@@ -47,7 +47,7 @@ export function createService<TInput, TOut>(cfg: ServiceConfig<TInput, TOut>) {
     if (!parsed.success) throw new ValidationError("Invalid input", parsed.error.flatten());
     const input = parsed.data;
 
-    await authorize(actor, cfg.action, cfg.permission(input, actor));
+    await authorize(actor, `${cfg.module}.${cfg.action}`, cfg.permission(input, actor));
 
     let before: unknown = null;
     const out = await runWithTenant(actor, async (tx) => {
