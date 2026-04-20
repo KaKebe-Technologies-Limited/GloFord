@@ -1,0 +1,50 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript", "plugin:jsx-a11y/recommended"],
+  "plugins": ["boundaries", "jsx-a11y"],
+  "settings": {
+    "boundaries/elements": [
+      { "type": "ui", "pattern": ["app/**", "components/**"] },
+      { "type": "actions", "pattern": ["lib/actions/**"] },
+      { "type": "services", "pattern": ["lib/services/**"] },
+      { "type": "inngest", "pattern": ["lib/inngest/**"] },
+      { "type": "tenant", "pattern": ["lib/tenant/**"] },
+      { "type": "rbac", "pattern": ["lib/rbac/**"] },
+      { "type": "validators", "pattern": ["lib/validators/**"] },
+      { "type": "shared", "pattern": ["lib/errors.ts", "lib/cache.ts", "lib/i18n/**", "lib/utils/**"] },
+      { "type": "auth", "pattern": ["lib/auth.ts"] },
+      { "type": "data", "pattern": ["lib/db.ts", "prisma/**"] }
+    ],
+    "boundaries/ignore": ["**/*.test.ts", "**/*.test.tsx", "prisma/seed.ts"]
+  },
+  "rules": {
+    "boundaries/element-types": [
+      "error",
+      {
+        "default": "disallow",
+        "rules": [
+          { "from": "ui", "allow": ["ui", "actions", "shared", "validators", "rbac", "auth"] },
+          { "from": "actions", "allow": ["services", "shared", "validators", "rbac", "auth"] },
+          { "from": "services", "allow": ["services", "data", "shared", "validators", "rbac", "tenant", "inngest", "auth"] },
+          { "from": "inngest", "allow": ["services", "data", "shared", "validators", "tenant", "auth"] },
+          { "from": "tenant", "allow": ["data", "shared", "auth"] },
+          { "from": "rbac", "allow": ["data", "shared", "auth"] },
+          { "from": "auth", "allow": ["data", "shared"] },
+          { "from": "validators", "allow": ["shared"] },
+          { "from": "shared", "allow": ["shared"] },
+          { "from": "data", "allow": ["shared"] }
+        ]
+      }
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@/prisma/*", "../../prisma/*"],
+            "message": "Do not import Prisma types/client from UI. Use services (lib/services/*) or lib/db.ts."
+          }
+        ]
+      }
+    ]
+  }
+}

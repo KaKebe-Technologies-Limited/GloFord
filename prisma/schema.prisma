@@ -1,0 +1,874 @@
+// ────────────────────────────────────────────────────────────
+// Gloford — Prisma schema
+// Multi-tenant, RLS-enforced. Every tenant-scoped table carries
+// organizationId + is protected by Postgres row-level security.
+// ────────────────────────────────────────────────────────────
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ════════════════════════════════════════════════════════════
+// TENANCY
+// ════════════════════════════════════════════════════════════
+
+model Organization {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  logoUrl     String?
+  contactJson Json     @default("{}")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members       OrgMembership[]
+  pages         Page[]
+  programs      Program[]
+  posts         Post[]
+  tags          Tag[]
+  media         Media[]
+  campaigns     Campaign[]
+  donors        Donor[]
+  donations     Donation[]
+  settings      SiteSettings?
+  theme         Theme?
+  subscribers   Subscriber[]
+  segments      Segment[]
+  newsletters   Newsletter[]
+  emailCampaigns EmailCampaign[]
+  events        Event[]
+  navItems      NavItem[]
+  featureFlags  FeatureFlag[]
+  auditLogs     AuditLog[]
+  versions      Version[]
+  deadLetters   DeadLetter[]
+  webhookEvents WebhookEvent[]
+
+  @@index([isActive])
+}
+
+model OrgMembership {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  roleId         String
+  joinedAt       DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         Role         @relation(fields: [roleId], references: [id])
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+// ════════════════════════════════════════════════════════════
+// IDENTITY & AUTH (Auth.js v5 compatible)
+// ════════════════════════════════════════════════════════════
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  passwordHash  String?
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  memberships  OrgMembership[]
+  accounts     Account[]
+  sessions     Session[]
+  profile      UserProfile?
+  activity     UserActivity[]
+  grants       ResourceGrant[] @relation("GrantedTo")
+  grantsGiven  ResourceGrant[] @relation("GrantedBy")
+  postsAuthored Post[]         @relation("PostAuthor")
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserProfile {
+  userId        String  @id
+  firstName     String?
+  lastName      String?
+  phone         String?
+  country       String?
+  bio           String?
+  interests     String[] @default([])
+  preferences   Json     @default("{}")
+  volunteerInfo Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+}
+
+// ════════════════════════════════════════════════════════════
+// RBAC
+// ════════════════════════════════════════════════════════════
+
+model Role {
+  id          String   @id @default(cuid())
+  name        RoleName @unique
+  description String?
+  isSystem    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  permissions RolePermission[]
+  memberships OrgMembership[]
+}
+
+enum RoleName {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model Permission {
+  id           String    @id @default(cuid())
+  key          String    @unique
+  module       String
+  action       String
+  resourceType String?
+  scope        PermScope @default(ORG)
+  description  String?
+
+  roles RolePermission[]
+
+  @@index([module, action])
+}
+
+enum PermScope {
+  GLOBAL
+  ORG
+  OWN
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model ResourceGrant {
+  id           String    @id @default(cuid())
+  userId       String
+  resourceType String
+  resourceId   String
+  action       String
+  grantedById  String
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  user      User @relation("GrantedTo", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User @relation("GrantedBy", fields: [grantedById], references: [id])
+
+  @@unique([userId, resourceType, resourceId, action])
+  @@index([resourceType, resourceId])
+}
+
+// ════════════════════════════════════════════════════════════
+// CONTENT
+// ════════════════════════════════════════════════════════════
+
+enum ContentStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+model Page {
+  id             String        @id @default(cuid())
+  organizationId String
+  slug           String
+  title          String
+  seoTitle       String?
+  seoDesc        String?
+  blocks         Json          @default("[]")
+  status         ContentStatus @default(DRAFT)
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, status])
+}
+
+model Program {
+  id             String        @id @default(cuid())
+  organizationId String
+  slug           String
+  title          String
+  summary        String
+  body           Json          @default("[]")
+  coverMediaId   String?
+  status         ContentStatus @default(DRAFT)
+  order          Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  cover        Media?       @relation(fields: [coverMediaId], references: [id])
+  campaigns    Campaign[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, status])
+  @@index([organizationId, order])
+}
+
+model Post {
+  id             String        @id @default(cuid())
+  organizationId String
+  slug           String
+  title          String
+  excerpt        String?
+  body           Json          @default("[]")
+  coverMediaId   String?
+  authorId       String
+  status         ContentStatus @default(DRAFT)
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  cover        Media?       @relation(fields: [coverMediaId], references: [id])
+  author       User         @relation("PostAuthor", fields: [authorId], references: [id])
+  tags         PostTag[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, status, publishedAt])
+  @@index([authorId])
+}
+
+model Tag {
+  id             String @id @default(cuid())
+  organizationId String
+  slug           String
+  name           String
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  posts        PostTag[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+model PostTag {
+  postId String
+  tagId  String
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId])
+}
+
+model Media {
+  id             String   @id @default(cuid())
+  organizationId String
+  url            String
+  key            String   @unique
+  mime           String
+  width          Int?
+  height         Int?
+  sizeBytes      Int
+  alt            String?
+  uploadedById   String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  programs     Program[]
+  posts        Post[]
+
+  @@index([organizationId, createdAt])
+}
+
+// ════════════════════════════════════════════════════════════
+// DONATIONS
+// ════════════════════════════════════════════════════════════
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+  MOBILE_MONEY
+}
+
+enum DonationStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum DonationType {
+  ONE_TIME
+  RECURRING
+}
+
+model Campaign {
+  id             String    @id @default(cuid())
+  organizationId String
+  slug           String
+  title          String
+  description    String
+  goalCents      Int?
+  currency       String    @default("USD")
+  startsAt       DateTime?
+  endsAt         DateTime?
+  programId      String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program      Program?     @relation(fields: [programId], references: [id])
+  donations    Donation[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, isActive])
+}
+
+model Donor {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String
+  name           String?
+  phone          String?
+  country        String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  donations    Donation[]
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
+}
+
+model Donation {
+  id             String          @id @default(cuid())
+  organizationId String
+  donorId        String?
+  campaignId     String?
+  amountCents    Int
+  currency       String          @default("USD")
+  provider       PaymentProvider
+  providerRef    String          @unique
+  status         DonationStatus  @default(PENDING)
+  type           DonationType    @default(ONE_TIME)
+  subscriptionId String?
+  receiptUrl     String?
+  metadata       Json?
+  createdAt      DateTime        @default(now())
+  completedAt    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  donor        Donor?       @relation(fields: [donorId], references: [id])
+  campaign     Campaign?    @relation(fields: [campaignId], references: [id])
+
+  @@index([organizationId, status, createdAt])
+  @@index([donorId])
+  @@index([campaignId])
+}
+
+// ════════════════════════════════════════════════════════════
+// SETTINGS & THEME (singletons per org)
+// ════════════════════════════════════════════════════════════
+
+model SiteSettings {
+  id             String   @id @default(cuid())
+  organizationId String   @unique
+  siteName       String
+  logoUrl        String?
+  contact        Json     @default("{}")
+  socials        Json     @default("{}")
+  seo            Json     @default("{}")
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Theme {
+  id             String   @id @default(cuid())
+  organizationId String   @unique
+  colors         Json     @default("{}")
+  typography     Json     @default("{}")
+  radius         Json     @default("{}")
+  shadows        Json     @default("{}")
+  custom         Json?
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// ════════════════════════════════════════════════════════════
+// NEWSLETTER & SUBSCRIBERS
+// ════════════════════════════════════════════════════════════
+
+enum SubscriberStatus {
+  PENDING
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+}
+
+enum NewsletterStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  FAILED
+  CANCELED
+}
+
+enum SendStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+model Subscriber {
+  id             String           @id @default(cuid())
+  organizationId String
+  email          String
+  name           String?
+  status         SubscriberStatus @default(PENDING)
+  source         String?
+  confirmedAt    DateTime?
+  unsubToken     String           @unique
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  segments     SubscriberSegment[]
+  logs         NewsletterLog[]
+  events       SubscriberEvent[]
+  enrollments  CampaignEnrollment[]
+
+  @@unique([organizationId, email])
+  @@index([organizationId, status])
+}
+
+model Newsletter {
+  id             String           @id @default(cuid())
+  organizationId String
+  title          String
+  subject        String
+  preheader      String?
+  content        Json             @default("[]")
+  status         NewsletterStatus @default(DRAFT)
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  segmentIds     String[]         @default([])
+  createdById    String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  logs         NewsletterLog[]
+
+  @@index([organizationId, status, scheduledAt])
+}
+
+model NewsletterLog {
+  id            String     @id @default(cuid())
+  newsletterId  String
+  subscriberId  String
+  providerMsgId String?
+  status        SendStatus @default(QUEUED)
+  openedAt      DateTime?
+  clickedAt     DateTime?
+  bouncedAt     DateTime?
+  error         String?
+  createdAt     DateTime   @default(now())
+
+  newsletter Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([newsletterId, subscriberId])
+  @@index([status])
+}
+
+// ════════════════════════════════════════════════════════════
+// SEGMENTS & EMAIL AUTOMATION
+// ════════════════════════════════════════════════════════════
+
+enum SegmentSource {
+  MANUAL
+  AUTO
+  EVENT
+}
+
+enum CampaignTrigger {
+  ON_SIGNUP
+  ON_DONATION
+  SCHEDULED
+  MANUAL
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELED
+  FAILED
+}
+
+model Segment {
+  id             String   @id @default(cuid())
+  organizationId String
+  slug           String
+  name           String
+  description    String?
+  rules          Json?
+  isSystem       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  subscribers    SubscriberSegment[]
+  campaigns      EmailCampaign[]     @relation("CampaignSegments")
+  events         Event[]             @relation("EventSegments")
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+model SubscriberSegment {
+  subscriberId String
+  segmentId    String
+  source       SegmentSource @default(MANUAL)
+  addedAt      DateTime      @default(now())
+
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  segment    Segment    @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  @@id([subscriberId, segmentId])
+  @@index([segmentId])
+}
+
+model SubscriberEvent {
+  id           String   @id @default(cuid())
+  subscriberId String
+  type         String
+  payload      Json?
+  createdAt    DateTime @default(now())
+
+  subscriber Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@index([subscriberId, type, createdAt])
+  @@index([type, createdAt])
+}
+
+model EmailCampaign {
+  id             String          @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  trigger        CampaignTrigger
+  triggerConfig  Json?
+  isActive       Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  segments     Segment[]            @relation("CampaignSegments")
+  emails       CampaignEmail[]
+  enrollments  CampaignEnrollment[]
+
+  @@index([organizationId, trigger, isActive])
+}
+
+model CampaignEmail {
+  id           String   @id @default(cuid())
+  campaignId   String
+  stepOrder    Int
+  subject      String
+  preheader    String?
+  content      Json     @default("[]")
+  delayMinutes Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  campaign EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, stepOrder])
+}
+
+model CampaignEnrollment {
+  id           String           @id @default(cuid())
+  campaignId   String
+  subscriberId String
+  currentStep  Int              @default(0)
+  status       EnrollmentStatus @default(ACTIVE)
+  nextSendAt   DateTime?
+  enrolledAt   DateTime         @default(now())
+  completedAt  DateTime?
+
+  campaign   EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  subscriber Subscriber    @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, subscriberId])
+  @@index([status, nextSendAt])
+}
+
+// ════════════════════════════════════════════════════════════
+// EVENTS
+// ════════════════════════════════════════════════════════════
+
+enum EventNotifType {
+  ANNOUNCEMENT
+  REMINDER
+}
+
+model Event {
+  id             String    @id @default(cuid())
+  organizationId String
+  slug           String
+  title          String
+  description    String
+  startsAt       DateTime
+  endsAt         DateTime?
+  location       String?
+  coverMediaId   String?
+  isPublic       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization  Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  segments      Segment[]           @relation("EventSegments")
+  notifications EventNotification[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, startsAt])
+}
+
+model EventNotification {
+  id      String           @id @default(cuid())
+  eventId String
+  type    EventNotifType
+  subject String
+  content Json             @default("[]")
+  sendAt  DateTime
+  status  NewsletterStatus @default(DRAFT)
+  sentAt  DateTime?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([status, sendAt])
+}
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
+
+enum NavLocation {
+  HEADER
+  FOOTER
+  ADMIN_SIDEBAR
+}
+
+model NavItem {
+  id                 String      @id @default(cuid())
+  organizationId     String
+  location           NavLocation
+  parentId           String?
+  label              String
+  href               String?
+  pageId             String?
+  order              Int         @default(0)
+  requiredPermission String?
+  isActive           Boolean     @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       NavItem?     @relation("NavTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children     NavItem[]    @relation("NavTree")
+
+  @@index([organizationId, location, order])
+}
+
+// ════════════════════════════════════════════════════════════
+// FEATURE FLAGS
+// ════════════════════════════════════════════════════════════
+
+model FeatureFlag {
+  id             String   @id @default(cuid())
+  organizationId String?
+  key            String
+  description    String?
+  isEnabled      Boolean  @default(false)
+  rules          Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, key])
+  @@index([key])
+}
+
+// ════════════════════════════════════════════════════════════
+// OBSERVABILITY (audit, versioning, dead-letter, webhooks)
+// ════════════════════════════════════════════════════════════
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String?
+  userId         String?
+  userRole       String?
+  action         String
+  module         String
+  entityType     String?
+  entityId       String?
+  diff           Json?
+  ipAddress      String?
+  geoCountry     String?
+  geoCity        String?
+  userAgent      String?
+  deviceType     String?
+  os             String?
+  browser        String?
+  correlationId  String?
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([module, action, createdAt])
+  @@index([userId, createdAt])
+  @@index([correlationId])
+}
+
+model Version {
+  id             String   @id @default(cuid())
+  organizationId String
+  entityType     String
+  entityId       String
+  snapshot       Json
+  diff           Json?
+  version        Int
+  createdById    String
+  createdAt      DateTime @default(now())
+  reason         String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([entityType, entityId, version])
+  @@index([organizationId, entityType, createdAt])
+}
+
+enum DLStatus {
+  PENDING
+  RETRIED
+  RESOLVED
+  IGNORED
+}
+
+model DeadLetter {
+  id             String   @id @default(cuid())
+  organizationId String?
+  source         String
+  eventType      String
+  payload        Json
+  error          String
+  attempts       Int      @default(0)
+  status         DLStatus @default(PENDING)
+  createdAt      DateTime @default(now())
+  resolvedAt     DateTime?
+  resolvedById   String?
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([source])
+}
+
+model WebhookEvent {
+  id             String   @id @default(cuid())
+  organizationId String?
+  provider       String
+  providerEventId String
+  eventType      String
+  payload        Json
+  processedAt    DateTime?
+  error          String?
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerEventId])
+  @@index([provider, createdAt])
+}

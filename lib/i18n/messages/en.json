@@ -1,0 +1,69 @@
+{
+  "common": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "loading": "Loading\u2026",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "error": "Something went wrong"
+  },
+  "public": {
+    "nav": {
+      "home": "Home",
+      "about": "About",
+      "programs": "Programs",
+      "blog": "Blog",
+      "events": "Events",
+      "donate": "Donate",
+      "contact": "Contact"
+    },
+    "hero": {
+      "heading": "Changing lives through community action",
+      "subheading": "Gloford partners with communities to advance health, education, and resilience.",
+      "cta": "Support our work"
+    },
+    "footer": {
+      "rights": "All rights reserved.",
+      "newsletter": "Subscribe to our newsletter"
+    }
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "nav": {
+      "content": "Content",
+      "pages": "Pages",
+      "programs": "Programs",
+      "posts": "Blog",
+      "media": "Media",
+      "finance": "Finance",
+      "campaigns": "Campaigns",
+      "donations": "Donations",
+      "donors": "Donors",
+      "communications": "Communications",
+      "subscribers": "Subscribers",
+      "segments": "Segments",
+      "newsletters": "Newsletters",
+      "emailCampaigns": "Email Campaigns",
+      "events": "Events",
+      "users": "Users",
+      "roles": "Roles",
+      "settings": "Settings",
+      "theme": "Theme",
+      "system": "System",
+      "audit": "Audit log",
+      "versions": "Versions",
+      "deadLetter": "Dead letter",
+      "featureFlags": "Feature flags",
+      "health": "Health"
+    }
+  },
+  "auth": {
+    "signInTitle": "Sign in to Gloford",
+    "email": "Email",
+    "password": "Password",
+    "continueWithGoogle": "Continue with Google",
+    "invalidCredentials": "Invalid email or password"
+  }
+}
