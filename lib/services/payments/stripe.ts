@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { db } from "@/lib/db";
 import { UpstreamError, ValidationError } from "@/lib/errors";
+import { loadConfig } from "./config";
 import type {
   CreateIntentParams,
   CreateIntentResult,
@@ -8,22 +9,19 @@ import type {
   WebhookVerifyResult,
 } from "./types";
 
-let cached: Stripe | null = null;
-function client() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new UpstreamError("Stripe is not configured");
-  if (!cached) cached = new Stripe(key, { apiVersion: "2024-12-18.acacia" });
-  return cached;
+async function stripeFor(orgId: string) {
+  const cfg = await loadConfig(orgId, "STRIPE");
+  return new Stripe(cfg.secrets.secretKey, { apiVersion: "2024-12-18.acacia" });
 }
 
 export const stripeAdapter: PaymentProviderAdapter = {
   id: "STRIPE",
   label: "Card (Stripe)",
+  flow: "REDIRECT",
 
   async createIntent(params: CreateIntentParams): Promise<CreateIntentResult> {
-    const stripe = client();
+    const stripe = await stripeFor(params.orgId);
 
-    // Upsert donor by (org, email).
     const donor = await db.donor.upsert({
       where: {
         organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
@@ -36,11 +34,6 @@ export const stripeAdapter: PaymentProviderAdapter = {
       },
     });
 
-    // Use Stripe Checkout Sessions: Stripe hosts the card form, handles
-    // 3DS, wallet buttons, etc. The donor returns to our success/cancel
-    // URL; the webhook is the source of truth for status.
-    //
-    // Recurring donations use mode=subscription with a dynamic price.
     const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const baseMetadata = {
       orgId: params.orgId,
@@ -58,9 +51,7 @@ export const stripeAdapter: PaymentProviderAdapter = {
             price_data: {
               currency: params.currency.toLowerCase(),
               unit_amount: params.amountCents,
-              product_data: {
-                name: params.campaignId ? "Donation (campaign)" : "Donation",
-              },
+              product_data: { name: params.campaignId ? "Donation (campaign)" : "Donation" },
               ...(params.recurring ? { recurring: { interval: "month" } } : {}),
             },
           },
@@ -75,13 +66,8 @@ export const stripeAdapter: PaymentProviderAdapter = {
       params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : undefined,
     );
 
-    if (!session.url) {
-      throw new UpstreamError("Stripe did not return a checkout URL");
-    }
+    if (!session.url) throw new UpstreamError("Stripe did not return a checkout URL");
 
-    // providerRef is the PaymentIntent id for one-time donations, and
-    // the Subscription id for recurring. The Session id is stored in
-    // metadata for debugging.
     const providerRef =
       (typeof session.payment_intent === "string" ? session.payment_intent : null) ??
       (typeof session.subscription === "string" ? session.subscription : null) ??
@@ -103,6 +89,7 @@ export const stripeAdapter: PaymentProviderAdapter = {
     });
 
     return {
+      kind: "REDIRECT",
       donationId: donation.id,
       providerRef,
       redirectUrl: session.url,
@@ -113,9 +100,20 @@ export const stripeAdapter: PaymentProviderAdapter = {
     const sig = req.headers.get("stripe-signature");
     const secret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!sig || !secret) throw new ValidationError("Missing Stripe webhook signature or secret");
+
+    // We need a Stripe client to verify the signature. Since all webhooks
+    // use the same *signing* secret (env-scoped), any configured org's
+    // secret key works — grab the first enabled Stripe config.
+    const cfg = await db.paymentConfiguration.findFirst({
+      where: { provider: "STRIPE", isEnabled: true },
+      select: { organizationId: true },
+    });
+    if (!cfg) throw new ValidationError("No Stripe configuration available");
+    const stripe = await stripeFor(cfg.organizationId);
+
     let event: Stripe.Event;
     try {
-      event = client().webhooks.constructEvent(rawBody, sig, secret);
+      event = stripe.webhooks.constructEvent(rawBody, sig, secret);
     } catch (e) {
       throw new ValidationError("Invalid Stripe signature", e);
     }
@@ -126,10 +124,6 @@ export const stripeAdapter: PaymentProviderAdapter = {
     const event = raw as Stripe.Event;
     switch (event.type) {
       case "checkout.session.completed": {
-        // Covers both mode=payment (payment_intent present) and
-        // mode=subscription (subscription present). SUCCEEDED is the
-        // correct terminal state only for one-time; subscriptions will
-        // emit invoice.paid / invoice.payment_failed over their life.
         const s = event.data.object as Stripe.Checkout.Session;
         const providerRef =
           (typeof s.payment_intent === "string" ? s.payment_intent : null) ??

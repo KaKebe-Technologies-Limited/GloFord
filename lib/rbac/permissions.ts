@@ -50,6 +50,7 @@ export const PERMISSIONS: PermissionSpec[] = [
   p("users", "read"), p("users", "invite"), p("users", "update"), p("users", "deactivate"),
   p("roles", "read"), p("roles", "update"),
   p("settings", "read"), p("settings", "update"),
+  p("settings", "managePayments"),
   p("theme", "read"), p("theme", "update"),
   p("nav", "read"), p("nav", "update"),
   p("featureFlags", "read"), p("featureFlags", "update"),

@@ -20,6 +20,7 @@ import {
   Flag,
   Activity,
   AlertTriangle,
+  CreditCard,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -65,6 +66,7 @@ const GROUPS: Group[] = [
       { href: "/admin/roles", key: "roles", icon: Shield },
       { href: "/admin/theme", key: "theme", icon: Palette },
       { href: "/admin/settings", key: "settings", icon: Settings },
+      { href: "/admin/settings/payments", key: "payments", icon: CreditCard },
     ],
   },
   {
