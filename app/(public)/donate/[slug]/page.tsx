@@ -1,16 +1,8 @@
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
 import { getActiveCampaignBySlug } from "@/lib/services/campaigns";
-import { DonateWidget } from "@/components/donate/DonateWidget";
+import { DonateWidget, type WidgetProvider } from "@/components/donate/DonateWidget";
+import { getPublicDonationContext } from "@/lib/services/donations/public";
 import { formatMoney } from "@/lib/utils/money";
-
-async function resolveOrg() {
-  return db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-}
 
 export default async function CampaignDonatePage({
   params,
@@ -18,8 +10,9 @@ export default async function CampaignDonatePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const org = await resolveOrg();
-  if (!org) notFound();
+  const ctx = await getPublicDonationContext();
+  if (!ctx) notFound();
+  const { org, providers } = ctx;
 
   let campaign;
   try {
@@ -64,6 +57,7 @@ export default async function CampaignDonatePage({
 
         <aside className="lg:sticky lg:top-20 lg:self-start">
           <DonateWidget
+            providers={providers as WidgetProvider[]}
             campaign={{
               slug: campaign.slug,
               title: campaign.title,

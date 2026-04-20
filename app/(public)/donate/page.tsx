@@ -1,18 +1,15 @@
-import { db } from "@/lib/db";
-import { listActiveCampaigns } from "@/lib/services/campaigns";
-import { DonateWidget } from "@/components/donate/DonateWidget";
 import Link from "next/link";
+import { listActiveCampaigns } from "@/lib/services/campaigns";
+import { DonateWidget, type WidgetProvider } from "@/components/donate/DonateWidget";
+import { getPublicDonationContext } from "@/lib/services/donations/public";
 import { formatMoney } from "@/lib/utils/money";
 
 export const metadata = { title: "Donate" };
 
 export default async function DonatePage() {
-  const org = await db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true, name: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!org) return null;
+  const ctx = await getPublicDonationContext();
+  if (!ctx) return null;
+  const { org, providers } = ctx;
 
   const campaigns = await listActiveCampaigns(org.id);
 
@@ -58,7 +55,7 @@ export default async function DonatePage() {
         </section>
 
         <aside className="lg:sticky lg:top-20 lg:self-start">
-          <DonateWidget />
+          <DonateWidget providers={providers as WidgetProvider[]} />
         </aside>
       </div>
     </div>

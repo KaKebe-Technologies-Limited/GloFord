@@ -51,6 +51,7 @@ model Organization {
   versions      Version[]
   deadLetters   DeadLetter[]
   webhookEvents WebhookEvent[]
+  paymentConfigs PaymentConfiguration[]
 
   @@index([isActive])
 }
@@ -362,7 +363,11 @@ model Media {
 enum PaymentProvider {
   STRIPE
   PAYPAL
-  MOBILE_MONEY
+  MOBILE_MONEY  // legacy, unused post-extension (kept for enum stability)
+  PESAPAL
+  FLUTTERWAVE
+  MTN_MOMO
+  AIRTEL_MONEY
 }
 
 enum DonationStatus {
@@ -440,6 +445,31 @@ model Donation {
   @@index([organizationId, status, createdAt])
   @@index([donorId])
   @@index([campaignId])
+}
+
+// ════════════════════════════════════════════════════════════
+// PAYMENT PROVIDER CONFIGURATION
+// One row per (org, provider). Secrets are encrypted at rest
+// with AES-256-GCM; the encryption key lives in ENCRYPTION_KEY.
+// ════════════════════════════════════════════════════════════
+
+model PaymentConfiguration {
+  id               String          @id @default(cuid())
+  organizationId   String
+  provider         PaymentProvider
+  isEnabled        Boolean         @default(false)
+  mode             String          @default("sandbox")   // "sandbox" | "live"
+  publicConfig     Json            @default("{}")         // non-sensitive (brand, country, etc.)
+  encryptedSecrets String?                                  // AES-GCM, base64(iv|tag|ciphertext)
+  lastVerifiedAt   DateTime?
+  verifyError      String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  organization     Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, provider])
+  @@index([organizationId, isEnabled])
 }
 
 // ════════════════════════════════════════════════════════════
