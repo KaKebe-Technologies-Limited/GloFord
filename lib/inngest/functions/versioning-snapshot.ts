@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 const differ = jsondiffpatch.create({
   objectHash: (obj: unknown) => (obj as { id?: string })?.id,
   arrays: { detectMove: true },
-  textDiff: { minLength: 80 },
+  // `textDiff` requires a diff_match_patch instance we don't ship;
+  // skip long-text diffing to keep the bundle small.
 });
 
 /**

@@ -12,7 +12,7 @@ export class AppError extends Error {
     public readonly code: string,
     public readonly status: number,
     public readonly safeMessage: string,
-    public readonly cause?: unknown,
+    public override readonly cause?: unknown,
   ) {
     super(safeMessage);
     this.name = this.constructor.name;

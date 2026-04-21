@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { NewsletterForm } from "./NewsletterForm";
 
 export async function PublicFooter() {
   const t = await getTranslations("public.footer");
@@ -15,22 +17,25 @@ export async function PublicFooter() {
         <nav aria-label="Footer" className="space-y-2 text-sm">
           <p className="font-medium">Explore</p>
           <ul className="space-y-1 text-[--color-muted-fg]">
-            <li><a href="/about" className="hover:underline">About</a></li>
-            <li><a href="/programs" className="hover:underline">Programs</a></li>
-            <li><a href="/blog" className="hover:underline">Blog</a></li>
-            <li><a href="/events" className="hover:underline">Events</a></li>
+            <li><Link href="/about" className="hover:underline">About</Link></li>
+            <li><Link href="/programs" className="hover:underline">Programs</Link></li>
+            <li><Link href="/blog" className="hover:underline">Blog</Link></li>
+            <li><Link href="/events" className="hover:underline">Events</Link></li>
           </ul>
         </nav>
         <nav aria-label="Support" className="space-y-2 text-sm">
           <p className="font-medium">Support</p>
           <ul className="space-y-1 text-[--color-muted-fg]">
-            <li><a href="/donate" className="hover:underline">Donate</a></li>
-            <li><a href="/contact" className="hover:underline">Contact</a></li>
+            <li><Link href="/donate" className="hover:underline">Donate</Link></li>
+            <li><Link href="/contact" className="hover:underline">Contact</Link></li>
           </ul>
         </nav>
         <div className="space-y-2 text-sm">
           <p className="font-medium">{t("newsletter")}</p>
-          <p className="text-[--color-muted-fg]">Subscription form arrives in Phase 4.</p>
+          <p className="text-xs text-[--color-muted-fg]">
+            Stay in touch. We send occasional updates on programs and stories.
+          </p>
+          <NewsletterForm source="footer" />
         </div>
       </div>
       <div className="border-t border-[--color-border] py-4 text-center text-xs text-[--color-muted-fg]">

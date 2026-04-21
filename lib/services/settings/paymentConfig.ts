@@ -1,12 +1,15 @@
+import type { z } from "zod";
 import { createService } from "@/lib/services/_shared";
 import { encryptJson } from "@/lib/crypto/encrypt";
 import { paymentConfigSchema, toggleConfigSchema } from "@/lib/validators/paymentConfig";
+
+type PaymentConfigInput = z.infer<typeof paymentConfigSchema>;
 
 /**
  * Split the typed input into (publicConfig, secretsObject) for storage.
  * Secrets are encrypted with AES-GCM before they touch the DB.
  */
-function splitConfig(input: Parameters<typeof paymentConfigSchema.parse>[0]) {
+function splitConfig(input: PaymentConfigInput) {
   switch (input.provider) {
     case "STRIPE":
       return {

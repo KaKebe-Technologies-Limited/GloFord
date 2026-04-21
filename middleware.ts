@@ -1,23 +1,30 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
- * Auth guard for /admin. The layout also checks auth (defense in
- * depth) but middleware lets us redirect without rendering.
+ * Edge-safe auth guard for /admin.
  *
- * RBAC is enforced at the service layer — the middleware only
- * verifies "is authenticated", never "is authorized for this action".
+ * We only check session-cookie presence here; the admin layout + every
+ * service call perform the real RBAC checks. This file stays pure
+ * cookie-inspection so it can run at the edge without dragging Prisma
+ * or Auth.js into the middleware bundle.
  */
-export default auth((req) => {
-  const { nextUrl, auth: session } = req;
-  const isAdmin = nextUrl.pathname.startsWith("/admin");
-  if (!isAdmin) return;
-  if (!session?.user?.id) {
-    const url = new URL("/login", nextUrl);
-    url.searchParams.set("next", nextUrl.pathname + nextUrl.search);
-    return NextResponse.redirect(url);
-  }
-});
+
+const SESSION_COOKIES = [
+  "authjs.session-token",
+  "__Secure-authjs.session-token",
+  "next-auth.session-token",
+  "__Secure-next-auth.session-token",
+];
+
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  if (!pathname.startsWith("/admin")) return NextResponse.next();
+  const hasSession = SESSION_COOKIES.some((name) => req.cookies.get(name));
+  if (hasSession) return NextResponse.next();
+  const url = new URL("/login", req.url);
+  url.searchParams.set("next", pathname + req.nextUrl.search);
+  return NextResponse.redirect(url);
+}
 
 export const config = {
   matcher: ["/admin/:path*"],

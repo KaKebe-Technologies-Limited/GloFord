@@ -6,9 +6,9 @@ const withNextIntl = createNextIntlPlugin("./lib/i18n/request.ts");
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  output: "standalone",
   experimental: {
     serverActions: { bodySizeLimit: "2mb" },
-    typedRoutes: true,
   },
   images: {
     remotePatterns: [

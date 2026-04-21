@@ -50,13 +50,9 @@ export async function createDonationIntent(
     idempotencyKey,
   });
 
-  return {
-    donationId: result.donationId,
-    providerRef: result.providerRef,
-    clientSecret: result.clientSecret,
-    redirectUrl: result.redirectUrl,
-    publicPayload: result.publicPayload,
-  };
+  // Pass the discriminated union through untouched so the widget can
+  // switch on result.kind.
+  return result;
 }
 
 /**

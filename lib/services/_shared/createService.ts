@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import type { ZodType } from "zod";
+import type { z, ZodTypeAny } from "zod";
 import { ValidationError } from "@/lib/errors";
 import { authorize } from "@/lib/rbac/authorize";
 import { runWithTenant, type Actor } from "@/lib/tenant/context";
@@ -20,18 +20,22 @@ export type ServiceContext<TInput> = {
 
 type VersionRef = { entityType: string; entityId: string };
 
-export type ServiceConfig<TInput, TOut> = {
+export type ServiceConfig<S extends ZodTypeAny, TOut> = {
   module: string;
   action: string;
-  schema: ZodType<TInput>;
+  schema: S;
   /** Build a ResourceRef from parsed input so RBAC can check cross-tenant + scope. */
-  permission: (input: TInput, actor: Actor) => ResourceRef;
+  permission: (input: z.infer<S>, actor: Actor) => ResourceRef;
   /** Run the business logic inside a tenant-scoped transaction. */
-  exec: (ctx: ServiceContext<TInput>) => Promise<TOut>;
+  exec: (ctx: ServiceContext<z.infer<S>>) => Promise<TOut>;
   /** If provided, a Version snapshot is queued after the mutation succeeds. */
-  version?: (out: TOut, input: TInput) => VersionRef | null;
+  version?: (out: TOut, input: z.infer<S>) => VersionRef | null;
   /** If provided, loaded BEFORE exec so versioning can diff. */
-  loadBefore?: (ctx: { actor: Actor; input: TInput; tx: Prisma.TransactionClient }) => Promise<unknown>;
+  loadBefore?: (ctx: {
+    actor: Actor;
+    input: z.infer<S>;
+    tx: Prisma.TransactionClient;
+  }) => Promise<unknown>;
 };
 
 /**
@@ -41,50 +45,61 @@ export type ServiceConfig<TInput, TOut> = {
  * Audit + versioning are fire-and-forget through Inngest; if they fail,
  * the mutation is already durable. See §10, §11, §14 of the blueprint.
  */
-export function createService<TInput, TOut>(cfg: ServiceConfig<TInput, TOut>) {
+export function createService<S extends ZodTypeAny, TOut>(cfg: ServiceConfig<S, TOut>) {
   return async (actor: Actor, raw: unknown): Promise<TOut> => {
     const parsed = cfg.schema.safeParse(raw);
-    if (!parsed.success) throw new ValidationError("Invalid input", parsed.error.flatten());
-    const input = parsed.data;
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      throw new ValidationError(issue?.message ?? "Invalid input");
+    }
+    const input = parsed.data as z.infer<S>;
 
-    await authorize(actor, `${cfg.module}.${cfg.action}`, cfg.permission(input, actor));
+    const ref = cfg.permission(input, actor);
+    await authorize(actor, `${cfg.module}.${cfg.action}`, ref);
 
-    let before: unknown = null;
+    let before: unknown = undefined;
     const out = await runWithTenant(actor, async (tx) => {
       if (cfg.loadBefore) before = await cfg.loadBefore({ actor, input, tx });
       return cfg.exec({ actor, input, tx });
     });
 
-    const ref = cfg.version?.(out, input) ?? null;
-    const eventsToSend: Parameters<typeof inngest.send>[0][] = [
+    const versionRef = cfg.version?.(out, input) ?? null;
+    const eventsToSend = [
       {
-        name: "audit/log",
+        name: "audit/log" as const,
         data: {
-          actor: { userId: actor.userId, orgId: actor.orgId, role: actor.role, email: actor.email },
+          actor: {
+            userId: actor.userId,
+            orgId: actor.orgId,
+            role: actor.role,
+            email: actor.email,
+          },
           action: `${cfg.module}.${cfg.action}`,
           module: cfg.module,
-          entityType: ref?.entityType,
-          entityId: ref?.entityId,
+          entityType: versionRef?.entityType,
+          entityId: versionRef?.entityId,
         },
       },
     ];
-    if (ref) {
+    if (versionRef) {
       eventsToSend.push({
-        name: "versioning/snapshot",
+        name: "versioning/snapshot" as never,
         data: {
           orgId: actor.orgId,
-          entityType: ref.entityType,
-          entityId: ref.entityId,
+          entityType: versionRef.entityType,
+          entityId: versionRef.entityId,
           before,
           after: out,
           actorId: actor.userId,
-        },
+        } as never,
       });
     }
     // Fire-and-forget — never block the request on observability.
-    void inngest.send(eventsToSend).catch(() => {
-      /* swallow; resilience rule §14 */
-    });
+    for (const ev of eventsToSend) {
+      void inngest.send(ev).catch(() => {
+        /* swallow; resilience rule §14 */
+      });
+    }
 
     return out;
   };

@@ -19,14 +19,9 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    orgId: string;
-    role: RoleName;
-    roleId: string;
-  }
-}
+// `next-auth/jwt` isn't re-exported at the package root in v5 beta —
+// we augment the `jwt` callback's token via ambient shape inside the
+// callback instead.
 
 const CredentialsSchema = z.object({
   email: z.string().email(),
@@ -61,23 +56,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
-      // On initial sign-in, `user` is populated. Load the first active membership.
+      // On initial sign-in, `user` is populated. Load the first active
+      // membership and stash domain fields on the token. We cast
+      // because next-auth v5's JWT type is a plain Record<string, unknown>.
       if (user?.id) {
         const membership = await loadPrimaryMembership(user.id);
         if (!membership) return token;
-        token.id = user.id;
-        token.orgId = membership.organizationId;
-        token.role = membership.role.name;
-        token.roleId = membership.roleId;
+        const t = token as Record<string, unknown>;
+        t.id = user.id;
+        t.orgId = membership.organizationId;
+        t.role = membership.role.name;
+        t.roleId = membership.roleId;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token.id) {
-        session.user.id = token.id;
-        session.user.orgId = token.orgId;
-        session.user.role = token.role;
-        session.user.roleId = token.roleId;
+      const t = token as {
+        id?: string;
+        orgId?: string;
+        role?: RoleName;
+        roleId?: string;
+      };
+      if (t.id && t.orgId && t.role && t.roleId) {
+        session.user.id = t.id;
+        session.user.orgId = t.orgId;
+        session.user.role = t.role;
+        session.user.roleId = t.roleId;
       }
       return session;
     },

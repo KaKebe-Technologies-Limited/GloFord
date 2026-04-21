@@ -1,0 +1,105 @@
+# ────────────────────────────────────────────────────────────
+# Gloford local stack
+#
+#   db      -> Postgres 16 with a persistent volume.
+#   migrate -> One-shot: `prisma migrate deploy` + `pnpm db:seed`.
+#              Exits 0 before `app` starts.
+#   app     -> Next.js production image from ./Dockerfile.
+#   inngest -> Local Inngest dev server for Server Actions that
+#              emit events (audit, versioning, newsletter/send, ...).
+#
+# Usage:
+#   docker compose up -d db
+#   docker compose run --rm migrate     # first boot
+#   docker compose up --build app inngest
+# ────────────────────────────────────────────────────────────
+
+name: gloford
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gloford
+      POSTGRES_PASSWORD: gloford
+      POSTGRES_DB: gloford
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gloford -d gloford"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - migrate-node-modules:/app/node_modules
+    environment:
+      DATABASE_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
+      DIRECT_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-O2PqgJfqZ3eZk0kSzv6gOQ3aV2lT8WrxKEP0iFnPw9k=}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@gloford.org}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-change-me-on-first-login}
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        apk add --no-cache openssl libc6-compat &&
+        corepack enable &&
+        corepack prepare pnpm@10.0.0 --activate &&
+        pnpm install --frozen-lockfile &&
+        pnpm prisma migrate deploy &&
+        pnpm db:seed
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      AUTH_SECRET: ${AUTH_SECRET:-replace-me-with-openssl-rand-base64-32}
+      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
+      DATABASE_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
+      DIRECT_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-O2PqgJfqZ3eZk0kSzv6gOQ3aV2lT8WrxKEP0iFnPw9k=}
+      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-}
+      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
+      INNGEST_BASE_URL: http://inngest:8288
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-Gloford <no-reply@gloford.org>}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  inngest:
+    image: inngest/inngest:latest
+    command: ["inngest", "dev", "-u", "http://app:3000/api/inngest"]
+    ports:
+      - "8288:8288"
+    depends_on:
+      - app
+
+volumes:
+  db-data:
+  migrate-node-modules:

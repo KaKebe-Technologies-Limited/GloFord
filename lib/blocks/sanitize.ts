@@ -40,7 +40,9 @@ export function sanitizeHtml(input: string): string {
     const attrRegex = /([a-z-]+)\s*=\s*"([^"]*)"/gi;
     let m;
     while ((m = attrRegex.exec(attrs))) {
-      const [, name, value] = m;
+      const name = m[1];
+      const value = m[2];
+      if (!name || value === undefined) continue;
       if (!allowed.has(name.toLowerCase())) continue;
       if (name.toLowerCase() === "href" && !URL_SAFE.test(value)) continue;
       cleaned.push(`${name}="${escapeAttr(value)}"`);

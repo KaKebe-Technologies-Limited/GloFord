@@ -33,8 +33,12 @@ export function BlockEditor({
     if (i < 0) return;
     const j = i + dir;
     if (j < 0 || j >= value.length) return;
+    const a = value[i];
+    const b = value[j];
+    if (!a || !b) return;
     const next = [...value];
-    [next[i], next[j]] = [next[j], next[i]];
+    next[i] = b;
+    next[j] = a;
     onChange(next);
   };
   const update = (id: string, data: unknown) =>
