@@ -4,6 +4,8 @@ import { getLocale, getMessages } from "next-intl/server";
 import { getActiveThemeTokens } from "@/lib/theme/service";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: {
     default: "Gloford",

@@ -27,6 +27,7 @@ export function Topbar({
           <p className="text-xs text-[--color-muted-fg]">{user.email}</p>
         </div>
         {user.image ? (
+          // eslint-disable-next-line @next/next/no-img-element -- avatar from OAuth IdP, size is fixed
           <img
             src={user.image}
             alt=""

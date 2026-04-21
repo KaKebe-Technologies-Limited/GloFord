@@ -11,7 +11,7 @@ import type {
 
 async function stripeFor(orgId: string) {
   const cfg = await loadConfig(orgId, "STRIPE");
-  return new Stripe(cfg.secrets.secretKey, { apiVersion: "2024-12-18.acacia" });
+  return new Stripe(cfg.secrets.secretKey, { apiVersion: "2025-02-24.acacia" });
 }
 
 export const stripeAdapter: PaymentProviderAdapter = {

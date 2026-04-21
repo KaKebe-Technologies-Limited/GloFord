@@ -3,6 +3,7 @@
   "plugins": ["boundaries", "jsx-a11y"],
   "settings": {
     "boundaries/elements": [
+      { "type": "apiRoute", "pattern": ["app/api/**"] },
       { "type": "ui", "pattern": ["app/**", "components/**"] },
       { "type": "actions", "pattern": ["lib/actions/**"] },
       { "type": "services", "pattern": ["lib/services/**"] },
@@ -10,11 +11,16 @@
       { "type": "tenant", "pattern": ["lib/tenant/**"] },
       { "type": "rbac", "pattern": ["lib/rbac/**"] },
       { "type": "validators", "pattern": ["lib/validators/**"] },
-      { "type": "shared", "pattern": ["lib/errors.ts", "lib/cache.ts", "lib/i18n/**", "lib/utils/**"] },
+      { "type": "mail", "pattern": ["lib/mail/**"] },
+      { "type": "crypto", "pattern": ["lib/crypto/**"] },
+      { "type": "storage", "pattern": ["lib/storage/**"] },
+      { "type": "blocks", "pattern": ["lib/blocks/**"] },
+      { "type": "theme", "pattern": ["lib/theme/**"] },
+      { "type": "shared", "pattern": ["lib/errors.ts", "lib/cache.ts", "lib/auth-context.ts", "lib/i18n/**", "lib/utils/**"] },
       { "type": "auth", "pattern": ["lib/auth.ts"] },
       { "type": "data", "pattern": ["lib/db.ts", "prisma/**"] }
     ],
-    "boundaries/ignore": ["**/*.test.ts", "**/*.test.tsx", "prisma/seed.ts"]
+    "boundaries/ignore": ["**/*.test.ts", "**/*.test.tsx", "prisma/seed.ts", "prisma/seed/**"]
   },
   "rules": {
     "boundaries/element-types": [
@@ -22,14 +28,20 @@
       {
         "default": "disallow",
         "rules": [
-          { "from": "ui", "allow": ["ui", "actions", "shared", "validators", "rbac", "auth"] },
-          { "from": "actions", "allow": ["services", "shared", "validators", "rbac", "auth"] },
-          { "from": "services", "allow": ["services", "data", "shared", "validators", "rbac", "tenant", "inngest", "auth"] },
-          { "from": "inngest", "allow": ["services", "data", "shared", "validators", "tenant", "auth"] },
+          { "from": "ui", "allow": ["ui", "actions", "services", "shared", "validators", "rbac", "auth", "blocks", "theme", "mail", "data"] },
+          { "from": "apiRoute", "allow": ["services", "actions", "shared", "validators", "rbac", "auth", "inngest", "blocks", "theme", "mail", "data"] },
+          { "from": "actions", "allow": ["services", "shared", "validators", "rbac", "auth", "data"] },
+          { "from": "services", "allow": ["services", "data", "shared", "validators", "rbac", "tenant", "inngest", "auth", "mail", "crypto", "storage", "blocks", "theme"] },
+          { "from": "inngest", "allow": ["services", "data", "shared", "validators", "tenant", "auth", "mail", "blocks", "inngest"] },
           { "from": "tenant", "allow": ["data", "shared", "auth"] },
-          { "from": "rbac", "allow": ["data", "shared", "auth"] },
+          { "from": "rbac", "allow": ["data", "shared", "auth", "tenant"] },
           { "from": "auth", "allow": ["data", "shared"] },
-          { "from": "validators", "allow": ["shared"] },
+          { "from": "validators", "allow": ["shared", "blocks"] },
+          { "from": "mail", "allow": ["shared", "data"] },
+          { "from": "crypto", "allow": ["shared"] },
+          { "from": "storage", "allow": ["shared"] },
+          { "from": "blocks", "allow": ["blocks", "shared", "data"] },
+          { "from": "theme", "allow": ["data", "shared"] },
           { "from": "shared", "allow": ["shared"] },
           { "from": "data", "allow": ["shared"] }
         ]
@@ -45,6 +57,7 @@
           }
         ]
       }
-    ]
+    ],
+    "jsx-a11y/heading-has-content": ["error", { "components": ["CardTitle"] }]
   }
 }

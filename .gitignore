@@ -58,3 +58,6 @@ logs/
 
 # Claude Code local config
 .claude/
+
+# Scratch area (not part of the repo)
+.tmp/
