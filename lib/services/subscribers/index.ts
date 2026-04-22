@@ -6,7 +6,7 @@ import {
   subscriberDeleteSchema,
   subscriberAssignSegmentsSchema,
 } from "@/lib/validators/subscribers";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { getMailProvider } from "@/lib/mail";
 import { doubleOptInEmail, welcomeEmail } from "@/lib/mail/templates";
 import { buildBrand } from "@/lib/mail/brand";
@@ -25,31 +25,33 @@ export async function publicSubscribe(
   raw: unknown,
 ): Promise<{ sent: boolean; alreadyActive: boolean }> {
   const input = subscribeSchema.parse(raw);
-  const existing = await db.subscriber.findUnique({
-    where: { organizationId_email: { organizationId: orgId, email: input.email } },
+  const { subscriber, alreadyActive } = await runAsTenant(orgId, async (tx) => {
+    const existing = await tx.subscriber.findUnique({
+      where: { organizationId_email: { organizationId: orgId, email: input.email } },
+    });
+    if (existing?.status === "ACTIVE") {
+      return { subscriber: existing, alreadyActive: true };
+    }
+    const token = existing?.unsubToken ?? randomBytes(16).toString("hex");
+    const row = await tx.subscriber.upsert({
+      where: { organizationId_email: { organizationId: orgId, email: input.email } },
+      update: {
+        name: input.name ?? undefined,
+        source: input.source ?? existing?.source ?? undefined,
+      },
+      create: {
+        organizationId: orgId,
+        email: input.email,
+        name: input.name,
+        source: input.source,
+        status: "PENDING",
+        unsubToken: token,
+      },
+    });
+    return { subscriber: row, alreadyActive: false };
   });
 
-  if (existing?.status === "ACTIVE") {
-    return { sent: false, alreadyActive: true };
-  }
-
-  const token = existing?.unsubToken ?? randomBytes(16).toString("hex");
-
-  const subscriber = await db.subscriber.upsert({
-    where: { organizationId_email: { organizationId: orgId, email: input.email } },
-    update: {
-      name: input.name ?? undefined,
-      source: input.source ?? existing?.source ?? undefined,
-    },
-    create: {
-      organizationId: orgId,
-      email: input.email,
-      name: input.name,
-      source: input.source,
-      status: "PENDING",
-      unsubToken: token,
-    },
-  });
+  if (alreadyActive) return { sent: false, alreadyActive: true };
 
   // Use a deterministic confirm token tied to the subscriber id for
   // this launch. A proper flow would persist the token with an
@@ -78,16 +80,20 @@ export async function confirmSubscriber(
   orgId: string,
   token: string,
 ): Promise<{ ok: boolean }> {
-  const subscriber = await db.subscriber.findFirst({
-    where: { organizationId: orgId, unsubToken: token },
-  });
+  const subscriber = await runAsTenant(orgId, (tx) =>
+    tx.subscriber.findFirst({
+      where: { organizationId: orgId, unsubToken: token },
+    }),
+  );
   if (!subscriber) throw new NotFoundError("Subscriber");
   if (subscriber.status === "ACTIVE") return { ok: true };
 
-  await db.subscriber.update({
-    where: { id: subscriber.id },
-    data: { status: "ACTIVE", confirmedAt: new Date() },
-  });
+  await runAsTenant(orgId, (tx) =>
+    tx.subscriber.update({
+      where: { id: subscriber.id },
+      data: { status: "ACTIVE", confirmedAt: new Date() },
+    }),
+  );
 
   const brand = await buildBrand(orgId);
   const { subject, html, text } = welcomeEmail({ brand });
@@ -107,16 +113,18 @@ export async function confirmSubscriber(
  * outgoing newsletter. Safe to hit repeatedly.
  */
 export async function unsubscribe(orgId: string, token: string) {
-  const subscriber = await db.subscriber.findFirst({
-    where: { organizationId: orgId, unsubToken: token },
+  return runAsTenant(orgId, async (tx) => {
+    const subscriber = await tx.subscriber.findFirst({
+      where: { organizationId: orgId, unsubToken: token },
+    });
+    if (!subscriber) throw new NotFoundError("Subscriber");
+    if (subscriber.status === "UNSUBSCRIBED") return { ok: true };
+    await tx.subscriber.update({
+      where: { id: subscriber.id },
+      data: { status: "UNSUBSCRIBED" },
+    });
+    return { ok: true };
   });
-  if (!subscriber) throw new NotFoundError("Subscriber");
-  if (subscriber.status === "UNSUBSCRIBED") return { ok: true };
-  await db.subscriber.update({
-    where: { id: subscriber.id },
-    data: { status: "UNSUBSCRIBED" },
-  });
-  return { ok: true };
 }
 
 // ─── Admin service layer (RBAC-gated) ───────────────────────
@@ -173,18 +181,22 @@ export const assignSubscriberSegments = createService({
 });
 
 export function listSubscribers(orgId: string, take = 200) {
-  return db.subscriber.findMany({
-    where: { organizationId: orgId },
-    orderBy: { createdAt: "desc" },
-    take,
-    include: {
-      segments: { include: { segment: { select: { slug: true, name: true } } } },
-    },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.subscriber.findMany({
+      where: { organizationId: orgId },
+      orderBy: { createdAt: "desc" },
+      take,
+      include: {
+        segments: { include: { segment: { select: { slug: true, name: true } } } },
+      },
+    }),
+  );
 }
 
 export function countActiveSubscribers(orgId: string) {
-  return db.subscriber.count({
-    where: { organizationId: orgId, status: "ACTIVE" },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.subscriber.count({
+      where: { organizationId: orgId, status: "ACTIVE" },
+    }),
+  );
 }

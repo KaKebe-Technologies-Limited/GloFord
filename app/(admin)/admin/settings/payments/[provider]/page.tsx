@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { requireActorFromSession } from "@/lib/auth-context";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { PaymentConfigForm } from "./Form";
 
 const SLUG_TO_PROVIDER = {
@@ -25,16 +25,18 @@ export default async function ProviderConfigPage({
   if (!mapped) notFound();
 
   const actor = await requireActorFromSession();
-  const existing = await db.paymentConfiguration.findUnique({
-    where: { organizationId_provider: { organizationId: actor.orgId, provider: mapped } },
-    select: {
-      provider: true,
-      isEnabled: true,
-      mode: true,
-      publicConfig: true,
-      updatedAt: true,
-    },
-  });
+  const existing = await runAsTenant(actor.orgId, (tx) =>
+    tx.paymentConfiguration.findUnique({
+      where: { organizationId_provider: { organizationId: actor.orgId, provider: mapped } },
+      select: {
+        provider: true,
+        isEnabled: true,
+        mode: true,
+        publicConfig: true,
+        updatedAt: true,
+      },
+    }),
+  );
 
   return (
     <div className="space-y-6">

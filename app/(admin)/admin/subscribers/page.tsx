@@ -13,11 +13,20 @@ export default async function SubscribersPage() {
 
   return (
     <div className="space-y-6">
-      <header>
+      <header className="flex items-start justify-between gap-4">
+        <div>
         <h1 className="text-2xl font-semibold tracking-tight">Subscribers</h1>
         <p className="text-sm text-[--color-muted-fg]">
           {activeCount} active \u00b7 {rows.length} total (last 200)
         </p>
+        </div>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
+          href="/api/exports/subscribers"
+          className="inline-flex items-center gap-1.5 rounded-[--radius-md] border border-[--color-border] bg-[--color-card] px-3 py-2 text-sm hover:bg-[--color-muted]"
+        >
+          Export CSV
+        </a>
       </header>
 
       <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">

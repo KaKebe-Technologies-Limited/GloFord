@@ -6,7 +6,7 @@ import {
   newsletterSendNowSchema,
   newsletterDeleteSchema,
 } from "@/lib/validators/newsletters";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { inngest } from "@/lib/inngest/client";
 import { ConflictError } from "@/lib/errors";
 
@@ -115,12 +115,16 @@ export const deleteNewsletter = createService({
 });
 
 export function listNewsletters(orgId: string) {
-  return db.newsletter.findMany({
-    where: { organizationId: orgId },
-    orderBy: { updatedAt: "desc" },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.newsletter.findMany({
+      where: { organizationId: orgId },
+      orderBy: { updatedAt: "desc" },
+    }),
+  );
 }
 
 export function getNewsletterForEdit(orgId: string, id: string) {
-  return db.newsletter.findFirst({ where: { id, organizationId: orgId } });
+  return runAsTenant(orgId, (tx) =>
+    tx.newsletter.findFirst({ where: { id, organizationId: orgId } }),
+  );
 }

@@ -87,4 +87,20 @@ export type GloforEvents = {
   "event/reminder": {
     data: { orgId: string; eventId: string; notificationId: string };
   };
+
+  // ─── User invitations ──────────────────────────────────
+  "user/invite.send": {
+    data: { orgId: string; email: string; name?: string };
+  };
+
+  // ─── Version restore ───────────────────────────────────
+  "version/restore.apply": {
+    data: {
+      orgId: string;
+      entityType: string;
+      entityId: string;
+      snapshot: unknown;
+      actorId: string;
+    };
+  };
 };

@@ -8,7 +8,7 @@ import {
 } from "@/lib/validators/campaigns";
 import { NotFoundError } from "@/lib/errors";
 import { tags } from "@/lib/cache";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 
 export const createCampaign = createService({
   module: "campaigns",
@@ -94,40 +94,47 @@ export const deleteCampaign = createService({
 // ─── Reads ─────────────────────────────────────────────────────
 
 export function listCampaigns(orgId: string) {
-  return db.campaign.findMany({
-    where: { organizationId: orgId },
-    orderBy: { updatedAt: "desc" },
-    include: { _count: { select: { donations: { where: { status: "SUCCEEDED" } } } } },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.campaign.findMany({
+      where: { organizationId: orgId },
+      orderBy: { updatedAt: "desc" },
+      include: { _count: { select: { donations: { where: { status: "SUCCEEDED" } } } } },
+    }),
+  );
 }
 
 export function getCampaignForEdit(orgId: string, id: string) {
-  return db.campaign.findFirst({ where: { id, organizationId: orgId } });
+  return runAsTenant(orgId, (tx) =>
+    tx.campaign.findFirst({ where: { id, organizationId: orgId } }),
+  );
 }
 
 export function getActiveCampaignBySlug(orgId: string, s: string) {
   return unstable_cache(
     async () => {
-      const row = await db.campaign.findFirst({
-        where: {
-          organizationId: orgId,
-          slug: s,
-          isActive: true,
-          OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
-        },
+      const result = await runAsTenant(orgId, async (tx) => {
+        const row = await tx.campaign.findFirst({
+          where: {
+            organizationId: orgId,
+            slug: s,
+            isActive: true,
+            OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
+          },
+        });
+        if (!row) return null;
+        const agg = await tx.donation.aggregate({
+          where: { campaignId: row.id, status: "SUCCEEDED" },
+          _sum: { amountCents: true },
+          _count: { _all: true },
+        });
+        return {
+          ...row,
+          raisedCents: agg._sum.amountCents ?? 0,
+          donationCount: agg._count._all,
+        };
       });
-      if (!row) throw new NotFoundError("Campaign");
-      // Aggregate raised amount for progress bar.
-      const agg = await db.donation.aggregate({
-        where: { campaignId: row.id, status: "SUCCEEDED" },
-        _sum: { amountCents: true },
-        _count: { _all: true },
-      });
-      return {
-        ...row,
-        raisedCents: agg._sum.amountCents ?? 0,
-        donationCount: agg._count._all,
-      };
+      if (!result) throw new NotFoundError("Campaign");
+      return result;
     },
     ["campaign-pub", orgId, s],
     { tags: [tags.campaigns(orgId)], revalidate: 60 },
@@ -137,15 +144,17 @@ export function getActiveCampaignBySlug(orgId: string, s: string) {
 export function listActiveCampaigns(orgId: string) {
   return unstable_cache(
     async () =>
-      db.campaign.findMany({
-        where: {
-          organizationId: orgId,
-          isActive: true,
-          OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
-        },
-        orderBy: { createdAt: "desc" },
-        select: { id: true, slug: true, title: true, description: true, goalCents: true, currency: true },
-      }),
+      runAsTenant(orgId, (tx) =>
+        tx.campaign.findMany({
+          where: {
+            organizationId: orgId,
+            isActive: true,
+            OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
+          },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, slug: true, title: true, description: true, goalCents: true, currency: true },
+        }),
+      ),
     ["campaigns-active", orgId],
     { tags: [tags.campaigns(orgId)], revalidate: 300 },
   )();

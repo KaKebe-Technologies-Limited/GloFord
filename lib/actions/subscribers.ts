@@ -1,9 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { requireActorFromSession } from "@/lib/auth-context";
-import { NotFoundError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/ratelimit";
 import {
   publicSubscribe,
   confirmSubscriber,
@@ -24,6 +26,22 @@ async function resolveOrgId() {
 }
 
 export async function subscribeAction(raw: unknown) {
+  const h = await headers();
+  const ip =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    h.get("x-real-ip") ??
+    "unknown";
+  const rl = await rateLimit({
+    bucket: "newsletter-subscribe",
+    identifier: ip,
+    limit: 5,
+    windowSeconds: 600, // 5 sign-ups per 10 min per IP
+  });
+  if (!rl.ok) {
+    throw new ValidationError(
+      `Too many sign-up attempts. Try again after ${rl.resetAt.toLocaleTimeString()}.`,
+    );
+  }
   const orgId = await resolveOrgId();
   return publicSubscribe(orgId, raw);
 }

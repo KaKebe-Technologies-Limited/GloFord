@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: gloford
+          POSTGRES_PASSWORD: gloford
+          POSTGRES_DB: gloford_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U gloford"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    env:
+      # Default (superuser) URL — used by Prisma migrate deploy via
+      # `directUrl` in schema.prisma.
+      DATABASE_URL: postgresql://gloford:gloford@localhost:5432/gloford_test?sslmode=disable
+      DIRECT_URL:   postgresql://gloford:gloford@localhost:5432/gloford_test?sslmode=disable
+      # Runtime URL (non-superuser) for the test step so RLS actually
+      # enforces. Created by migration 30000000000400_rls_app_role.
+      APP_DB_URL:   postgresql://gloford_app:gloford_app@localhost:5432/gloford_test?sslmode=disable
+      ENCRYPTION_KEY: O2PqgJfqZ3eZk0kSzv6gOQ3aV2lT8WrxKEP0iFnPw9k=
+      AUTH_SECRET: ci-secret-do-not-use-in-prod
+      AUTH_URL: http://localhost:3000
+      SKIP_ENV_VALIDATION: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Apply migrations
+        run: pnpm prisma migrate deploy
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test (RLS enforced via gloford_app role)
+        env:
+          DATABASE_URL: ${{ env.APP_DB_URL }}
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build

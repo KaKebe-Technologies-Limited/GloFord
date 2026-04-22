@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { UpstreamError, ValidationError } from "@/lib/errors";
 import { loadConfig } from "./config";
 import type {
@@ -62,17 +62,19 @@ export const pesapalAdapter: PaymentProviderAdapter = {
     const ipnId = cfg.publicConfig.ipnId ?? process.env.PESAPAL_IPN_ID;
     if (!ipnId) throw new UpstreamError("Pesapal IPN id not configured");
 
-    const donor = await db.donor.upsert({
-      where: {
-        organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
-      },
-      update: { name: params.donorName ?? undefined },
-      create: {
-        organizationId: params.orgId,
-        email: params.donorEmail,
-        name: params.donorName,
-      },
-    });
+    const donor = await runAsTenant(params.orgId, (tx) =>
+      tx.donor.upsert({
+        where: {
+          organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
+        },
+        update: { name: params.donorName ?? undefined },
+        create: {
+          organizationId: params.orgId,
+          email: params.donorEmail,
+          name: params.donorName,
+        },
+      }),
+    );
 
     const merchantReference = `gfd_${crypto.randomUUID()}`;
 
@@ -111,20 +113,22 @@ export const pesapalAdapter: PaymentProviderAdapter = {
       throw new UpstreamError(`Pesapal order rejected: ${json.error?.message ?? "unknown"}`);
     }
 
-    const donation = await db.donation.create({
-      data: {
-        organizationId: params.orgId,
-        donorId: donor.id,
-        campaignId: params.campaignId,
-        amountCents: params.amountCents,
-        currency: params.currency.toUpperCase(),
-        provider: "PESAPAL",
-        providerRef: json.order_tracking_id,
-        type: "ONE_TIME",
-        status: "PENDING",
-        metadata: { merchantReference } as never,
-      },
-    });
+    const donation = await runAsTenant(params.orgId, (tx) =>
+      tx.donation.create({
+        data: {
+          organizationId: params.orgId,
+          donorId: donor.id,
+          campaignId: params.campaignId,
+          amountCents: params.amountCents,
+          currency: params.currency.toUpperCase(),
+          provider: "PESAPAL",
+          providerRef: json.order_tracking_id!,
+          type: "ONE_TIME",
+          status: "PENDING",
+          metadata: { merchantReference } as never,
+        },
+      }),
+    );
 
     return {
       kind: "REDIRECT",

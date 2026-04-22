@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { inngest } from "../client";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { getMailProvider } from "@/lib/mail";
 import { buildBrand } from "@/lib/mail/brand";
 import { newsletterEmail } from "@/lib/mail/templates";
@@ -16,9 +16,8 @@ import { blocksToEmailHtml, blocksToPlainText } from "@/lib/blocks/toEmail";
  *   • failures are retried per-subscriber
  *   • we can observe progress from the Inngest dashboard
  *
- * The function resolves the audience at send time, not at schedule
- * time, so new subscribers added between schedule and send are
- * included.
+ * All DB touches run inside runAsTenant(orgId, …) so the RLS policies
+ * enforce tenant isolation even when invoked from a system connection.
  */
 export const newsletterSend = inngest.createFunction(
   { id: "newsletter-send", retries: 2, concurrency: { limit: 5 } },
@@ -26,36 +25,42 @@ export const newsletterSend = inngest.createFunction(
   async ({ event, step }) => {
     const { orgId, newsletterId } = event.data;
 
-    const newsletter = await step.run("load-newsletter", async () => {
-      const n = await db.newsletter.findFirst({
-        where: { id: newsletterId, organizationId: orgId },
-      });
-      if (!n) throw new Error("newsletter not found");
-      return n;
-    });
+    const newsletter = await step.run("load-newsletter", () =>
+      runAsTenant(orgId, async (tx) => {
+        const n = await tx.newsletter.findFirst({
+          where: { id: newsletterId, organizationId: orgId },
+        });
+        if (!n) throw new Error("newsletter not found");
+        return n;
+      }),
+    );
 
     const brand = await step.run("load-brand", () => buildBrand(orgId));
 
-    const audience = await step.run("resolve-audience", async () => {
-      const where: Prisma.SubscriberWhereInput = {
-        organizationId: orgId,
-        status: "ACTIVE",
-      };
-      if (newsletter.segmentIds.length > 0) {
-        where.segments = { some: { segmentId: { in: newsletter.segmentIds } } };
-      }
-      return db.subscriber.findMany({
-        where,
-        select: { id: true, email: true, unsubToken: true },
-      });
-    });
+    const audience = await step.run("resolve-audience", () =>
+      runAsTenant(orgId, (tx) => {
+        const where: Prisma.SubscriberWhereInput = {
+          organizationId: orgId,
+          status: "ACTIVE",
+        };
+        if (newsletter.segmentIds.length > 0) {
+          where.segments = { some: { segmentId: { in: newsletter.segmentIds } } };
+        }
+        return tx.subscriber.findMany({
+          where,
+          select: { id: true, email: true, unsubToken: true },
+        });
+      }),
+    );
 
     if (audience.length === 0) {
       await step.run("mark-empty", () =>
-        db.newsletter.update({
-          where: { id: newsletter.id },
-          data: { status: "SENT", sentAt: new Date() },
-        }),
+        runAsTenant(orgId, (tx) =>
+          tx.newsletter.update({
+            where: { id: newsletter.id },
+            data: { status: "SENT", sentAt: new Date() },
+          }),
+        ),
       );
       return { sent: 0 };
     }
@@ -64,7 +69,6 @@ export const newsletterSend = inngest.createFunction(
     const text = blocksToPlainText(newsletter.content as unknown);
     const provider = getMailProvider();
 
-    // Send in batches. Use step.run per chunk so Inngest retries per chunk on failure.
     const CHUNK = 50;
     let sent = 0;
     for (let i = 0; i < audience.length; i += CHUNK) {
@@ -88,48 +92,54 @@ export const newsletterSend = inngest.createFunction(
               text: mail.text,
               metadata: { type: "newsletter", orgId, newsletterId: newsletter.id, subscriberId: s.id },
             });
-            await db.newsletterLog.upsert({
-              where: {
-                newsletterId_subscriberId: { newsletterId: newsletter.id, subscriberId: s.id },
-              },
-              update: {
-                providerMsgId: res.providerMessageId,
-                status: res.dryRun ? "SENT" : "SENT",
-              },
-              create: {
-                newsletterId: newsletter.id,
-                subscriberId: s.id,
-                providerMsgId: res.providerMessageId,
-                status: res.dryRun ? "SENT" : "SENT",
-              },
-            });
+            await runAsTenant(orgId, (tx) =>
+              tx.newsletterLog.upsert({
+                where: {
+                  newsletterId_subscriberId: { newsletterId: newsletter.id, subscriberId: s.id },
+                },
+                update: {
+                  providerMsgId: res.providerMessageId,
+                  status: "SENT",
+                },
+                create: {
+                  newsletterId: newsletter.id,
+                  subscriberId: s.id,
+                  providerMsgId: res.providerMessageId,
+                  status: "SENT",
+                },
+              }),
+            );
             sent++;
           } catch (e) {
-            await db.newsletterLog.upsert({
-              where: {
-                newsletterId_subscriberId: { newsletterId: newsletter.id, subscriberId: s.id },
-              },
-              update: {
-                status: "FAILED",
-                error: e instanceof Error ? e.message : String(e),
-              },
-              create: {
-                newsletterId: newsletter.id,
-                subscriberId: s.id,
-                status: "FAILED",
-                error: e instanceof Error ? e.message : String(e),
-              },
-            });
+            await runAsTenant(orgId, (tx) =>
+              tx.newsletterLog.upsert({
+                where: {
+                  newsletterId_subscriberId: { newsletterId: newsletter.id, subscriberId: s.id },
+                },
+                update: {
+                  status: "FAILED",
+                  error: e instanceof Error ? e.message : String(e),
+                },
+                create: {
+                  newsletterId: newsletter.id,
+                  subscriberId: s.id,
+                  status: "FAILED",
+                  error: e instanceof Error ? e.message : String(e),
+                },
+              }),
+            );
           }
         }
       });
     }
 
     await step.run("mark-sent", () =>
-      db.newsletter.update({
-        where: { id: newsletter.id },
-        data: { status: "SENT", sentAt: new Date() },
-      }),
+      runAsTenant(orgId, (tx) =>
+        tx.newsletter.update({
+          where: { id: newsletter.id },
+          data: { status: "SENT", sentAt: new Date() },
+        }),
+      ),
     );
 
     return { sent, total: audience.length };

@@ -11,6 +11,10 @@ export const donationIntentSchema = z.object({
   recurring: z.boolean().default(false),
 });
 
-export const donationRefundSchema = z.object({ id: cuid });
+export const donationRefundSchema = z.object({
+  id: cuid,
+  amountCents: z.number().int().min(1).optional(),
+  reason: z.string().trim().max(200).optional(),
+});
 
 export type DonationIntentInput = z.infer<typeof donationIntentSchema>;

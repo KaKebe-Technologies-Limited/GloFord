@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { NewsletterForm } from "./NewsletterForm";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 
 export async function PublicFooter() {
   const t = await getTranslations("public.footer");
@@ -38,8 +39,9 @@ export async function PublicFooter() {
           <NewsletterForm source="footer" />
         </div>
       </div>
-      <div className="border-t border-[--color-border] py-4 text-center text-xs text-[--color-muted-fg]">
-        &copy; {year} Gloford. {t("rights")}
+      <div className="flex flex-wrap items-center justify-center gap-4 border-t border-[--color-border] px-4 py-4 text-center text-xs text-[--color-muted-fg]">
+        <span>&copy; {year} Gloford. {t("rights")}</span>
+        <LocaleSwitcher />
       </div>
     </footer>
   );

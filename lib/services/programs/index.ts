@@ -9,7 +9,7 @@ import {
 } from "@/lib/validators/programs";
 import { NotFoundError } from "@/lib/errors";
 import { tags } from "@/lib/cache";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 
 export const createProgram = createService({
   module: "programs",
@@ -92,25 +92,31 @@ export const deleteProgram = createService({
 });
 
 export function listPrograms(orgId: string) {
-  return db.program.findMany({
-    where: { organizationId: orgId },
-    orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
-    select: { id: true, slug: true, title: true, status: true, order: true, updatedAt: true },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.program.findMany({
+      where: { organizationId: orgId },
+      orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
+      select: { id: true, slug: true, title: true, status: true, order: true, updatedAt: true },
+    }),
+  );
 }
 
 export function getProgramForEdit(orgId: string, id: string) {
-  return db.program.findFirst({ where: { id, organizationId: orgId } });
+  return runAsTenant(orgId, (tx) =>
+    tx.program.findFirst({ where: { id, organizationId: orgId } }),
+  );
 }
 
 export function listPublishedPrograms(orgId: string) {
   return unstable_cache(
     async () =>
-      db.program.findMany({
-        where: { organizationId: orgId, status: "PUBLISHED" },
-        orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
-        select: { id: true, slug: true, title: true, summary: true },
-      }),
+      runAsTenant(orgId, (tx) =>
+        tx.program.findMany({
+          where: { organizationId: orgId, status: "PUBLISHED" },
+          orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
+          select: { id: true, slug: true, title: true, summary: true },
+        }),
+      ),
     ["programs-pub", orgId],
     { tags: [tags.programs(orgId)], revalidate: 3600 },
   )();
@@ -119,9 +125,11 @@ export function listPublishedPrograms(orgId: string) {
 export function getPublishedProgramBySlug(orgId: string, s: string) {
   return unstable_cache(
     async () => {
-      const row = await db.program.findFirst({
-        where: { organizationId: orgId, slug: s, status: "PUBLISHED" },
-      });
+      const row = await runAsTenant(orgId, (tx) =>
+        tx.program.findFirst({
+          where: { organizationId: orgId, slug: s, status: "PUBLISHED" },
+        }),
+      );
       if (!row) throw new NotFoundError("Program");
       return row;
     },

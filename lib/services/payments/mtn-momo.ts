@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { UpstreamError, ValidationError } from "@/lib/errors";
 import { loadConfig } from "./config";
 import type {
@@ -94,32 +94,34 @@ export const mtnMomoAdapter: PaymentProviderAdapter = {
       throw new UpstreamError(`MTN MoMo requesttopay failed: ${res.status} ${text}`);
     }
 
-    const donor = await db.donor.upsert({
-      where: {
-        organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
-      },
-      update: { name: params.donorName ?? undefined, phone },
-      create: {
-        organizationId: params.orgId,
-        email: params.donorEmail,
-        name: params.donorName,
-        phone,
-      },
-    });
-
-    const donation = await db.donation.create({
-      data: {
-        organizationId: params.orgId,
-        donorId: donor.id,
-        campaignId: params.campaignId,
-        amountCents: params.amountCents,
-        currency: params.currency.toUpperCase(),
-        provider: "MTN_MOMO",
-        providerRef: referenceId,
-        type: "ONE_TIME",
-        status: "PENDING",
-        metadata: { externalId, phone } as never,
-      },
+    const { donation } = await runAsTenant(params.orgId, async (tx) => {
+      const donor = await tx.donor.upsert({
+        where: {
+          organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
+        },
+        update: { name: params.donorName ?? undefined, phone },
+        create: {
+          organizationId: params.orgId,
+          email: params.donorEmail,
+          name: params.donorName,
+          phone,
+        },
+      });
+      const donation = await tx.donation.create({
+        data: {
+          organizationId: params.orgId,
+          donorId: donor.id,
+          campaignId: params.campaignId,
+          amountCents: params.amountCents,
+          currency: params.currency.toUpperCase(),
+          provider: "MTN_MOMO",
+          providerRef: referenceId,
+          type: "ONE_TIME",
+          status: "PENDING",
+          metadata: { externalId, phone } as never,
+        },
+      });
+      return { donation };
     });
 
     return {

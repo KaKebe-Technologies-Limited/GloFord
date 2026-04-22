@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { runAsSystem } from "@/lib/tenant/context";
 import { flutterwaveAdapter, flutterwaveVerifyByRef } from "@/lib/services/payments/flutterwave";
 import { processWebhook } from "../_processWebhook";
 
@@ -17,10 +17,12 @@ export async function POST(req: Request) {
       const txRef = event.data?.tx_ref ?? verified.eventId;
       if (!txRef) return null;
 
-      const donation = await db.donation.findUnique({
-        where: { providerRef: txRef },
-        select: { organizationId: true, amountCents: true, currency: true },
-      });
+      const donation = await runAsSystem((tx) =>
+        tx.donation.findUnique({
+          where: { providerRef: txRef },
+          select: { organizationId: true, amountCents: true, currency: true },
+        }),
+      );
       if (!donation) return null;
 
       const verify = await flutterwaveVerifyByRef(donation.organizationId, txRef);

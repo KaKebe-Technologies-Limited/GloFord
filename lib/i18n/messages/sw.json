@@ -1,0 +1,71 @@
+{
+  "common": {
+    "signIn": "Ingia",
+    "signOut": "Toka",
+    "loading": "Inapakia…",
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "delete": "Futa",
+    "confirm": "Thibitisha",
+    "error": "Hitilafu imetokea"
+  },
+  "public": {
+    "nav": {
+      "home": "Nyumbani",
+      "about": "Kuhusu",
+      "programs": "Programu",
+      "blog": "Blogu",
+      "events": "Matukio",
+      "donate": "Changia",
+      "contact": "Mawasiliano"
+    },
+    "hero": {
+      "heading": "Kubadilisha maisha kupitia hatua za jamii",
+      "subheading": "Gloford inashirikiana na jamii kuendeleza afya, elimu na ustahimilivu.",
+      "cta": "Saidia kazi yetu"
+    },
+    "footer": {
+      "rights": "Haki zote zimehifadhiwa.",
+      "newsletter": "Jiandikishe kwa jarida letu"
+    }
+  },
+  "admin": {
+    "dashboard": "Dashibodi",
+    "nav": {
+      "content": "Yaliyomo",
+      "pages": "Kurasa",
+      "programs": "Programu",
+      "posts": "Blogu",
+      "media": "Midia",
+      "finance": "Fedha",
+      "campaigns": "Kampeni",
+      "donations": "Michango",
+      "donors": "Wachangiaji",
+      "communications": "Mawasiliano",
+      "subscribers": "Waliojiandikisha",
+      "segments": "Sehemu",
+      "newsletters": "Majarida",
+      "emailCampaigns": "Kampeni za barua pepe",
+      "events": "Matukio",
+      "users": "Watumiaji",
+      "roles": "Majukumu",
+      "settings": "Mipangilio",
+      "theme": "Mandhari",
+      "nav": "Urambazaji",
+      "payments": "Malipo",
+      "system": "Mfumo",
+      "audit": "Logi ya ukaguzi",
+      "versions": "Toleo",
+      "deadLetter": "Foleni ya hitilafu",
+      "featureFlags": "Vipengele",
+      "health": "Afya"
+    }
+  },
+  "auth": {
+    "signInTitle": "Ingia Gloford",
+    "email": "Barua pepe",
+    "password": "Nywila",
+    "continueWithGoogle": "Endelea na Google",
+    "invalidCredentials": "Barua pepe au nywila si sahihi"
+  }
+}

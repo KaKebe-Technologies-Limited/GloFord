@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CreditCard, Palette, Globe, Shield } from "lucide-react";
+import { CreditCard, Palette, Globe, Shield, KeyRound } from "lucide-react";
 import { requireActorFromSession } from "@/lib/auth-context";
 
 export const metadata = { title: "Settings" };
@@ -18,7 +18,7 @@ const CARDS = [
     icon: Palette,
   },
   {
-    href: "/admin/settings",
+    href: "/admin/settings/site",
     title: "Site",
     description: "Site name, contact info, socials, and SEO defaults.",
     icon: Globe,
@@ -28,6 +28,12 @@ const CARDS = [
     title: "Roles & permissions",
     description: "Control who can edit content, manage finance, or publish newsletters.",
     icon: Shield,
+  },
+  {
+    href: "/admin/settings/sso",
+    title: "SSO providers",
+    description: "Identity providers: email+password, Google, and any new OIDC you add.",
+    icon: KeyRound,
   },
 ] as const;
 

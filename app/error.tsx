@@ -10,7 +10,22 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[GlobalError]", error);
+    // eslint-disable-next-line no-console
+    console.error("[AppError]", error);
+    // Best-effort: if Sentry is configured it'll already have been
+    // captured by the server runtime; this fires a client-side event
+    // too so client-only crashes aren't lost.
+    void fetch("/api/client-error", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        message: error.message,
+        digest: error.digest,
+        stack: error.stack,
+      }),
+    }).catch(() => {
+      /* swallow — never let error reporting error */
+    });
   }, [error]);
 
   return (
