@@ -1,9 +1,41 @@
 import type { Prisma } from "@prisma/client";
 import type { z, ZodTypeAny } from "zod";
+import { headers } from "next/headers";
 import { ValidationError } from "@/lib/errors";
 import { authorize } from "@/lib/rbac/authorize";
 import { runWithTenant, type Actor } from "@/lib/tenant/context";
 import { inngest } from "@/lib/inngest/client";
+import { captureException } from "@/lib/observability/sentry";
+
+const CORRELATION_HEADER = "x-correlation-id";
+
+/**
+ * Best-effort correlation-ID read. Server Actions run inside a request
+ * scope so `headers()` resolves; Inngest-triggered service calls have
+ * no request headers available and simply skip the tag.
+ */
+async function readCorrelationId(): Promise<string | undefined> {
+  try {
+    const h = await headers();
+    return h.get(CORRELATION_HEADER) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function readRequestContext() {
+  try {
+    const h = await headers();
+    const ip =
+      h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      h.get("x-real-ip") ??
+      undefined;
+    const userAgent = h.get("user-agent") ?? undefined;
+    return ip || userAgent ? { ip, userAgent } : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 type ResourceRef = {
   type: string;
@@ -58,11 +90,27 @@ export function createService<S extends ZodTypeAny, TOut>(cfg: ServiceConfig<S, 
     await authorize(actor, `${cfg.module}.${cfg.action}`, ref);
 
     let before: unknown = undefined;
-    const out = await runWithTenant(actor, async (tx) => {
-      if (cfg.loadBefore) before = await cfg.loadBefore({ actor, input, tx });
-      return cfg.exec({ actor, input, tx });
-    });
+    let out: TOut;
+    try {
+      out = await runWithTenant(actor, async (tx) => {
+        if (cfg.loadBefore) before = await cfg.loadBefore({ actor, input, tx });
+        return cfg.exec({ actor, input, tx });
+      });
+    } catch (err) {
+      // Capture service-layer errors before rethrowing so Sentry (or the
+      // logger fallback) sees them even if the caller swallows the throw.
+      captureException(err, {
+        action: `${cfg.module}.${cfg.action}`,
+        orgId: actor.orgId,
+        userId: actor.userId,
+      });
+      throw err;
+    }
 
+    const [correlationId, request] = await Promise.all([
+      readCorrelationId(),
+      readRequestContext(),
+    ]);
     const versionRef = cfg.version?.(out, input) ?? null;
     const eventsToSend = [
       {
@@ -78,6 +126,8 @@ export function createService<S extends ZodTypeAny, TOut>(cfg: ServiceConfig<S, 
           module: cfg.module,
           entityType: versionRef?.entityType,
           entityId: versionRef?.entityId,
+          correlationId,
+          request,
         },
       },
     ];

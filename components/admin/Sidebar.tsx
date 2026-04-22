@@ -65,6 +65,7 @@ const GROUPS: Group[] = [
       { href: "/admin/users", key: "users", icon: Users },
       { href: "/admin/roles", key: "roles", icon: Shield },
       { href: "/admin/theme", key: "theme", icon: Palette },
+      { href: "/admin/nav", key: "nav", icon: FileText },
       { href: "/admin/settings", key: "settings", icon: Settings },
       { href: "/admin/settings/payments", key: "payments", icon: CreditCard },
     ],

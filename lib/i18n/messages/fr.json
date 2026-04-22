@@ -1,0 +1,71 @@
+{
+  "common": {
+    "signIn": "Connexion",
+    "signOut": "Déconnexion",
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "error": "Une erreur est survenue"
+  },
+  "public": {
+    "nav": {
+      "home": "Accueil",
+      "about": "À propos",
+      "programs": "Programmes",
+      "blog": "Blog",
+      "events": "Événements",
+      "donate": "Faire un don",
+      "contact": "Contact"
+    },
+    "hero": {
+      "heading": "Transformer des vies par l'action communautaire",
+      "subheading": "Gloford s'associe aux communautés pour faire progresser la santé, l'éducation et la résilience.",
+      "cta": "Soutenir notre travail"
+    },
+    "footer": {
+      "rights": "Tous droits réservés.",
+      "newsletter": "Abonnez-vous à notre newsletter"
+    }
+  },
+  "admin": {
+    "dashboard": "Tableau de bord",
+    "nav": {
+      "content": "Contenu",
+      "pages": "Pages",
+      "programs": "Programmes",
+      "posts": "Blog",
+      "media": "Médias",
+      "finance": "Finances",
+      "campaigns": "Campagnes",
+      "donations": "Dons",
+      "donors": "Donateurs",
+      "communications": "Communications",
+      "subscribers": "Abonnés",
+      "segments": "Segments",
+      "newsletters": "Newsletters",
+      "emailCampaigns": "Campagnes email",
+      "events": "Événements",
+      "users": "Utilisateurs",
+      "roles": "Rôles",
+      "settings": "Paramètres",
+      "theme": "Thème",
+      "nav": "Navigation",
+      "payments": "Paiements",
+      "system": "Système",
+      "audit": "Journal d'audit",
+      "versions": "Versions",
+      "deadLetter": "File d'erreurs",
+      "featureFlags": "Fonctionnalités",
+      "health": "Santé"
+    }
+  },
+  "auth": {
+    "signInTitle": "Connexion à Gloford",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "continueWithGoogle": "Continuer avec Google",
+    "invalidCredentials": "E-mail ou mot de passe invalide"
+  }
+}

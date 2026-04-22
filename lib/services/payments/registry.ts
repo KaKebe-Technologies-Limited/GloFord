@@ -1,5 +1,5 @@
 import type { PaymentProvider as ProviderEnum } from "@prisma/client";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import type { PaymentProviderAdapter } from "./types";
 import { stripeAdapter } from "./stripe";
 import { paypalAdapter } from "./paypal";
@@ -24,10 +24,12 @@ export function getAdapter(id: ProviderEnum): PaymentProviderAdapter {
 
 /** List providers the given org has enabled in its PaymentConfiguration. */
 export async function listEnabledProviders(orgId: string) {
-  const rows = await db.paymentConfiguration.findMany({
-    where: { organizationId: orgId, isEnabled: true },
-    select: { provider: true, mode: true, publicConfig: true },
-  });
+  const rows = await runAsTenant(orgId, (tx) =>
+    tx.paymentConfiguration.findMany({
+      where: { organizationId: orgId, isEnabled: true },
+      select: { provider: true, mode: true, publicConfig: true },
+    }),
+  );
   return rows
     .filter((r) => r.provider !== "MOBILE_MONEY") // legacy
     .map((r) => {

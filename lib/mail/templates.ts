@@ -105,6 +105,80 @@ export function newsletterEmail({
   };
 }
 
+export function userInviteEmail({
+  brand,
+  inviteeName,
+  signInUrl,
+}: {
+  brand: BrandContext;
+  inviteeName?: string;
+  signInUrl: string;
+}) {
+  const preheader = `You've been invited to ${brand.orgName}'s admin.`;
+  const greet = inviteeName ? `Hi ${escape(inviteeName)},` : "Hello,";
+  const body = `
+    <h1 style="font-size:22px;margin:0 0 12px">Welcome to ${escape(brand.orgName)}</h1>
+    <p style="margin:0 0 12px">${greet} an administrator added you to the ${escape(brand.orgName)} admin workspace.</p>
+    <p style="margin:0 0 16px">Sign in with this email to get started. If you haven't set a password, use the "Sign in with Google" option or request a magic link on the sign-in page.</p>
+    <p style="margin:16px 0 0;text-align:center">
+      <a href="${escape(signInUrl)}" style="display:inline-block;padding:12px 24px;background:#1d4ed8;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Sign in</a>
+    </p>
+  `;
+  return {
+    subject: `You've been invited to ${brand.orgName}`,
+    html: shell(brand, preheader, body),
+    text: `${greet}\n\nYou've been invited to ${brand.orgName}'s admin workspace.\nSign in: ${signInUrl}`,
+  };
+}
+
+export function eventNotificationEmail({
+  brand,
+  subject,
+  kind,
+  eventTitle,
+  eventStartsAt,
+  eventLocation,
+  eventUrl,
+  bodyHtml,
+  bodyText,
+  unsubUrl,
+}: {
+  brand: BrandContext;
+  subject: string;
+  kind: "ANNOUNCEMENT" | "REMINDER";
+  eventTitle: string;
+  eventStartsAt: Date;
+  eventLocation?: string;
+  eventUrl: string;
+  bodyHtml: string;
+  bodyText: string;
+  unsubUrl: string;
+}) {
+  const when = eventStartsAt.toLocaleString(undefined, {
+    dateStyle: "full",
+    timeStyle: "short",
+  });
+  const badge = kind === "REMINDER" ? "Reminder" : "Announcement";
+  const preheader = `${badge}: ${eventTitle} — ${when}`;
+  const header = `
+    <p style="margin:0 0 4px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280">${badge}</p>
+    <h1 style="font-size:22px;margin:0 0 12px">${escape(eventTitle)}</h1>
+    <p style="margin:0 0 4px;color:#374151"><strong>When:</strong> ${escape(when)}</p>
+    ${eventLocation ? `<p style="margin:0 0 16px;color:#374151"><strong>Where:</strong> ${escape(eventLocation)}</p>` : ""}
+  `;
+  const cta = `
+    <p style="margin:20px 0 0;text-align:center">
+      <a href="${escape(eventUrl)}" style="display:inline-block;padding:12px 24px;background:#1d4ed8;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">View event details</a>
+    </p>
+  `;
+  const plain = `${badge}: ${eventTitle}\n${when}${eventLocation ? `\n${eventLocation}` : ""}\n\n${bodyText}\n\nDetails: ${eventUrl}`;
+  return {
+    subject,
+    html: shell(brand, preheader, `${header}${bodyHtml || ""}${cta}`, unsubUrl),
+    text: `${plain}\n\n---\nUnsubscribe: ${unsubUrl}`,
+  };
+}
+
 export function donationReceiptEmail({
   brand,
   amount,

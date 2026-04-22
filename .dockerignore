@@ -15,5 +15,14 @@ Dockerfile
 docker-compose.yaml
 compose.yaml
 README.md
+BACKUP.md
 .tmp
 .claude
+tests
+vitest.config.ts
+**/.DS_Store
+**/Thumbs.db
+.trunk
+.prettierignore
+.prettierrc.json
+.eslintrc.json

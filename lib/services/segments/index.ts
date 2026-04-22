@@ -4,7 +4,7 @@ import {
   segmentUpdateSchema,
   segmentDeleteSchema,
 } from "@/lib/validators/segments";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 
 export const createSegment = createService({
   module: "segments",
@@ -62,9 +62,11 @@ export const deleteSegment = createService({
 });
 
 export function listSegments(orgId: string) {
-  return db.segment.findMany({
-    where: { organizationId: orgId },
-    orderBy: [{ isSystem: "desc" }, { name: "asc" }],
-    include: { _count: { select: { subscribers: true } } },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.segment.findMany({
+      where: { organizationId: orgId },
+      orderBy: [{ isSystem: "desc" }, { name: "asc" }],
+      include: { _count: { select: { subscribers: true } } },
+    }),
+  );
 }

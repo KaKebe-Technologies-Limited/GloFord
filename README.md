@@ -31,6 +31,27 @@ pnpm inngest:dev             # in another terminal
 
 Default admin credentials come from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` in `.env.local`.
 
+### Seed safety
+
+The seed script accepts admin credentials only through env vars — never via
+flags or files that could land in shell history. For any environment that is
+not a throwaway dev loop:
+
+1. **Always set `SEED_ADMIN_PASSWORD`** to a unique strong value before running
+   `pnpm db:seed`. The seed prints a warning if you run with the built-in
+   default (`change-me-on-first-login`).
+2. **Generate `ENCRYPTION_KEY` once per environment** with
+   `openssl rand -base64 32`. This key encrypts payment-provider secrets at
+   rest in `PaymentConfiguration.encryptedSecrets`. If lost, stored provider
+   API keys cannot be decrypted and must be re-entered manually in the admin.
+3. **Generate `AUTH_SECRET`** similarly and keep it out of the repo. Rotating
+   it signs out every active session — plan accordingly.
+4. After the first successful sign-in, **delete** `SEED_ADMIN_PASSWORD` from
+   your runtime env. The seed is idempotent; it only creates the admin if one
+   doesn't exist. It does not reset an existing admin's password.
+
+See [BACKUP.md](./BACKUP.md) for the production backup/restore runbook.
+
 ## Architecture
 
 See the blueprint in conversation history. Key invariants:
@@ -63,3 +84,23 @@ See the blueprint in conversation history. Key invariants:
 | `pnpm db:seed` | Seed roles, permissions, Gloford org, default theme |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm inngest:dev` | Local Inngest dev server |
+| `pnpm test` | Run Vitest unit tests once |
+| `pnpm test:watch` | Watch-mode tests |
+
+## Docker
+
+A multi-stage Dockerfile + a three-service compose stack live in the repo:
+
+```bash
+docker compose up -d db                # start Postgres
+docker compose run --rm migrate        # apply migrations + seed
+docker compose up --build app inngest  # build image and bring up app + Inngest dev server
+```
+
+- App: <http://localhost:3000>
+- Inngest dev UI: <http://localhost:8288>
+- Postgres: `localhost:5433` (mapped from 5432 in the container)
+
+The compose file lives at [`compose.yaml`](./compose.yaml) (the modern canonical
+filename Docker recommends; `docker-compose.yml` is the legacy name, both are
+recognized by `docker compose`).

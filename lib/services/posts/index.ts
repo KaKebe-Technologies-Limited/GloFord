@@ -8,7 +8,7 @@ import {
 } from "@/lib/validators/posts";
 import { NotFoundError } from "@/lib/errors";
 import { tags } from "@/lib/cache";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import type { Prisma } from "@prisma/client";
 
 /** Upsert tags for the org and return their ids, preserving order. */
@@ -126,34 +126,40 @@ export const deletePost = createService({
 });
 
 export function listPosts(orgId: string) {
-  return db.post.findMany({
-    where: { organizationId: orgId },
-    orderBy: { updatedAt: "desc" },
-    select: {
-      id: true, slug: true, title: true, status: true, publishedAt: true, updatedAt: true,
-      author: { select: { name: true, email: true } },
-    },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.post.findMany({
+      where: { organizationId: orgId },
+      orderBy: { updatedAt: "desc" },
+      select: {
+        id: true, slug: true, title: true, status: true, publishedAt: true, updatedAt: true,
+        author: { select: { name: true, email: true } },
+      },
+    }),
+  );
 }
 
 export function getPostForEdit(orgId: string, id: string) {
-  return db.post.findFirst({
-    where: { id, organizationId: orgId },
-    include: { tags: { include: { tag: true } } },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.post.findFirst({
+      where: { id, organizationId: orgId },
+      include: { tags: { include: { tag: true } } },
+    }),
+  );
 }
 
 export function listPublishedPosts(orgId: string, take = 20) {
   return unstable_cache(
     async () =>
-      db.post.findMany({
-        where: { organizationId: orgId, status: "PUBLISHED" },
-        orderBy: { publishedAt: "desc" },
-        take,
-        select: {
-          id: true, slug: true, title: true, excerpt: true, publishedAt: true,
-        },
-      }),
+      runAsTenant(orgId, (tx) =>
+        tx.post.findMany({
+          where: { organizationId: orgId, status: "PUBLISHED" },
+          orderBy: { publishedAt: "desc" },
+          take,
+          select: {
+            id: true, slug: true, title: true, excerpt: true, publishedAt: true,
+          },
+        }),
+      ),
     ["posts-pub", orgId, String(take)],
     { tags: [tags.posts(orgId)], revalidate: 3600 },
   )();
@@ -162,10 +168,12 @@ export function listPublishedPosts(orgId: string, take = 20) {
 export function getPublishedPostBySlug(orgId: string, s: string) {
   return unstable_cache(
     async () => {
-      const row = await db.post.findFirst({
-        where: { organizationId: orgId, slug: s, status: "PUBLISHED" },
-        include: { author: { select: { name: true } }, tags: { include: { tag: true } } },
-      });
+      const row = await runAsTenant(orgId, (tx) =>
+        tx.post.findFirst({
+          where: { organizationId: orgId, slug: s, status: "PUBLISHED" },
+          include: { author: { select: { name: true } }, tags: { include: { tag: true } } },
+        }),
+      );
       if (!row) throw new NotFoundError("Post");
       return row;
     },

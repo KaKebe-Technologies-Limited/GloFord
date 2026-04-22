@@ -5,7 +5,7 @@ import {
   mediaDeleteSchema,
 } from "@/lib/validators/media";
 import { buildMediaKey, deleteObject, presignUpload, publicUrlFor } from "@/lib/storage/r2";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 
 export const presignMediaUpload = createService({
   module: "media",
@@ -58,9 +58,11 @@ export const deleteMedia = createService({
 });
 
 export function listMedia(orgId: string, take = 100) {
-  return db.media.findMany({
-    where: { organizationId: orgId },
-    orderBy: { createdAt: "desc" },
-    take,
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.media.findMany({
+      where: { organizationId: orgId },
+      orderBy: { createdAt: "desc" },
+      take,
+    }),
+  );
 }

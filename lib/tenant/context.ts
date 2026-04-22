@@ -52,6 +52,49 @@ export async function readWithTenant<T>(
   return runWithTenant(actor, fn);
 }
 
+/**
+ * Tenant-scoped write without an Actor. Use this from webhooks, Inngest
+ * functions, and cron handlers that have a verified `orgId` but no
+ * authenticated user. Sets `app.current_org` so the strict tenant policy
+ * passes — service-layer RBAC isn't applicable for system code paths.
+ *
+ * Security: caller MUST ensure the orgId comes from a verified source
+ * (signed webhook payload, DB lookup from a system-scoped query, etc.).
+ * Anything derived from user input needs its own authorization check first.
+ */
+export async function runAsTenant<T>(
+  orgId: string,
+  fn: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  assertCuid(orgId, "orgId");
+  return db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.current_org', ${orgId}, true)`;
+    return fn(tx);
+  });
+}
+
+/**
+ * Cross-tenant write or read for trusted system code (cron dispatchers,
+ * boot-time jobs). Sets `app.current_role = 'SYSTEM'`, which the RLS
+ * policies recognize as a bypass clause (see migration
+ * 30000000000400_rls_app_role). Only use this from code paths you
+ * fully trust — a misuse is a cross-tenant information leak.
+ */
+export async function runAsSystem<T>(
+  fn: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  return db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.current_role', 'SYSTEM', true)`;
+    return fn(tx);
+  });
+}
+
+function assertCuid(value: string, label: string) {
+  if (!/^[a-z0-9]{20,40}$/i.test(value)) {
+    throw new ForbiddenError(`Invalid ${label}`);
+  }
+}
+
 function assertSafeActor(a: Actor) {
   const cuid = /^[a-z0-9]{20,40}$/i;
   if (!cuid.test(a.userId)) throw new ForbiddenError("Invalid actor.userId");

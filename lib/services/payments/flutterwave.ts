@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { UpstreamError, ValidationError } from "@/lib/errors";
 import { loadConfig } from "./config";
 import type {
@@ -34,17 +34,19 @@ export const flutterwaveAdapter: PaymentProviderAdapter = {
     }
     const cfg = await loadConfig(params.orgId, "FLUTTERWAVE");
 
-    const donor = await db.donor.upsert({
-      where: {
-        organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
-      },
-      update: { name: params.donorName ?? undefined },
-      create: {
-        organizationId: params.orgId,
-        email: params.donorEmail,
-        name: params.donorName,
-      },
-    });
+    const donor = await runAsTenant(params.orgId, (tx) =>
+      tx.donor.upsert({
+        where: {
+          organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
+        },
+        update: { name: params.donorName ?? undefined },
+        create: {
+          organizationId: params.orgId,
+          email: params.donorEmail,
+          name: params.donorName,
+        },
+      }),
+    );
 
     const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const tx_ref = `gfd_${crypto.randomUUID()}`;
@@ -89,19 +91,21 @@ export const flutterwaveAdapter: PaymentProviderAdapter = {
       throw new UpstreamError(`Flutterwave rejected: ${json.message ?? "unknown"}`);
     }
 
-    const donation = await db.donation.create({
-      data: {
-        organizationId: params.orgId,
-        donorId: donor.id,
-        campaignId: params.campaignId,
-        amountCents: params.amountCents,
-        currency: params.currency.toUpperCase(),
-        provider: "FLUTTERWAVE",
-        providerRef: tx_ref,
-        type: "ONE_TIME",
-        status: "PENDING",
-      },
-    });
+    const donation = await runAsTenant(params.orgId, (tx) =>
+      tx.donation.create({
+        data: {
+          organizationId: params.orgId,
+          donorId: donor.id,
+          campaignId: params.campaignId,
+          amountCents: params.amountCents,
+          currency: params.currency.toUpperCase(),
+          provider: "FLUTTERWAVE",
+          providerRef: tx_ref,
+          type: "ONE_TIME",
+          status: "PENDING",
+        },
+      }),
+    );
 
     return {
       kind: "REDIRECT",

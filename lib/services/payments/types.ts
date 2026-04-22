@@ -70,4 +70,16 @@ export interface PaymentProviderAdapter {
   verifyWebhook(req: Request, rawBody: string): Promise<WebhookVerifyResult>;
 
   interpretEvent(event: unknown): DonationTransition | null;
+
+  /**
+   * Issue a refund for a previously-succeeded donation. Optional: adapters
+   * that don't support refunds (mobile money in most countries) omit this
+   * and the admin refund button surfaces "unsupported" from the service.
+   */
+  refund?(params: {
+    orgId: string;
+    providerRef: string;
+    amountCents?: number;
+    reason?: string;
+  }): Promise<{ ok: boolean; providerRefundId?: string }>;
 }

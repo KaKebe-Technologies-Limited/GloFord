@@ -1,5 +1,5 @@
 import type { PaymentProvider as ProviderEnum } from "@prisma/client";
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { decryptJson } from "@/lib/crypto/encrypt";
 
 /**
@@ -48,9 +48,11 @@ export async function loadConfig<P extends ProviderEnum>(
   orgId: string,
   provider: P,
 ): Promise<ProviderConfig<P>> {
-  const row = await db.paymentConfiguration.findUnique({
-    where: { organizationId_provider: { organizationId: orgId, provider } },
-  });
+  const row = await runAsTenant(orgId, (tx) =>
+    tx.paymentConfiguration.findUnique({
+      where: { organizationId_provider: { organizationId: orgId, provider } },
+    }),
+  );
   if (!row) throw new Error(`Provider ${provider} is not configured for this organization`);
   if (!row.isEnabled) throw new Error(`Provider ${provider} is disabled`);
   if (!row.encryptedSecrets) throw new Error(`Provider ${provider} is missing secrets`);
@@ -65,18 +67,20 @@ export async function loadConfig<P extends ProviderEnum>(
 
 /** Used by the admin UI to show provider status without decrypting secrets. */
 export async function listConfigs(orgId: string) {
-  return db.paymentConfiguration.findMany({
-    where: { organizationId: orgId },
-    orderBy: { provider: "asc" },
-    select: {
-      id: true,
-      provider: true,
-      isEnabled: true,
-      mode: true,
-      publicConfig: true,
-      lastVerifiedAt: true,
-      verifyError: true,
-      updatedAt: true,
-    },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.paymentConfiguration.findMany({
+      where: { organizationId: orgId },
+      orderBy: { provider: "asc" },
+      select: {
+        id: true,
+        provider: true,
+        isEnabled: true,
+        mode: true,
+        publicConfig: true,
+        lastVerifiedAt: true,
+        verifyError: true,
+        updatedAt: true,
+      },
+    }),
+  );
 }

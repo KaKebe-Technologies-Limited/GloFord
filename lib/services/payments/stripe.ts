@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { db } from "@/lib/db";
+import { runAsTenant, runAsSystem } from "@/lib/tenant/context";
 import { UpstreamError, ValidationError } from "@/lib/errors";
 import { loadConfig } from "./config";
 import type {
@@ -22,17 +22,19 @@ export const stripeAdapter: PaymentProviderAdapter = {
   async createIntent(params: CreateIntentParams): Promise<CreateIntentResult> {
     const stripe = await stripeFor(params.orgId);
 
-    const donor = await db.donor.upsert({
-      where: {
-        organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
-      },
-      update: { name: params.donorName ?? undefined },
-      create: {
-        organizationId: params.orgId,
-        email: params.donorEmail,
-        name: params.donorName,
-      },
-    });
+    const donor = await runAsTenant(params.orgId, (tx) =>
+      tx.donor.upsert({
+        where: {
+          organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
+        },
+        update: { name: params.donorName ?? undefined },
+        create: {
+          organizationId: params.orgId,
+          email: params.donorEmail,
+          name: params.donorName,
+        },
+      }),
+    );
 
     const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const baseMetadata = {
@@ -73,20 +75,22 @@ export const stripeAdapter: PaymentProviderAdapter = {
       (typeof session.subscription === "string" ? session.subscription : null) ??
       session.id;
 
-    const donation = await db.donation.create({
-      data: {
-        organizationId: params.orgId,
-        donorId: donor.id,
-        campaignId: params.campaignId,
-        amountCents: params.amountCents,
-        currency: params.currency.toUpperCase(),
-        provider: "STRIPE",
-        providerRef,
-        type: params.recurring ? "RECURRING" : "ONE_TIME",
-        status: "PENDING",
-        metadata: { checkoutSessionId: session.id } as never,
-      },
-    });
+    const donation = await runAsTenant(params.orgId, (tx) =>
+      tx.donation.create({
+        data: {
+          organizationId: params.orgId,
+          donorId: donor.id,
+          campaignId: params.campaignId,
+          amountCents: params.amountCents,
+          currency: params.currency.toUpperCase(),
+          provider: "STRIPE",
+          providerRef,
+          type: params.recurring ? "RECURRING" : "ONE_TIME",
+          status: "PENDING",
+          metadata: { checkoutSessionId: session.id } as never,
+        },
+      }),
+    );
 
     return {
       kind: "REDIRECT",
@@ -103,11 +107,14 @@ export const stripeAdapter: PaymentProviderAdapter = {
 
     // We need a Stripe client to verify the signature. Since all webhooks
     // use the same *signing* secret (env-scoped), any configured org's
-    // secret key works — grab the first enabled Stripe config.
-    const cfg = await db.paymentConfiguration.findFirst({
-      where: { provider: "STRIPE", isEnabled: true },
-      select: { organizationId: true },
-    });
+    // secret key works — grab the first enabled Stripe config under a
+    // SYSTEM-scoped read (cross-tenant lookup).
+    const cfg = await runAsSystem((tx) =>
+      tx.paymentConfiguration.findFirst({
+        where: { provider: "STRIPE", isEnabled: true },
+        select: { organizationId: true },
+      }),
+    );
     if (!cfg) throw new ValidationError("No Stripe configuration available");
     const stripe = await stripeFor(cfg.organizationId);
 
@@ -118,6 +125,18 @@ export const stripeAdapter: PaymentProviderAdapter = {
       throw new ValidationError("Invalid Stripe signature", e);
     }
     return { eventId: event.id, type: event.type, event };
+  },
+
+  async refund({ orgId, providerRef, amountCents, reason }) {
+    const stripe = await stripeFor(orgId);
+    // providerRef is typically a PaymentIntent id for one-time donations.
+    const refund = await stripe.refunds.create({
+      payment_intent: providerRef,
+      ...(amountCents !== undefined && { amount: amountCents }),
+      ...(reason && { reason: "requested_by_customer" as const }),
+      metadata: { orgId, reason: reason ?? "" },
+    });
+    return { ok: refund.status === "succeeded" || refund.status === "pending", providerRefundId: refund.id };
   },
 
   interpretEvent(raw) {

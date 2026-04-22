@@ -92,28 +92,34 @@ export const deletePage = createService({
 
 // ─── Read helpers (no createService — reads don't need audit/version) ─
 
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { unstable_cache } from "next/cache";
 
 export function listPages(orgId: string) {
-  return db.page.findMany({
-    where: { organizationId: orgId },
-    orderBy: { updatedAt: "desc" },
-    select: { id: true, slug: true, title: true, status: true, publishedAt: true, updatedAt: true },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.page.findMany({
+      where: { organizationId: orgId },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, slug: true, title: true, status: true, publishedAt: true, updatedAt: true },
+    }),
+  );
 }
 
 export function getPageForEdit(orgId: string, id: string) {
-  return db.page.findFirst({ where: { id, organizationId: orgId } });
+  return runAsTenant(orgId, (tx) =>
+    tx.page.findFirst({ where: { id, organizationId: orgId } }),
+  );
 }
 
 /** Public-facing cached read by slug. Revalidated via tags on publish. */
 export function getPublishedPageBySlug(orgId: string, s: string) {
   return unstable_cache(
     async () => {
-      const row = await db.page.findFirst({
-        where: { organizationId: orgId, slug: s, status: "PUBLISHED" },
-      });
+      const row = await runAsTenant(orgId, (tx) =>
+        tx.page.findFirst({
+          where: { organizationId: orgId, slug: s, status: "PUBLISHED" },
+        }),
+      );
       if (!row) throw new NotFoundError("Page");
       return row;
     },

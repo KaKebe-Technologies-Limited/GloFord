@@ -3,6 +3,7 @@ import { requireActorFromSession } from "@/lib/auth-context";
 import { listDonations } from "@/lib/services/donations";
 import { formatMoney } from "@/lib/utils/money";
 import { DonationStatusBadge } from "./StatusBadge";
+import { RefundButton } from "./RefundButton";
 
 export const metadata = { title: "Donations" };
 
@@ -34,12 +35,13 @@ export default async function DonationsPage() {
                 <th className="px-4 py-3">Campaign</th>
                 <th className="px-4 py-3">Provider</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 w-0">Actions</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-[--color-muted-fg]">
+                  <td colSpan={7} className="px-4 py-10 text-center text-[--color-muted-fg]">
                     No donations yet.
                   </td>
                 </tr>
@@ -79,6 +81,14 @@ export default async function DonationsPage() {
                     <td className="px-4 py-3 text-[--color-muted-fg]">{r.provider}</td>
                     <td className="px-4 py-3">
                       <DonationStatusBadge status={r.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      {r.status === "SUCCEEDED" ? (
+                        <RefundButton
+                          id={r.id}
+                          amountLabel={formatMoney(r.amountCents, r.currency)}
+                        />
+                      ) : null}
                     </td>
                   </tr>
                 ))

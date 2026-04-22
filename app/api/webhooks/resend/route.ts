@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { db } from "@/lib/db";
+import { runAsSystem, runAsTenant } from "@/lib/tenant/context";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -72,19 +72,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true, ignored: type });
   }
 
-  await db.newsletterLog.updateMany({
-    where: { providerMsgId },
-    data: update,
-  });
+  // Resolve the tenant: prefer the orgId tag (stamped when we sent
+  // the message). If missing, look it up via the NewsletterLog →
+  // Newsletter join using a SYSTEM-scoped read.
+  const tagOrgId = event.data?.tags?.find((t) => t.name === "orgId")?.value;
+  const orgId =
+    tagOrgId ??
+    (await runAsSystem(async (tx) => {
+      const log = await tx.newsletterLog.findFirst({
+        where: { providerMsgId },
+        select: { newsletter: { select: { organizationId: true } } },
+      });
+      return log?.newsletter.organizationId ?? null;
+    }));
+
+  if (!orgId) {
+    // Nothing to update — the message isn't one of ours or predates
+    // tag-stamping. Acknowledge so Resend doesn't keep retrying.
+    return NextResponse.json({ received: true, ignored: "unknown-tenant" });
+  }
+
+  await runAsTenant(orgId, (tx) =>
+    tx.newsletterLog.updateMany({
+      where: { providerMsgId },
+      data: update,
+    }),
+  );
 
   // Flip subscribers to BOUNCED/COMPLAINED so they're excluded from future sends.
   if (type === "email.bounced" || type === "email.complained") {
     const subscriberId = event.data?.tags?.find((t) => t.name === "subscriberId")?.value;
     if (subscriberId) {
-      await db.subscriber.update({
-        where: { id: subscriberId },
-        data: { status: type === "email.bounced" ? "BOUNCED" : "COMPLAINED" },
-      });
+      await runAsTenant(orgId, (tx) =>
+        tx.subscriber.update({
+          where: { id: subscriberId },
+          data: { status: type === "email.bounced" ? "BOUNCED" : "COMPLAINED" },
+        }),
+      );
     }
   }
 

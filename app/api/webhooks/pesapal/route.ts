@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { runAsSystem } from "@/lib/tenant/context";
 import { pesapalAdapter, pesapalGetStatus } from "@/lib/services/payments/pesapal";
 import { processWebhook } from "../_processWebhook";
 
@@ -14,10 +14,12 @@ async function handle(req: Request) {
   return processWebhook(req, "PESAPAL", pesapalAdapter, {
     enrich: async (verified) => {
       const trackingId = verified.eventId;
-      const donation = await db.donation.findUnique({
-        where: { providerRef: trackingId },
-        select: { organizationId: true },
-      });
+      const donation = await runAsSystem((tx) =>
+        tx.donation.findUnique({
+          where: { providerRef: trackingId },
+          select: { organizationId: true },
+        }),
+      );
       if (!donation) return null;
       const status = await pesapalGetStatus(donation.organizationId, trackingId);
       const desc = status.payment_status_description?.toUpperCase();

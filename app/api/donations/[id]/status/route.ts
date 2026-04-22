@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { runAsSystem } from "@/lib/tenant/context";
 import { mtnMomoGetStatus } from "@/lib/services/payments/mtn-momo";
 import { airtelMoneyGetStatus } from "@/lib/services/payments/airtel-money";
 import { applyDonationEvent } from "@/lib/services/donations";
@@ -24,10 +24,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const row = await db.donation.findUnique({
-    where: { id },
-    select: { id: true, status: true, provider: true, providerRef: true, organizationId: true },
-  });
+  // Public endpoint — we don't know the orgId yet, look it up via
+  // SYSTEM then return the safe subset. Donation ids are unguessable
+  // cuids so this leaks nothing to anyone without the id.
+  const row = await runAsSystem((tx) =>
+    tx.donation.findUnique({
+      where: { id },
+      select: { id: true, status: true, provider: true, providerRef: true, organizationId: true },
+    }),
+  );
   if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   if (row.status === "PENDING" && (row.provider === "MTN_MOMO" || row.provider === "AIRTEL_MONEY")) {

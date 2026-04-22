@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { runAsTenant } from "@/lib/tenant/context";
 import { UpstreamError, ValidationError } from "@/lib/errors";
 import { loadConfig } from "./config";
 import type {
@@ -99,39 +99,42 @@ export const airtelMoneyAdapter: PaymentProviderAdapter = {
     if (!json.status?.success || !json.data?.transaction?.id) {
       throw new UpstreamError(`Airtel Money rejected: ${json.status?.message ?? "unknown"}`);
     }
+    const transactionId = json.data.transaction.id;
 
-    const donor = await db.donor.upsert({
-      where: {
-        organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
-      },
-      update: { name: params.donorName ?? undefined, phone },
-      create: {
-        organizationId: params.orgId,
-        email: params.donorEmail,
-        name: params.donorName,
-        phone,
-      },
-    });
-
-    const donation = await db.donation.create({
-      data: {
-        organizationId: params.orgId,
-        donorId: donor.id,
-        campaignId: params.campaignId,
-        amountCents: params.amountCents,
-        currency,
-        provider: "AIRTEL_MONEY",
-        providerRef: json.data.transaction.id,
-        type: "ONE_TIME",
-        status: "PENDING",
-        metadata: { reference, phone, country } as never,
-      },
+    const { donation } = await runAsTenant(params.orgId, async (tx) => {
+      const donor = await tx.donor.upsert({
+        where: {
+          organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
+        },
+        update: { name: params.donorName ?? undefined, phone },
+        create: {
+          organizationId: params.orgId,
+          email: params.donorEmail,
+          name: params.donorName,
+          phone,
+        },
+      });
+      const donation = await tx.donation.create({
+        data: {
+          organizationId: params.orgId,
+          donorId: donor.id,
+          campaignId: params.campaignId,
+          amountCents: params.amountCents,
+          currency,
+          provider: "AIRTEL_MONEY",
+          providerRef: transactionId,
+          type: "ONE_TIME",
+          status: "PENDING",
+          metadata: { reference, phone, country } as never,
+        },
+      });
+      return { donation };
     });
 
     return {
       kind: "AWAIT_PHONE",
       donationId: donation.id,
-      providerRef: json.data.transaction.id,
+      providerRef: transactionId,
       phone,
     };
   },

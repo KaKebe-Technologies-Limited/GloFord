@@ -352,6 +352,7 @@ model Media {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   programs     Program[]
   posts        Post[]
+  events       Event[]      @relation("EventCover")
 
   @@index([organizationId, createdAt])
 }
@@ -739,6 +740,7 @@ model Event {
   updatedAt      DateTime  @updatedAt
 
   organization  Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  cover         Media?              @relation("EventCover", fields: [coverMediaId], references: [id])
   segments      Segment[]           @relation("EventSegments")
   notifications EventNotification[]
 
@@ -884,6 +886,25 @@ model DeadLetter {
 
   @@index([status, createdAt])
   @@index([source])
+}
+
+// ════════════════════════════════════════════════════════════
+// RATE LIMITING
+// Fixed-window counter keyed by (bucket, identifier). A write
+// path increments count and returns it; callers compare against
+// their per-route limit. Old rows age out via `windowEnd`.
+// ════════════════════════════════════════════════════════════
+
+model RateLimitHit {
+  id         String   @id @default(cuid())
+  bucket     String   // e.g. "donate", "newsletter-subscribe"
+  identifier String   // usually the remote IP; could be userId for authed routes
+  count      Int      @default(0)
+  windowEnd  DateTime
+
+  @@unique([bucket, identifier, windowEnd])
+  @@index([bucket, identifier])
+  @@index([windowEnd])
 }
 
 model WebhookEvent {

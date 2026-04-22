@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { runAsSystem } from "@/lib/tenant/context";
 import type { RoleName } from "@prisma/client";
 
 // Augment session with our domain fields
@@ -89,9 +90,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 });
 
 async function loadPrimaryMembership(userId: string) {
-  return db.orgMembership.findFirst({
-    where: { userId, organization: { isActive: true } },
-    select: { organizationId: true, roleId: true, role: { select: { name: true } } },
-    orderBy: { joinedAt: "asc" },
-  });
+  // Happens during sign-in before a tenant context is known — use the
+  // SYSTEM bypass. OrgMembership's policy otherwise requires either
+  // userId=app_current_user (not set yet) or SYSTEM.
+  return runAsSystem((tx) =>
+    tx.orgMembership.findFirst({
+      where: { userId, organization: { isActive: true } },
+      select: { organizationId: true, roleId: true, role: { select: { name: true } } },
+      orderBy: { joinedAt: "asc" },
+    }),
+  );
 }

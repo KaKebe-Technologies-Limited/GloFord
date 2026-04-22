@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { runAsSystem } from "@/lib/tenant/context";
 import { isAppError } from "@/lib/errors";
 import type { PaymentProvider } from "@prisma/client";
 import type { PaymentProviderAdapter } from "@/lib/services/payments/types";
@@ -40,10 +40,12 @@ export async function processWebhook(
     return NextResponse.json({ error: "invalid_signature" }, { status });
   }
 
-  const existing = await db.webhookEvent.findUnique({
-    where: { provider_providerEventId: { provider, providerEventId: verified.eventId } },
-    select: { id: true, processedAt: true },
-  });
+  const existing = await runAsSystem((tx) =>
+    tx.webhookEvent.findUnique({
+      where: { provider_providerEventId: { provider, providerEventId: verified.eventId } },
+      select: { id: true, processedAt: true },
+    }),
+  );
 
   if (existing?.processedAt) {
     return NextResponse.json({ received: true, duplicate: true });
@@ -51,15 +53,17 @@ export async function processWebhook(
 
   const record = existing
     ? existing
-    : await db.webhookEvent.create({
-        data: {
-          provider,
-          providerEventId: verified.eventId,
-          eventType: verified.type,
-          payload: verified.event as never,
-        },
-        select: { id: true, processedAt: true },
-      });
+    : await runAsSystem((tx) =>
+        tx.webhookEvent.create({
+          data: {
+            provider,
+            providerEventId: verified.eventId,
+            eventType: verified.type,
+            payload: verified.event as never,
+          },
+          select: { id: true, processedAt: true },
+        }),
+      );
 
   try {
     const transition = hooks?.enrich
@@ -67,16 +71,20 @@ export async function processWebhook(
       : adapter.interpretEvent(verified.event);
     if (transition) await applyDonationEvent(transition);
 
-    await db.webhookEvent.update({
-      where: { id: record.id },
-      data: { processedAt: new Date(), error: null },
-    });
+    await runAsSystem((tx) =>
+      tx.webhookEvent.update({
+        where: { id: record.id },
+        data: { processedAt: new Date(), error: null },
+      }),
+    );
     return NextResponse.json({ received: true });
   } catch (e) {
-    await db.webhookEvent.update({
-      where: { id: record.id },
-      data: { error: e instanceof Error ? e.message : String(e) },
-    });
+    await runAsSystem((tx) =>
+      tx.webhookEvent.update({
+        where: { id: record.id },
+        data: { error: e instanceof Error ? e.message : String(e) },
+      }),
+    );
     return NextResponse.json({ error: "processing_failed" }, { status: 500 });
   }
 }

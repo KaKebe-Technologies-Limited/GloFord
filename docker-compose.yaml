@@ -1,19 +1,3 @@
-# ────────────────────────────────────────────────────────────
-# Gloford local stack
-#
-#   db      -> Postgres 16 with a persistent volume.
-#   migrate -> One-shot: `prisma migrate deploy` + `pnpm db:seed`.
-#              Exits 0 before `app` starts.
-#   app     -> Next.js production image from ./Dockerfile.
-#   inngest -> Local Inngest dev server for Server Actions that
-#              emit events (audit, versioning, newsletter/send, ...).
-#
-# Usage:
-#   docker compose up -d db
-#   docker compose run --rm migrate     # first boot
-#   docker compose up --build app inngest
-# ────────────────────────────────────────────────────────────
-
 name: gloford
 
 services:
@@ -41,6 +25,7 @@ services:
       - ./:/app
       - migrate-node-modules:/app/node_modules
     environment:
+      # Migrations + seed run as superuser so DDL + RLS role creation work.
       DATABASE_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
       DIRECT_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-O2PqgJfqZ3eZk0kSzv6gOQ3aV2lT8WrxKEP0iFnPw9k=}
@@ -74,7 +59,11 @@ services:
       AUTH_URL: ${AUTH_URL:-http://localhost:3000}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
       AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
-      DATABASE_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
+      # Runtime connects as the non-superuser gloford_app role so RLS
+      # policies actually enforce (see migration 30000000000400_rls_app_role).
+      # DIRECT_URL stays on the superuser so Prisma can run DDL if needed
+      # (e.g., migrate deploy at boot).
+      DATABASE_URL: postgresql://gloford_app:gloford_app@db:5432/gloford?sslmode=disable
       DIRECT_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-O2PqgJfqZ3eZk0kSzv6gOQ3aV2lT8WrxKEP0iFnPw9k=}
       INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-}

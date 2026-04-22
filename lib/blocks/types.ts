@@ -51,7 +51,8 @@ export const statsBlockSchema = z.object({
 
 export const galleryBlockSchema = z.object({
   heading: z.string().max(200).optional(),
-  mediaIds: z.array(z.string()).min(1).max(24),
+  // Allow empty during authoring; the renderer skips blocks with no media.
+  mediaIds: z.array(z.string()).max(24).default([]),
 });
 
 export const donateCtaBlockSchema = z.object({

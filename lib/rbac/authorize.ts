@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { ForbiddenError } from "@/lib/errors";
-import type { Actor } from "@/lib/tenant/context";
+import { runAsSystem, type Actor } from "@/lib/tenant/context";
 
 type ResourceRef = {
   type: string;
@@ -63,12 +63,17 @@ export const getRolePermission = cache(async (roleId: string, key: string) => {
 
 export const getResourceGrant = cache(
   async (userId: string, resourceType: string, resourceId: string, action: string) => {
-    const grant = await db.resourceGrant.findUnique({
-      where: {
-        userId_resourceType_resourceId_action: { userId, resourceType, resourceId, action },
-      },
-      select: { expiresAt: true },
-    });
+    // Runs during authorization, BEFORE the tenant context is set
+    // (createService calls authorize then runWithTenant). SYSTEM bypass
+    // lets us read the grant without needing app.current_user yet.
+    const grant = await runAsSystem((tx) =>
+      tx.resourceGrant.findUnique({
+        where: {
+          userId_resourceType_resourceId_action: { userId, resourceType, resourceId, action },
+        },
+        select: { expiresAt: true },
+      }),
+    );
     if (!grant) return null;
     if (grant.expiresAt && grant.expiresAt < new Date()) return null;
     return grant;

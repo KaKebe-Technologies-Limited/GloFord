@@ -1,7 +1,7 @@
 import { createService } from "@/lib/services/_shared";
 import { donationIntentSchema, donationRefundSchema } from "@/lib/validators/donations";
-import { NotFoundError, UpstreamError } from "@/lib/errors";
-import { db } from "@/lib/db";
+import { ConflictError, NotFoundError, UpstreamError } from "@/lib/errors";
+import { runAsSystem, runAsTenant } from "@/lib/tenant/context";
 import { getAdapter } from "@/lib/services/payments/registry";
 import { inngest } from "@/lib/inngest/client";
 
@@ -22,15 +22,17 @@ export async function createDonationIntent(
 
   let campaignId: string | undefined;
   if (input.campaignSlug) {
-    const campaign = await db.campaign.findFirst({
-      where: {
-        organizationId: orgId,
-        slug: input.campaignSlug,
-        isActive: true,
-        OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
-      },
-      select: { id: true, currency: true },
-    });
+    const campaign = await runAsTenant(orgId, (tx) =>
+      tx.campaign.findFirst({
+        where: {
+          organizationId: orgId,
+          slug: input.campaignSlug,
+          isActive: true,
+          OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
+        },
+        select: { id: true, currency: true },
+      }),
+    );
     if (!campaign) throw new NotFoundError("Campaign");
     if (campaign.currency !== input.currency.toUpperCase()) {
       throw new UpstreamError("Campaign currency does not match request");
@@ -66,34 +68,47 @@ export async function applyDonationEvent(params: {
   receiptUrl?: string;
   completedAt?: Date;
 }) {
-  const existing = await db.donation.findUnique({
-    where: { providerRef: params.providerRef },
-    select: { id: true, organizationId: true, status: true, donorId: true, amountCents: true, currency: true },
-  });
+  // Cross-tenant lookup by provider reference — the webhook pipeline
+  // doesn't know the orgId yet. SYSTEM-scoped read is safe because
+  // providerRef is unique across all tenants.
+  const existing = await runAsSystem((tx) =>
+    tx.donation.findUnique({
+      where: { providerRef: params.providerRef },
+      select: {
+        id: true,
+        organizationId: true,
+        status: true,
+        donorId: true,
+        amountCents: true,
+        currency: true,
+      },
+    }),
+  );
   if (!existing) return null;
 
   // Don't regress: a SUCCEEDED donation shouldn't silently become PENDING.
   if (existing.status === params.status) return existing;
   if (existing.status === "REFUNDED" && params.status === "SUCCEEDED") return existing;
 
-  const updated = await db.donation.update({
-    where: { id: existing.id },
-    data: {
-      status: params.status,
-      completedAt: params.completedAt,
-      receiptUrl: params.receiptUrl,
-    },
-  });
+  const updated = await runAsTenant(existing.organizationId, (tx) =>
+    tx.donation.update({
+      where: { id: existing.id },
+      data: {
+        status: params.status,
+        completedAt: params.completedAt,
+        receiptUrl: params.receiptUrl,
+      },
+    }),
+  );
 
   // Fire the side-effect event exactly once per SUCCEEDED transition.
   if (params.status === "SUCCEEDED" && existing.status !== "SUCCEEDED" && existing.donorId) {
-    // Resolve/create a Subscriber for this donor email so downstream
-    // segmentation can tag them as "Donors". Best-effort: if the
-    // subscriber lookup fails, we don't block the donation state.
-    const donor = await db.donor.findUnique({
-      where: { id: existing.donorId },
-      select: { email: true, name: true },
-    });
+    const donor = await runAsTenant(existing.organizationId, (tx) =>
+      tx.donor.findUnique({
+        where: { id: existing.donorId! },
+        select: { email: true, name: true },
+      }),
+    );
     if (donor) {
       await inngest
         .send({
@@ -121,37 +136,85 @@ export const refundDonation = createService({
   schema: donationRefundSchema,
   permission: () => ({ type: "Donation" }),
   loadBefore: async ({ input, tx }) => tx.donation.findUnique({ where: { id: input.id } }),
-  exec: async ({ input, tx }) => {
-    // Placeholder: a real refund calls the provider SDK to issue the
-    // money back. The webhook then flips status to REFUNDED. Here we
-    // just mark the donation for manual processing until the full
-    // refund flow lands in a later phase.
-    const row = await tx.donation.update({
-      where: { id: input.id },
-      data: { metadata: { refundRequested: true, at: new Date().toISOString() } as never },
+  exec: async ({ input, actor, tx }) => {
+    const donation = await tx.donation.findFirst({
+      where: { id: input.id, organizationId: actor.orgId },
     });
-    return row;
+    if (!donation) throw new NotFoundError("Donation not found");
+    if (donation.status !== "SUCCEEDED") {
+      throw new ConflictError(`Cannot refund a donation in ${donation.status} state`);
+    }
+    if (input.amountCents && input.amountCents > donation.amountCents) {
+      throw new ConflictError("Refund amount exceeds donation amount");
+    }
+
+    const adapter = getAdapter(donation.provider);
+    if (!adapter.refund) {
+      throw new ConflictError(
+        `Refunds are not supported by ${adapter.label}. Process manually and mark refunded via the database.`,
+      );
+    }
+
+    const result = await adapter.refund({
+      orgId: actor.orgId,
+      providerRef: donation.providerRef,
+      amountCents: input.amountCents,
+      reason: input.reason,
+    });
+
+    if (!result.ok) {
+      throw new UpstreamError(`Provider did not confirm refund (ref ${result.providerRefundId ?? "none"})`);
+    }
+
+    // The provider will also emit a charge.refunded webhook that flips
+    // status to REFUNDED via applyDonationEvent. We mark it optimistically
+    // here so the admin list updates immediately.
+    const existingMeta =
+      donation.metadata && typeof donation.metadata === "object"
+        ? (donation.metadata as Record<string, unknown>)
+        : {};
+    return tx.donation.update({
+      where: { id: donation.id },
+      data: {
+        status: "REFUNDED",
+        metadata: {
+          ...existingMeta,
+          refund: {
+            providerRefundId: result.providerRefundId ?? null,
+            amountCents: input.amountCents ?? donation.amountCents,
+            reason: input.reason ?? null,
+            byUserId: actor.userId,
+            at: new Date().toISOString(),
+          },
+        } as never,
+      },
+    });
   },
+  version: (out) => ({ entityType: "Donation", entityId: out.id }),
 });
 
 export function listDonations(orgId: string, take = 100) {
-  return db.donation.findMany({
-    where: { organizationId: orgId },
-    orderBy: { createdAt: "desc" },
-    take,
-    include: {
-      donor: { select: { id: true, email: true, name: true } },
-      campaign: { select: { id: true, title: true, slug: true } },
-    },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.donation.findMany({
+      where: { organizationId: orgId },
+      orderBy: { createdAt: "desc" },
+      take,
+      include: {
+        donor: { select: { id: true, email: true, name: true } },
+        campaign: { select: { id: true, title: true, slug: true } },
+      },
+    }),
+  );
 }
 
 export function listDonors(orgId: string) {
-  return db.donor.findMany({
-    where: { organizationId: orgId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      _count: { select: { donations: { where: { status: "SUCCEEDED" } } } },
-    },
-  });
+  return runAsTenant(orgId, (tx) =>
+    tx.donor.findMany({
+      where: { organizationId: orgId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: { select: { donations: { where: { status: "SUCCEEDED" } } } },
+      },
+    }),
+  );
 }
