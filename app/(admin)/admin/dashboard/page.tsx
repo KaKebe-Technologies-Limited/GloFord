@@ -1,23 +1,20 @@
-import Link from "next/link";
-import {
-  FileText,
-  Newspaper,
-  Users,
-  HandCoins,
-  Mail,
-  CalendarDays,
-  ArrowRight,
-  Activity,
-} from "lucide-react";
-import { getTranslations } from "next-intl/server";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/observability/log";
+import { DashboardClient } from "./DashboardClient";
 
 export const metadata = { title: "Dashboard" };
 
+interface AggResult {
+  _sum: { amountCents: number | null };
+  _count: number;
+}
+
+interface TotalAggResult {
+  _sum: { amountCents: number | null };
+}
+
 export default async function DashboardPage() {
-  const t = await getTranslations("admin");
   await requireActorFromSession();
 
   const since = new Date();
@@ -35,8 +32,8 @@ export default async function DashboardPage() {
     }
   }
 
-  const empty = { _sum: { amountCents: 0 }, _count: 0 };
-  const emptyTotal = { _sum: { amountCents: 0 } };
+  const empty: AggResult = { _sum: { amountCents: 0 }, _count: 0 };
+  const emptyTotal: TotalAggResult = { _sum: { amountCents: 0 } };
 
   const [
     pagesPublished,
@@ -66,7 +63,7 @@ export default async function DashboardPage() {
         where: { status: "SUCCEEDED", createdAt: { gte: since } },
         _sum: { amountCents: true },
         _count: true,
-      }),
+      }) as Promise<AggResult>,
       empty,
     ),
     settle("donations30", db.donation.count({ where: { createdAt: { gte: since } } }), 0),
@@ -75,7 +72,7 @@ export default async function DashboardPage() {
       db.donation.aggregate({
         where: { status: "SUCCEEDED" },
         _sum: { amountCents: true },
-      }),
+      }) as Promise<TotalAggResult>,
       emptyTotal,
     ),
     settle("eventsUpcoming", db.event.count({ where: { startsAt: { gte: new Date() } } }), 0),
@@ -105,199 +102,26 @@ export default async function DashboardPage() {
     settle("dlqPending", db.deadLetter.count({ where: { status: "PENDING" } }), 0),
   ]);
 
-  const _unused = {
+  const stats = {
     pagesPublished,
     pagesDraft,
-      programsPublished,
-      postsPublished,
-      subscribersActive,
-      subscribersPending,
-      donationsAgg,
-      donations30,
-      donationsTotalAgg,
-      eventsUpcoming,
-      newslettersDraft,
-      newslettersSent,
-      recentAudit,
-      dlqPending,
-    };
-  void _unused;
+    programsPublished,
+    postsPublished,
+    subscribersActive,
+    subscribersPending,
+    donationsAgg,
+    donations30,
+    donationsTotalAgg,
+    eventsUpcoming,
+    newslettersDraft,
+    newslettersSent,
+    dlqPending,
+  };
 
-  const fmt = new Intl.NumberFormat("en", { notation: "compact" });
-  const currency = new Intl.NumberFormat("en", { style: "currency", currency: "USD" });
+  const serializedAudit = recentAudit.map((r) => ({
+    ...r,
+    createdAt: r.createdAt.toISOString(),
+  }));
 
-  return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">{t("dashboard")}</h1>
-        <p className="text-sm text-[--color-muted-fg]">
-          A snapshot of your organization&apos;s last 30 days.
-        </p>
-      </header>
-
-      <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        <Kpi
-          icon={FileText}
-          label="Published pages"
-          value={fmt.format(pagesPublished)}
-          sublabel={`${pagesDraft} in draft`}
-          href="/admin/pages"
-        />
-        <Kpi
-          icon={Newspaper}
-          label="Programs"
-          value={fmt.format(programsPublished)}
-          sublabel="Published"
-          href="/admin/programs"
-        />
-        <Kpi
-          icon={Newspaper}
-          label="Posts"
-          value={fmt.format(postsPublished)}
-          sublabel="Published"
-          href="/admin/posts"
-        />
-        <Kpi
-          icon={Users}
-          label="Active subscribers"
-          value={fmt.format(subscribersActive)}
-          sublabel={`${subscribersPending} pending confirm`}
-          href="/admin/subscribers"
-        />
-        <Kpi
-          icon={HandCoins}
-          label="Donations — 30d"
-          value={currency.format((donationsAgg._sum.amountCents ?? 0) / 100)}
-          sublabel={`${donationsAgg._count} successful · ${donations30} attempted`}
-          href="/admin/donations"
-        />
-        <Kpi
-          icon={HandCoins}
-          label="Donations — lifetime"
-          value={currency.format((donationsTotalAgg._sum.amountCents ?? 0) / 100)}
-          sublabel="Successful only"
-          href="/admin/donations"
-        />
-        <Kpi
-          icon={CalendarDays}
-          label="Upcoming events"
-          value={fmt.format(eventsUpcoming)}
-          sublabel="Starting today or later"
-          href="/admin/events"
-        />
-        <Kpi
-          icon={Mail}
-          label="Newsletters"
-          value={fmt.format(newslettersSent)}
-          sublabel={`${newslettersDraft} in draft`}
-          href="/admin/newsletters"
-        />
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
-          <header className="flex items-center justify-between border-b border-[--color-border] px-5 py-3">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-[--color-muted-fg]" aria-hidden="true" />
-              <h2 className="text-sm font-semibold">Recent activity</h2>
-            </div>
-            <Link
-              href="/admin/system/audit"
-              className="inline-flex items-center gap-1 text-xs text-[--color-muted-fg] hover:text-[--color-fg]"
-            >
-              Audit log <ArrowRight className="h-3 w-3" aria-hidden="true" />
-            </Link>
-          </header>
-          <ul className="divide-y divide-[--color-border]">
-            {recentAudit.length === 0 ? (
-              <li className="px-5 py-6 text-sm text-[--color-muted-fg]">
-                No activity yet. Your first action will appear here.
-              </li>
-            ) : (
-              recentAudit.map((r) => (
-                <li key={r.id} className="flex items-center gap-3 px-5 py-3 text-sm">
-                  <span className="font-medium">{r.action}</span>
-                  <span className="text-[--color-muted-fg]">
-                    {r.entityType ? `on ${r.entityType}` : ""}
-                  </span>
-                  <span className="ml-auto font-mono text-xs text-[--color-muted-fg]">
-                    {r.createdAt.toLocaleString()}
-                  </span>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
-
-        <div className="space-y-4">
-          <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
-            <p className="text-xs uppercase tracking-wider text-[--color-muted-fg]">
-              Dead-letter queue
-            </p>
-            <p className="mt-2 text-3xl font-semibold">{fmt.format(dlqPending)}</p>
-            <p className="mt-1 text-xs text-[--color-muted-fg]">
-              {dlqPending === 0 ? "Inbox zero" : "events waiting for review"}
-            </p>
-            {dlqPending > 0 ? (
-              <Link
-                href="/admin/system/dead-letter"
-                className="mt-3 inline-flex items-center gap-1 text-sm text-[--color-primary] hover:underline"
-              >
-                Review now <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </Link>
-            ) : null}
-          </div>
-
-          <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
-            <p className="text-xs uppercase tracking-wider text-[--color-muted-fg]">Quick links</p>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li>
-                <Link href="/admin/system/health" className="hover:underline">
-                  → System health
-                </Link>
-              </li>
-              <li>
-                <Link href="/admin/settings/payments" className="hover:underline">
-                  → Payment providers
-                </Link>
-              </li>
-              <li>
-                <Link href="/admin/users" className="hover:underline">
-                  → Invite users
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function Kpi({
-  icon: Icon,
-  label,
-  value,
-  sublabel,
-  href,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  sublabel: string;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group block rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 transition hover:shadow-sm"
-    >
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-[--color-muted-fg]">
-        <Icon className="h-4 w-4" aria-hidden="true" />
-        {label}
-      </div>
-      <p className="mt-2 text-3xl font-semibold">{value}</p>
-      <p className="mt-1 text-xs text-[--color-muted-fg]">{sublabel}</p>
-    </Link>
-  );
+  return <DashboardClient stats={stats} recentAudit={serializedAudit} />;
 }

@@ -141,29 +141,110 @@ async function seedBasics() {
     },
   });
 
-  const nav: Array<{
-    location: "HEADER" | "FOOTER";
-    label: string;
-    href: string;
-    order: number;
-  }> = [
-    { location: "HEADER", label: "Home", href: "/", order: 0 },
-    { location: "HEADER", label: "About", href: "/about", order: 1 },
-    { location: "HEADER", label: "Programs", href: "/programs", order: 2 },
-    { location: "HEADER", label: "Blog", href: "/blog", order: 3 },
-    { location: "HEADER", label: "Events", href: "/events", order: 4 },
-    { location: "HEADER", label: "Contact", href: "/contact", order: 5 },
-    { location: "FOOTER", label: "About", href: "/about", order: 0 },
-    { location: "FOOTER", label: "Programs", href: "/programs", order: 1 },
-    { location: "FOOTER", label: "Blog", href: "/blog", order: 2 },
-    { location: "FOOTER", label: "Events", href: "/events", order: 3 },
-  ];
-  for (const item of nav) {
-    const existing = await db.navItem.findFirst({
-      where: { location: item.location, label: item.label },
+  const headerItems = [
+    { id: "seed-header-home", label: "Home", href: "/", order: 0, children: [] },
+    {
+      id: "seed-header-about-us",
+      label: "About Us",
+      href: "/about",
+      order: 1,
+      children: [
+        { id: "seed-header-about-us-who-we-are", label: "Who We Are", href: "/who-we-are", order: 0 },
+        { id: "seed-header-about-us-leadership", label: "Leadership", href: "/leadership", order: 1 },
+        { id: "seed-header-about-us-our-history", label: "Our History", href: "/history", order: 2 },
+        { id: "seed-header-about-us-partners", label: "Partners", href: "/partners", order: 3 },
+      ],
+    },
+    {
+      id: "seed-header-mission-impact",
+      label: "Mission & Impact",
+      href: "/mission",
+      order: 2,
+      children: [
+        { id: "seed-header-mission-impact-our-mission", label: "Our Mission", href: "/mission", order: 0 },
+        { id: "seed-header-mission-impact-our-approach", label: "Our Approach", href: "/our-approach", order: 1 },
+        { id: "seed-header-mission-impact-impact-stories", label: "Impact Stories", href: "/blog", order: 2 },
+        { id: "seed-header-mission-impact-reports-accountability", label: "Reports & Accountability", href: "/reports", order: 3 },
+      ],
+    },
+    { id: "seed-header-programs", label: "Programs", href: "/programs", order: 3, children: [] },
+    {
+      id: "seed-header-get-involved",
+      label: "Get Involved",
+      href: "/volunteer",
+      order: 4,
+      children: [
+        { id: "seed-header-get-involved-donate", label: "Donate", href: "/donate", order: 0 },
+        { id: "seed-header-get-involved-volunteer", label: "Volunteer", href: "/volunteer", order: 1 },
+        { id: "seed-header-get-involved-careers", label: "Careers", href: "/careers", order: 2 },
+        { id: "seed-header-get-involved-internships", label: "Internships", href: "/internships", order: 3 },
+        { id: "seed-header-get-involved-partner-with-us", label: "Partner With Us", href: "/partner-with-us", order: 4 },
+      ],
+    },
+    {
+      id: "seed-header-media",
+      label: "Media",
+      href: "/blog",
+      order: 5,
+      children: [
+        { id: "seed-header-media-blog", label: "Blog", href: "/blog", order: 0 },
+        { id: "seed-header-media-events", label: "Events", href: "/events", order: 1 },
+        { id: "seed-header-media-newsroom", label: "Newsroom", href: "/newsroom", order: 2 },
+        { id: "seed-header-media-gallery", label: "Gallery", href: "/gallery", order: 3 },
+      ],
+    },
+    { id: "seed-header-contact", label: "Contact", href: "/contact", order: 6, children: [] },
+  ] as const;
+
+  for (const item of headerItems) {
+    const parent = await db.navItem.upsert({
+      where: { id: item.id },
+      update: { location: "HEADER", parentId: null, label: item.label, href: item.href, order: item.order, isActive: true },
+      create: { id: item.id, location: "HEADER", label: item.label, href: item.href, order: item.order, isActive: true },
     });
-    if (!existing) await db.navItem.create({ data: item });
+
+    for (const child of item.children) {
+      await db.navItem.upsert({
+        where: { id: child.id },
+        update: { location: "HEADER", parentId: parent.id, label: child.label, href: child.href, order: child.order, isActive: true },
+        create: { id: child.id, location: "HEADER", parentId: parent.id, label: child.label, href: child.href, order: child.order, isActive: true },
+      });
+    }
   }
+
+  const footerItems = [
+    { id: "seed-footer-about-us", label: "About Us", href: "/about", order: 0 },
+    { id: "seed-footer-programs", label: "Programs", href: "/programs", order: 1 },
+    { id: "seed-footer-volunteer", label: "Volunteer", href: "/volunteer", order: 2 },
+    { id: "seed-footer-careers", label: "Careers", href: "/careers", order: 3 },
+    { id: "seed-footer-contact", label: "Contact", href: "/contact", order: 4 },
+  ] as const;
+
+  for (const item of footerItems) {
+    await db.navItem.upsert({
+      where: { id: item.id },
+      update: { location: "FOOTER", parentId: null, label: item.label, href: item.href, order: item.order, isActive: true },
+      create: { id: item.id, location: "FOOTER", label: item.label, href: item.href, order: item.order, isActive: true },
+    });
+  }
+
+  await db.navItem.updateMany({
+    where: {
+      location: "HEADER",
+      id: { notIn: headerItems.flatMap((item) => [item.id, ...item.children.map((child) => child.id)]) },
+      label: { in: ["Home", "About", "Programs", "Blog", "Events", "Contact"] },
+    },
+    data: { isActive: false },
+  });
+
+  await db.navItem.updateMany({
+    where: {
+      location: "FOOTER",
+      id: { notIn: footerItems.map((item) => item.id) },
+      label: { in: ["About", "Programs", "Blog", "Events", "Contact"] },
+    },
+    data: { isActive: false },
+  });
 
   const segments = [
     { slug: "donors", name: "Donors", description: "People who have donated at least once", isSystem: true },
@@ -282,6 +363,14 @@ async function seedStockMedia(adminId: string): Promise<Record<string, SeededMed
 async function seedDemoPages(media: Record<string, SeededMedia>) {
   const homeHero = media["hero-community"]?.id;
   const aboutHero = media["hero-field"]?.id;
+  const youthHero = media["hero-youth"]?.id;
+  const staffHero = media["hero-staff"]?.id;
+  const partnerLogos = [
+    media["partner-pepfar"]?.id,
+    media["partner-plan"]?.id,
+    media["partner-wood-en-daad"]?.id,
+    media["partner-cehurd"]?.id,
+  ].filter(Boolean) as string[];
 
   const pages = [
     {
@@ -293,12 +382,28 @@ async function seedDemoPages(media: Record<string, SeededMedia>) {
           id: "p-home-hero",
           type: "hero",
           data: {
-            heading: "Changing lives through community action.",
+            eyebrow: "Community-led development across Uganda",
+            heading: "Building healthier, stronger, opportunity-rich communities together.",
             subheading:
-              `${BRAND_NAME} partners with communities across Uganda to advance health, education, and climate resilience.`,
-            ctaLabel: "Support our work",
+              `${BRAND_NAME} partners with local leaders, families, and young people to expand access to health, education, livelihoods, and climate resilience with dignity and measurable impact.`,
+            ctaLabel: "Donate now",
             ctaHref: "/donate",
+            secondaryCtaLabel: "Volunteer with us",
+            secondaryCtaHref: "/volunteer",
             ...(homeHero ? { imageMediaId: homeHero } : {}),
+          },
+        },
+        {
+          id: "p-home-mission",
+          type: "featureSplit",
+          data: {
+            eyebrow: "Our mission",
+            heading: "We turn community trust into practical action.",
+            body:
+              "Our work starts by listening. We co-design programs with communities, then back them with health outreach, youth mentorship, climate adaptation, and storytelling platforms that keep people informed and connected. The result is work that is local, accountable, and built to last.",
+            ctaLabel: "Learn our approach",
+            ctaHref: "/our-approach",
+            ...(aboutHero ? { imageMediaId: aboutHero } : {}),
           },
         },
         {
@@ -317,20 +422,107 @@ async function seedDemoPages(media: Record<string, SeededMedia>) {
         {
           id: "p-home-programs",
           type: "programGrid",
-          data: { heading: "Our programs", limit: 4 },
+          data: {
+            heading: "Programs rooted in real community needs",
+            intro:
+              "From youth opportunity to health outreach and climate resilience, each program is designed to solve practical problems with local partners.",
+            limit: 4,
+          },
         },
         {
-          id: "p-home-posts",
-          type: "postList",
-          data: { heading: "Latest stories", limit: 3 },
+          id: "p-home-feature",
+          type: "featureSplit",
+          data: {
+            eyebrow: "Mission in action",
+            heading: "When young people lead, communities move forward.",
+            body:
+              "We invest in youth leadership because transformation spreads outward. A confident young volunteer can become a mentor, an advocate, and a bridge between services and the families that need them most. That is the kind of multiplier effect we design for.",
+            ctaLabel: "See volunteer opportunities",
+            ctaHref: "/volunteer",
+            ...(youthHero ? { imageMediaId: youthHero } : {}),
+            reverse: true,
+          },
+        },
+        {
+          id: "p-home-actions",
+          type: "actionCards",
+          data: {
+            heading: "Get involved in the mission",
+            intro: "Different people contribute in different ways. Choose the path that fits your capacity and season.",
+            items: [
+              {
+                title: "Volunteer",
+                body: "Join local initiatives, campaigns, and field activities that directly support families and young people.",
+                href: "/volunteer",
+                label: "Start here",
+              },
+              {
+                title: "Careers",
+                body: "Bring your professional skills into mission-driven work with a team grounded in community partnership.",
+                href: "/careers",
+                label: "See openings",
+              },
+              {
+                title: "Internships",
+                body: "Learn alongside practitioners in programs, communications, research, and community mobilization.",
+                href: "/internships",
+                label: "Explore internships",
+              },
+              {
+                title: "Partner with us",
+                body: "Work with us as a donor, institution, implementing partner, or strategic ally.",
+                href: "/partner-with-us",
+                label: "Partner now",
+              },
+            ],
+          },
         },
         {
           id: "p-home-donate",
           type: "donateCta",
           data: {
-            heading: "Stand with communities building a better tomorrow.",
-            body: "Your support funds seed kits, mobile clinics, youth mentorship, and community radio — work that only happens when people like you back it.",
-            buttonLabel: "Donate now",
+            heading: "Fund work that communities can feel right now.",
+            body: "Support drought-resilient farming kits, mobile health outreach, youth mentorship, and local information access through community radio.",
+            buttonLabel: "Support the campaign",
+            campaignSlug: "climate-resilience-2026",
+          },
+        },
+        {
+          id: "p-home-posts",
+          type: "postList",
+          data: {
+            heading: "Latest stories from the field",
+            intro: "Stories, updates, and lessons from the communities we serve with.",
+            limit: 3,
+          },
+        },
+        {
+          id: "p-home-events",
+          type: "eventList",
+          data: {
+            heading: "Come meet the work in person",
+            intro: "Join gatherings, public forums, and community events where ideas turn into action.",
+            limit: 3,
+          },
+        },
+        {
+          id: "p-home-partners",
+          type: "partnerLogos",
+          data: {
+            heading: "Built with trusted partners",
+            intro: "We believe sustainable progress comes through collaboration across civil society, institutions, and communities.",
+            mediaIds: partnerLogos,
+          },
+        },
+        {
+          id: "p-home-final-cta",
+          type: "cta",
+          data: {
+            heading: "Ready to stand with communities shaping their own future?",
+            body: "Explore the mission, join as a volunteer, or support the work financially.",
+            buttonLabel: "Contact us",
+            buttonHref: "/contact",
+            variant: "outline",
           },
         },
       ],
@@ -368,6 +560,207 @@ async function seedDemoPages(media: Record<string, SeededMedia>) {
           type: "richText",
           data: {
             html: `<p>We'd love to hear from you. Reach out at <a href="mailto:${SEED_ADMIN_EMAIL}">${SEED_ADMIN_EMAIL}</a>.</p>`,
+          },
+        },
+      ],
+    },
+    {
+      slug: "who-we-are",
+      title: "Who We Are",
+      seoDesc: `${BRAND_NAME} is a community-led organization serving through partnership, dignity, and measurable action.`,
+      blocks: [
+        {
+          id: "p-who-we-are-hero",
+          type: "hero",
+          data: {
+            eyebrow: "About us",
+            heading: "We exist to back communities with practical, respectful support.",
+            subheading: "Our identity is rooted in partnership, trust, and work that responds to real conditions on the ground.",
+            ...(staffHero ? { imageMediaId: staffHero } : {}),
+          },
+        },
+      ],
+    },
+    {
+      slug: "mission",
+      title: "Our Mission",
+      seoDesc: "Our mission and the impact we aim to make alongside communities.",
+      blocks: [
+        {
+          id: "p-mission-feature",
+          type: "featureSplit",
+          data: {
+            eyebrow: "Mission & impact",
+            heading: "We help communities grow resilience, agency, and hope.",
+            body: "Our mission is to strengthen people and systems so families can access opportunity, navigate crises, and participate in shaping their own future. We pursue that mission through practical service delivery, local leadership, and accountability to the communities we work with.",
+            ...(aboutHero ? { imageMediaId: aboutHero } : {}),
+          },
+        },
+      ],
+    },
+    {
+      slug: "our-approach",
+      title: "Our Approach",
+      seoDesc: "How we design, deliver, and measure community-led work.",
+      blocks: [
+        {
+          id: "p-approach-rich-text",
+          type: "richText",
+          data: {
+            html: "<p>We listen first, build with local actors, measure what matters, and adapt quickly when conditions change. Our approach combines service, partnership, and storytelling so communities are not just recipients of aid but co-owners of solutions.</p>",
+          },
+        },
+      ],
+    },
+    {
+      slug: "leadership",
+      title: "Leadership",
+      seoDesc: "Meet the leadership guiding the organization.",
+      blocks: [
+        {
+          id: "p-leadership-rich-text",
+          type: "richText",
+          data: {
+            html: "<p>Our leadership team combines local insight, operational discipline, and a long-term commitment to the communities we serve. They guide strategy, stewardship, and accountability across all areas of work.</p>",
+          },
+        },
+      ],
+    },
+    {
+      slug: "history",
+      title: "Our History",
+      seoDesc: "A brief history of the organization and how the work evolved.",
+      blocks: [
+        {
+          id: "p-history-rich-text",
+          type: "richText",
+          data: {
+            html: `<p>${BRAND_NAME} began with a belief that sustainable progress requires local trust and long-term presence. What started as grassroots community support grew into a broader platform for health, youth empowerment, climate resilience, and communication.</p>`,
+          },
+        },
+      ],
+    },
+    {
+      slug: "partners",
+      title: "Partners",
+      seoDesc: "Organizations and institutions collaborating with us.",
+      blocks: [
+        {
+          id: "p-partners-logos",
+          type: "partnerLogos",
+          data: {
+            heading: "Partner ecosystem",
+            intro: "These organizations help strengthen the reach and quality of the work.",
+            mediaIds: partnerLogos,
+          },
+        },
+      ],
+    },
+    {
+      slug: "reports",
+      title: "Reports & Accountability",
+      seoDesc: "Transparency, reporting, and accountability resources.",
+      blocks: [
+        {
+          id: "p-reports-rich-text",
+          type: "richText",
+          data: {
+            html: "<p>We are committed to stewardship, transparency, and learning. This page is where annual reports, summaries, and accountability updates can be published for partners, supporters, and the communities we serve.</p>",
+          },
+        },
+      ],
+    },
+    {
+      slug: "volunteer",
+      title: "Volunteer",
+      seoDesc: "Volunteer opportunities and ways to serve.",
+      blocks: [
+        {
+          id: "p-volunteer-hero",
+          type: "hero",
+          data: {
+            eyebrow: "Get involved",
+            heading: "Volunteer your time where it matters.",
+            subheading: "Support campaigns, outreach, events, and community engagement with a team that values preparation and dignity.",
+            ctaLabel: "Contact our team",
+            ctaHref: "/contact",
+            ...(youthHero ? { imageMediaId: youthHero } : {}),
+          },
+        },
+      ],
+    },
+    {
+      slug: "careers",
+      title: "Careers",
+      seoDesc: "Career opportunities and mission-driven roles.",
+      blocks: [
+        {
+          id: "p-careers-hero",
+          type: "hero",
+          data: {
+            eyebrow: "Careers",
+            heading: "Build a career around meaningful community impact.",
+            subheading: "Join a team that values collaboration, practical execution, and deep local partnership.",
+            ctaLabel: "Ask about openings",
+            ctaHref: "/contact",
+            ...(staffHero ? { imageMediaId: staffHero } : {}),
+          },
+        },
+      ],
+    },
+    {
+      slug: "internships",
+      title: "Internships",
+      seoDesc: "Internship opportunities for emerging professionals.",
+      blocks: [
+        {
+          id: "p-internships-rich-text",
+          type: "richText",
+          data: {
+            html: "<p>Our internships are designed for emerging professionals who want real exposure to community work, communications, operations, and program delivery. We look for curiosity, humility, and a willingness to learn.</p>",
+          },
+        },
+      ],
+    },
+    {
+      slug: "partner-with-us",
+      title: "Partner With Us",
+      seoDesc: "Collaborate with us as an institution, donor, or implementation partner.",
+      blocks: [
+        {
+          id: "p-partner-with-us-rich-text",
+          type: "richText",
+          data: {
+            html: "<p>We welcome partnerships with donors, NGOs, institutions, local governments, and private sector actors who want to support scalable, community-grounded work. Reach out to explore strategic collaboration.</p>",
+          },
+        },
+      ],
+    },
+    {
+      slug: "newsroom",
+      title: "Newsroom",
+      seoDesc: "Press-ready updates, organizational highlights, and public announcements.",
+      blocks: [
+        {
+          id: "p-newsroom-rich-text",
+          type: "richText",
+          data: {
+            html: "<p>The newsroom is where public statements, press resources, and organization-wide announcements can be published.</p>",
+          },
+        },
+      ],
+    },
+    {
+      slug: "gallery",
+      title: "Gallery",
+      seoDesc: "Moments from field work, events, and community activities.",
+      blocks: [
+        {
+          id: "p-gallery-grid",
+          type: "gallery",
+          data: {
+            heading: "Field moments",
+            mediaIds: [homeHero, aboutHero, youthHero, staffHero].filter(Boolean),
           },
         },
       ],

@@ -173,10 +173,13 @@ function BlockForm({ block, onChange }: { block: Block; onChange: (d: unknown) =
       const d = block.data;
       return (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <Field label="Eyebrow">
+            <input type="text" value={d.eyebrow ?? ""} onChange={(e) => onChange({ ...d, eyebrow: e.target.value })} className={inputCls} />
+          </Field>
           <Field label="Heading">
             <input type="text" value={d.heading} onChange={(e) => onChange({ ...d, heading: e.target.value })} className={inputCls} />
           </Field>
-          <Field label="Subheading">
+          <Field label="Subheading" className="md:col-span-2">
             <input type="text" value={d.subheading ?? ""} onChange={(e) => onChange({ ...d, subheading: e.target.value })} className={inputCls} />
           </Field>
           <Field label="CTA label">
@@ -184,6 +187,15 @@ function BlockForm({ block, onChange }: { block: Block; onChange: (d: unknown) =
           </Field>
           <Field label="CTA href">
             <input type="text" value={d.ctaHref ?? ""} onChange={(e) => onChange({ ...d, ctaHref: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Secondary CTA label">
+            <input type="text" value={d.secondaryCtaLabel ?? ""} onChange={(e) => onChange({ ...d, secondaryCtaLabel: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Secondary CTA href">
+            <input type="text" value={d.secondaryCtaHref ?? ""} onChange={(e) => onChange({ ...d, secondaryCtaHref: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Image media ID" className="md:col-span-2">
+            <input type="text" value={d.imageMediaId ?? ""} onChange={(e) => onChange({ ...d, imageMediaId: e.target.value })} className={cn(inputCls, "font-mono text-xs")} />
           </Field>
         </div>
       );
@@ -284,6 +296,9 @@ function BlockForm({ block, onChange }: { block: Block; onChange: (d: unknown) =
           <Field label="Heading">
             <input type="text" value={d.heading ?? ""} onChange={(e) => onChange({ ...d, heading: e.target.value })} className={inputCls} />
           </Field>
+          <Field label="Intro">
+            <input type="text" value={d.intro ?? ""} onChange={(e) => onChange({ ...d, intro: e.target.value })} className={inputCls} />
+          </Field>
           <Field label="Limit">
             <input
               type="number"
@@ -293,6 +308,117 @@ function BlockForm({ block, onChange }: { block: Block; onChange: (d: unknown) =
               onChange={(e) => onChange({ ...d, limit: Number(e.target.value) })}
               className={inputCls}
             />
+          </Field>
+        </div>
+      );
+    }
+    case "featureSplit": {
+      const d = block.data;
+      return (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <Field label="Eyebrow">
+            <input type="text" value={d.eyebrow ?? ""} onChange={(e) => onChange({ ...d, eyebrow: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Heading">
+            <input type="text" value={d.heading} onChange={(e) => onChange({ ...d, heading: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Body" className="md:col-span-2">
+            <textarea value={d.body} onChange={(e) => onChange({ ...d, body: e.target.value })} rows={5} className={inputCls} />
+          </Field>
+          <Field label="CTA label">
+            <input type="text" value={d.ctaLabel ?? ""} onChange={(e) => onChange({ ...d, ctaLabel: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="CTA href">
+            <input type="text" value={d.ctaHref ?? ""} onChange={(e) => onChange({ ...d, ctaHref: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Image media ID">
+            <input type="text" value={d.imageMediaId ?? ""} onChange={(e) => onChange({ ...d, imageMediaId: e.target.value })} className={cn(inputCls, "font-mono text-xs")} />
+          </Field>
+          <Field label="Reverse layout">
+            <select value={d.reverse ? "yes" : "no"} onChange={(e) => onChange({ ...d, reverse: e.target.value === "yes" })} className={inputCls}>
+              <option value="no">Image right</option>
+              <option value="yes">Image left</option>
+            </select>
+          </Field>
+        </div>
+      );
+    }
+    case "actionCards": {
+      const d = block.data;
+      const update = (i: number, patch: Partial<(typeof d.items)[number]>) => {
+        onChange({ ...d, items: d.items.map((item, idx) => (idx === i ? { ...item, ...patch } : item)) });
+      };
+      const remove = (i: number) => onChange({ ...d, items: d.items.filter((_, idx) => idx !== i) });
+      const add = () =>
+        onChange({
+          ...d,
+          items: [...d.items, { title: "New card", body: "Describe the action.", href: "/", label: "Explore" }],
+        });
+      return (
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <Field label="Heading">
+              <input type="text" value={d.heading ?? ""} onChange={(e) => onChange({ ...d, heading: e.target.value })} className={inputCls} />
+            </Field>
+            <Field label="Intro">
+              <input type="text" value={d.intro ?? ""} onChange={(e) => onChange({ ...d, intro: e.target.value })} className={inputCls} />
+            </Field>
+          </div>
+          {d.items.map((item, i) => (
+            <div key={i} className="grid grid-cols-1 gap-3 rounded-[--radius-md] border border-[--color-border] p-3 md:grid-cols-2">
+              <Field label="Title">
+                <input type="text" value={item.title} onChange={(e) => update(i, { title: e.target.value })} className={inputCls} />
+              </Field>
+              <Field label="Button label">
+                <input type="text" value={item.label} onChange={(e) => update(i, { label: e.target.value })} className={inputCls} />
+              </Field>
+              <Field label="Body" className="md:col-span-2">
+                <input type="text" value={item.body} onChange={(e) => update(i, { body: e.target.value })} className={inputCls} />
+              </Field>
+              <Field label="Href" className="md:col-span-2">
+                <input type="text" value={item.href} onChange={(e) => update(i, { href: e.target.value })} className={inputCls} />
+              </Field>
+              <div className="md:col-span-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => remove(i)}>
+                  <Trash2 className="h-4 w-4" /> Remove card
+                </Button>
+              </div>
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={add} disabled={d.items.length >= 6}>
+            <Plus className="h-4 w-4" /> Add card
+          </Button>
+        </div>
+      );
+    }
+    case "eventList": {
+      const d = block.data;
+      return (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <Field label="Heading">
+            <input type="text" value={d.heading ?? ""} onChange={(e) => onChange({ ...d, heading: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Intro">
+            <input type="text" value={d.intro ?? ""} onChange={(e) => onChange({ ...d, intro: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Limit">
+            <input type="number" min={1} max={6} value={d.limit} onChange={(e) => onChange({ ...d, limit: Number(e.target.value) })} className={inputCls} />
+          </Field>
+        </div>
+      );
+    }
+    case "partnerLogos": {
+      const d = block.data;
+      return (
+        <div className="grid grid-cols-1 gap-3">
+          <Field label="Heading">
+            <input type="text" value={d.heading ?? ""} onChange={(e) => onChange({ ...d, heading: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Intro">
+            <input type="text" value={d.intro ?? ""} onChange={(e) => onChange({ ...d, intro: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Media IDs (comma-separated)">
+            <textarea value={d.mediaIds.join(", ")} onChange={(e) => onChange({ ...d, mediaIds: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} rows={3} className={cn(inputCls, "font-mono text-xs")} />
           </Field>
         </div>
       );

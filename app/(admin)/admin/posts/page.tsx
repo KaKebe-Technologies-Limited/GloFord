@@ -2,10 +2,13 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { listPosts } from "@/lib/services/posts";
-import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/Button";
+import { PostListClient } from "./PostListClient";
+import type { Post, User } from "@prisma/client";
 
 export const metadata = { title: "Blog" };
+
+type PostWithAuthor = Post & { author: User | null };
 
 export default async function PostsListPage() {
   await requireActorFromSession();
@@ -25,48 +28,7 @@ export default async function PostsListPage() {
         </Button>
       </header>
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
-              <tr>
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Slug</th>
-                <th className="px-4 py-3">Author</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-[--color-muted-fg]">
-                    No posts yet.
-                  </td>
-                </tr>
-              ) : (
-                rows.map((r) => (
-                  <tr key={r.id} className="border-b border-[--color-border] last:border-0">
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/posts/${r.id}`} className="font-medium hover:underline">
-                        {r.title}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[--color-muted-fg]">/blog/{r.slug}</td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">{r.author?.name ?? r.author?.email ?? "\u2014"}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={r.status} />
-                    </td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">
-                      {new Date(r.updatedAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <PostListClient data={rows as PostWithAuthor[]} />
     </div>
   );
 }

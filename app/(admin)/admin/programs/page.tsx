@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { listPrograms } from "@/lib/services/programs";
-import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/Button";
+import { ProgramListClient } from "./ProgramListClient";
+import type { Program } from "@prisma/client";
 
 export const metadata = { title: "Programs" };
 
@@ -25,48 +26,7 @@ export default async function ProgramsListPage() {
         </Button>
       </header>
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
-              <tr>
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Slug</th>
-                <th className="px-4 py-3">Order</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-[--color-muted-fg]">
-                    No programs yet.
-                  </td>
-                </tr>
-              ) : (
-                rows.map((r) => (
-                  <tr key={r.id} className="border-b border-[--color-border] last:border-0">
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/programs/${r.id}`} className="font-medium hover:underline">
-                        {r.title}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[--color-muted-fg]">/programs/{r.slug}</td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">{r.order}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={r.status} />
-                    </td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">
-                      {new Date(r.updatedAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ProgramListClient data={rows as Program[]} />
     </div>
   );
 }

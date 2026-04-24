@@ -59,6 +59,46 @@
       "deadLetter": "Foleni ya hitilafu",
       "featureFlags": "Vipengele",
       "health": "Afya"
+    },
+    "dashboard": {
+      "title": "Dashibodi",
+      "snapshot": "Picha ya siku 30 zilizopita za shirika lako.",
+      "kpi": {
+        "pages": "Kurasa zilizochapishwa",
+        "pagesSub": "{count} katika rasimu",
+        "programs": "Programu",
+        "programsSub": "Zilizochapishwa",
+        "posts": "Makala",
+        "postsSub": "Zilizochapishwa",
+        "subscribers": "Wasajili hai",
+        "subscribersSub": "{count} wanasubiri uthibitisho",
+        "donations30": "Michango \u2014 siku 30",
+        "donations30Sub": "{successful} imefanikiwa \u00b7 {attempted} ilijaribiwa",
+        "donationsTotal": "Jumla ya michango",
+        "donationsTotalSub": "Iliyofanikiwa tu",
+        "events": "Matukio yajayo",
+        "eventsSub": "Kuanzia leo",
+        "newsletters": "Majarida",
+        "newslettersSub": "{count} katika rasimu"
+      },
+      "recentActivity": {
+        "title": "Shughuli za hivi karibuni",
+        "viewAudit": "Logi ya ukaguzi",
+        "empty": "Bado hakuna shughuli. Hatua yako ya kwanza itaonekana hapa.",
+        "onEntity": "kwenye {type}"
+      },
+      "deadLetter": {
+        "title": "Foleni ya hitilafu",
+        "zero": "Sanduku tupu",
+        "pending": "matukio yanayosubiri ukaguzi",
+        "action": "Kagua sasa"
+      },
+      "quickLinks": {
+        "title": "Viungo vya haraka",
+        "health": "Afya ya mfumo",
+        "payments": "Watoa huduma wa malipo",
+        "users": "Alika watumiaji"
+      }
     }
   },
   "auth": {
