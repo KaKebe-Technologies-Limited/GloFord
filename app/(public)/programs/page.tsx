@@ -1,17 +1,10 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
 import { listPublishedPrograms } from "@/lib/services/programs";
 
 export const metadata = { title: "Programs" };
 
 export default async function ProgramsIndex() {
-  const org = await db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!org) return null;
-  const programs = await listPublishedPrograms(org.id);
+  const programs = await listPublishedPrograms();
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-12 sm:py-16">

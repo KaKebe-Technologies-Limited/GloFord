@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { UpstreamError, ValidationError } from "@/lib/errors";
 import { loadConfig } from "./config";
 import type {
@@ -8,18 +8,6 @@ import type {
   PaymentProviderAdapter,
   WebhookVerifyResult,
 } from "./types";
-
-/**
- * Flutterwave adapter (pan-Africa).
- *
- * API flow (Standard / v3):
- *   1. POST /v3/payments with tx_ref, amount, currency, customer,
- *      redirect_url -> returns data.link (hosted checkout URL).
- *   2. Donor completes; Flutterwave posts webhook to our endpoint.
- *   3. POST /v3/transactions/verify_by_reference?tx_ref=... inside the
- *      webhook to confirm amount + currency + status before marking
- *      SUCCEEDED. (We trust the verify call, not the webhook payload.)
- */
 
 const BASE = "https://api.flutterwave.com/v3";
 
@@ -32,24 +20,16 @@ export const flutterwaveAdapter: PaymentProviderAdapter = {
     if (params.recurring) {
       throw new ValidationError("Flutterwave recurring donations are not supported yet");
     }
-    const cfg = await loadConfig(params.orgId, "FLUTTERWAVE");
+    const cfg = await loadConfig("FLUTTERWAVE");
 
-    const donor = await runAsTenant(params.orgId, (tx) =>
-      tx.donor.upsert({
-        where: {
-          organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
-        },
-        update: { name: params.donorName ?? undefined },
-        create: {
-          organizationId: params.orgId,
-          email: params.donorEmail,
-          name: params.donorName,
-        },
-      }),
-    );
+    const donor = await db.donor.upsert({
+      where: { email: params.donorEmail },
+      update: { name: params.donorName ?? undefined },
+      create: { email: params.donorEmail, name: params.donorName },
+    });
 
     const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-    const tx_ref = `gfd_${crypto.randomUUID()}`;
+    const tx_ref = `don_${crypto.randomUUID()}`;
 
     const res = await fetch(`${BASE}/payments`, {
       method: "POST",
@@ -70,11 +50,7 @@ export const flutterwaveAdapter: PaymentProviderAdapter = {
         customizations: {
           title: params.campaignId ? "Donation (campaign)" : "Donation",
         },
-        meta: {
-          orgId: params.orgId,
-          donorId: donor.id,
-          campaignId: params.campaignId ?? "",
-        },
+        meta: { donorId: donor.id, campaignId: params.campaignId ?? "" },
       }),
     });
 
@@ -91,21 +67,18 @@ export const flutterwaveAdapter: PaymentProviderAdapter = {
       throw new UpstreamError(`Flutterwave rejected: ${json.message ?? "unknown"}`);
     }
 
-    const donation = await runAsTenant(params.orgId, (tx) =>
-      tx.donation.create({
-        data: {
-          organizationId: params.orgId,
-          donorId: donor.id,
-          campaignId: params.campaignId,
-          amountCents: params.amountCents,
-          currency: params.currency.toUpperCase(),
-          provider: "FLUTTERWAVE",
-          providerRef: tx_ref,
-          type: "ONE_TIME",
-          status: "PENDING",
-        },
-      }),
-    );
+    const donation = await db.donation.create({
+      data: {
+        donorId: donor.id,
+        campaignId: params.campaignId,
+        amountCents: params.amountCents,
+        currency: params.currency.toUpperCase(),
+        provider: "FLUTTERWAVE",
+        providerRef: tx_ref,
+        type: "ONE_TIME",
+        status: "PENDING",
+      },
+    });
 
     return {
       kind: "REDIRECT",
@@ -116,7 +89,6 @@ export const flutterwaveAdapter: PaymentProviderAdapter = {
   },
 
   async verifyWebhook(req: Request, rawBody: string): Promise<WebhookVerifyResult> {
-    // Flutterwave signs by comparing a shared secret hash header.
     const hash = req.headers.get("verif-hash");
     const expected = process.env.FLUTTERWAVE_WEBHOOK_HASH;
     if (!hash || !expected) throw new ValidationError("Missing Flutterwave webhook hash");
@@ -145,9 +117,8 @@ export const flutterwaveAdapter: PaymentProviderAdapter = {
   },
 };
 
-/** Used by webhook to verify the charge amount matches what Flutterwave reports. */
-export async function flutterwaveVerifyByRef(orgId: string, txRef: string) {
-  const cfg = await loadConfig(orgId, "FLUTTERWAVE");
+export async function flutterwaveVerifyByRef(txRef: string) {
+  const cfg = await loadConfig("FLUTTERWAVE");
   const res = await fetch(
     `${BASE}/transactions/verify_by_reference?tx_ref=${encodeURIComponent(txRef)}`,
     { headers: { Authorization: `Bearer ${cfg.secrets.secretKey}` } },
@@ -159,7 +130,6 @@ export async function flutterwaveVerifyByRef(orgId: string, txRef: string) {
   };
 }
 
-/** HMAC helper retained for provider-signed callbacks (future). */
 export function flutterwaveSignature(secret: string, body: string) {
   return createHmac("sha256", secret).update(body).digest("hex");
 }

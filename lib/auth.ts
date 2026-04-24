@@ -5,24 +5,17 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { runAsSystem } from "@/lib/tenant/context";
 import type { RoleName } from "@prisma/client";
 
-// Augment session with our domain fields
 declare module "next-auth" {
   interface Session {
     user: DefaultSession["user"] & {
       id: string;
-      orgId: string;
       role: RoleName;
       roleId: string;
     };
   }
 }
-
-// `next-auth/jwt` isn't re-exported at the package root in v5 beta —
-// we augment the `jwt` callback's token via ambient shape inside the
-// callback instead.
 
 const CredentialsSchema = z.object({
   email: z.string().email(),
@@ -46,41 +39,48 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = CredentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
         const { email, password } = parsed.data;
-        const user = await db.user.findUnique({ where: { email }, select: { id: true, email: true, name: true, image: true, passwordHash: true, isActive: true } });
+        const user = await db.user.findUnique({
+          where: { email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            passwordHash: true,
+            isActive: true,
+          },
+        });
         if (!user || !user.isActive || !user.passwordHash) return null;
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
-        await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+        await db.user.update({
+          where: { id: user.id },
+          data: { lastLoginAt: new Date() },
+        });
         return { id: user.id, email: user.email, name: user.name, image: user.image };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      // On initial sign-in, `user` is populated. Load the first active
-      // membership and stash domain fields on the token. We cast
-      // because next-auth v5's JWT type is a plain Record<string, unknown>.
       if (user?.id) {
-        const membership = await loadPrimaryMembership(user.id);
-        if (!membership) return token;
+        const profile = await loadUserRole(user.id);
+        if (!profile) return token;
         const t = token as Record<string, unknown>;
         t.id = user.id;
-        t.orgId = membership.organizationId;
-        t.role = membership.role.name;
-        t.roleId = membership.roleId;
+        t.role = profile.role.name;
+        t.roleId = profile.roleId;
       }
       return token;
     },
     async session({ session, token }) {
       const t = token as {
         id?: string;
-        orgId?: string;
         role?: RoleName;
         roleId?: string;
       };
-      if (t.id && t.orgId && t.role && t.roleId) {
+      if (t.id && t.role && t.roleId) {
         session.user.id = t.id;
-        session.user.orgId = t.orgId;
         session.user.role = t.role;
         session.user.roleId = t.roleId;
       }
@@ -89,15 +89,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 });
 
-async function loadPrimaryMembership(userId: string) {
-  // Happens during sign-in before a tenant context is known — use the
-  // SYSTEM bypass. OrgMembership's policy otherwise requires either
-  // userId=app_current_user (not set yet) or SYSTEM.
-  return runAsSystem((tx) =>
-    tx.orgMembership.findFirst({
-      where: { userId, organization: { isActive: true } },
-      select: { organizationId: true, roleId: true, role: { select: { name: true } } },
-      orderBy: { joinedAt: "asc" },
-    }),
-  );
+async function loadUserRole(userId: string) {
+  const user = await db.user.findUnique({
+    where: { id: userId, isActive: true },
+    select: { roleId: true, role: { select: { name: true } } },
+  });
+  if (!user || !user.roleId || !user.role) return null;
+  return { roleId: user.roleId, role: user.role };
 }

@@ -1,4 +1,4 @@
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { UpstreamError, ValidationError } from "@/lib/errors";
 import { loadConfig } from "./config";
 import type {
@@ -8,29 +8,16 @@ import type {
   WebhookVerifyResult,
 } from "./types";
 
-/**
- * Pesapal adapter (East Africa).
- *
- * API flow (v3):
- *   1. POST /api/Auth/RequestToken with consumer_key/consumer_secret
- *      -> { token } valid ~5 min. We cache in-memory per process.
- *   2. POST /api/Transactions/SubmitOrderRequest with order payload
- *      -> { order_tracking_id, redirect_url }.
- *   3. Donor completes on Pesapal; we receive an IPN callback.
- *   4. POST /api/Transactions/GetTransactionStatus to confirm state.
- */
-
 function baseUrl(mode: string) {
   return mode === "live" ? "https://pay.pesapal.com/v3" : "https://cybqa.pesapal.com/pesapalv3";
 }
 
-const tokenCache = new Map<string, { token: string; expiresAt: number }>();
+let cachedToken: { token: string; expiresAt: number } | null = null;
 
-async function getToken(orgId: string): Promise<{ token: string; base: string; cfg: Awaited<ReturnType<typeof loadConfig<"PESAPAL">>> }> {
-  const cfg = await loadConfig(orgId, "PESAPAL");
-  const cached = tokenCache.get(orgId);
-  if (cached && cached.expiresAt > Date.now() + 30_000) {
-    return { token: cached.token, base: baseUrl(cfg.mode), cfg };
+async function getToken(): Promise<{ token: string; base: string; cfg: Awaited<ReturnType<typeof loadConfig<"PESAPAL">>> }> {
+  const cfg = await loadConfig("PESAPAL");
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 30_000) {
+    return { token: cachedToken.token, base: baseUrl(cfg.mode), cfg };
   }
   const base = baseUrl(cfg.mode);
   const res = await fetch(`${base}/api/Auth/RequestToken`, {
@@ -42,10 +29,10 @@ async function getToken(orgId: string): Promise<{ token: string; base: string; c
     }),
   });
   if (!res.ok) throw new UpstreamError(`Pesapal auth failed: ${res.status}`);
-  const json = (await res.json()) as { token?: string; expiryDate?: string; error?: unknown };
+  const json = (await res.json()) as { token?: string; expiryDate?: string };
   if (!json.token) throw new UpstreamError("Pesapal did not return a token");
   const expiresAt = json.expiryDate ? new Date(json.expiryDate).getTime() : Date.now() + 4 * 60_000;
-  tokenCache.set(orgId, { token: json.token, expiresAt });
+  cachedToken = { token: json.token, expiresAt };
   return { token: json.token, base, cfg };
 }
 
@@ -57,26 +44,18 @@ export const pesapalAdapter: PaymentProviderAdapter = {
   async createIntent(params: CreateIntentParams): Promise<CreateIntentResult> {
     if (params.recurring) throw new ValidationError("Pesapal recurring donations are not supported yet");
 
-    const { token, base, cfg } = await getToken(params.orgId);
+    const { token, base, cfg } = await getToken();
     const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const ipnId = cfg.publicConfig.ipnId ?? process.env.PESAPAL_IPN_ID;
     if (!ipnId) throw new UpstreamError("Pesapal IPN id not configured");
 
-    const donor = await runAsTenant(params.orgId, (tx) =>
-      tx.donor.upsert({
-        where: {
-          organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
-        },
-        update: { name: params.donorName ?? undefined },
-        create: {
-          organizationId: params.orgId,
-          email: params.donorEmail,
-          name: params.donorName,
-        },
-      }),
-    );
+    const donor = await db.donor.upsert({
+      where: { email: params.donorEmail },
+      update: { name: params.donorName ?? undefined },
+      create: { email: params.donorEmail, name: params.donorName },
+    });
 
-    const merchantReference = `gfd_${crypto.randomUUID()}`;
+    const merchantReference = `don_${crypto.randomUUID()}`;
 
     const orderRes = await fetch(`${base}/api/Transactions/SubmitOrderRequest`, {
       method: "POST",
@@ -112,38 +91,31 @@ export const pesapalAdapter: PaymentProviderAdapter = {
     if (!json.order_tracking_id || !json.redirect_url) {
       throw new UpstreamError(`Pesapal order rejected: ${json.error?.message ?? "unknown"}`);
     }
+    const trackingId = json.order_tracking_id;
 
-    const donation = await runAsTenant(params.orgId, (tx) =>
-      tx.donation.create({
-        data: {
-          organizationId: params.orgId,
-          donorId: donor.id,
-          campaignId: params.campaignId,
-          amountCents: params.amountCents,
-          currency: params.currency.toUpperCase(),
-          provider: "PESAPAL",
-          providerRef: json.order_tracking_id!,
-          type: "ONE_TIME",
-          status: "PENDING",
-          metadata: { merchantReference } as never,
-        },
-      }),
-    );
+    const donation = await db.donation.create({
+      data: {
+        donorId: donor.id,
+        campaignId: params.campaignId,
+        amountCents: params.amountCents,
+        currency: params.currency.toUpperCase(),
+        provider: "PESAPAL",
+        providerRef: trackingId,
+        type: "ONE_TIME",
+        status: "PENDING",
+        metadata: { merchantReference } as never,
+      },
+    });
 
     return {
       kind: "REDIRECT",
       donationId: donation.id,
-      providerRef: json.order_tracking_id,
+      providerRef: trackingId,
       redirectUrl: json.redirect_url,
     };
   },
 
   async verifyWebhook(req: Request): Promise<WebhookVerifyResult> {
-    // Pesapal IPN is a GET with orderTrackingId + orderNotificationType
-    // query params. It does not sign the payload; we authenticate by
-    // calling GetTransactionStatus with our server credentials — if
-    // the tracking id exists in our DB and Pesapal confirms it, the
-    // event is legitimate.
     const url = new URL(req.url);
     const trackingId = url.searchParams.get("OrderTrackingId") ?? url.searchParams.get("orderTrackingId");
     const notifType =
@@ -157,16 +129,12 @@ export const pesapalAdapter: PaymentProviderAdapter = {
   },
 
   interpretEvent() {
-    // Pesapal IPN doesn't include the final state in the callback;
-    // our webhook route calls GetTransactionStatus and constructs the
-    // transition there (see app/api/webhooks/pesapal/route.ts).
     return null;
   },
 };
 
-/** Exposed so the webhook route can finalize after IPN notification. */
-export async function pesapalGetStatus(orgId: string, trackingId: string) {
-  const { token, base } = await getToken(orgId);
+export async function pesapalGetStatus(trackingId: string) {
+  const { token, base } = await getToken();
   const res = await fetch(
     `${base}/api/Transactions/GetTransactionStatus?orderTrackingId=${encodeURIComponent(trackingId)}`,
     {

@@ -8,8 +8,8 @@ import { RefundButton } from "./RefundButton";
 export const metadata = { title: "Donations" };
 
 export default async function DonationsPage() {
-  const actor = await requireActorFromSession();
-  const rows = await listDonations(actor.orgId);
+  await requireActorFromSession();
+  const rows = await listDonations();
 
   const totalRaised = rows
     .filter((r) => r.status === "SUCCEEDED")

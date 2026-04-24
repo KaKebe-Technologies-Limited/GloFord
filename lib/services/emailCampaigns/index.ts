@@ -8,8 +8,8 @@ import {
   campaignEmailUpdateSchema,
   campaignEmailDeleteSchema,
 } from "@/lib/validators/emailCampaigns";
-import { runAsTenant } from "@/lib/tenant/context";
 import { ConflictError, NotFoundError } from "@/lib/errors";
+import { db } from "@/lib/db";
 
 // ───────────────────────────────────────── Campaigns ──
 
@@ -18,11 +18,10 @@ export const createEmailCampaign = createService({
   action: "create",
   schema: emailCampaignCreateSchema,
   permission: () => ({ type: "EmailCampaign" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const { segmentIds, triggerConfig, ...rest } = input;
     return tx.emailCampaign.create({
       data: {
-        organizationId: actor.orgId,
         ...rest,
         triggerConfig: (triggerConfig ?? {}) as never,
         segments: segmentIds.length
@@ -41,11 +40,9 @@ export const updateEmailCampaign = createService({
   permission: () => ({ type: "EmailCampaign" }),
   loadBefore: async ({ input, tx }) =>
     tx.emailCampaign.findUnique({ where: { id: input.id } }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const { id, segmentIds, triggerConfig, ...rest } = input;
-    const row = await tx.emailCampaign.findFirst({
-      where: { id, organizationId: actor.orgId },
-    });
+    const row = await tx.emailCampaign.findUnique({ where: { id } });
     if (!row) throw new NotFoundError("Campaign not found");
     return tx.emailCampaign.update({
       where: { id },
@@ -66,9 +63,9 @@ export const deleteEmailCampaign = createService({
   action: "delete",
   schema: emailCampaignDeleteSchema,
   permission: () => ({ type: "EmailCampaign" }),
-  exec: async ({ input, actor, tx }) => {
-    const row = await tx.emailCampaign.findFirst({
-      where: { id: input.id, organizationId: actor.orgId },
+  exec: async ({ input, tx }) => {
+    const row = await tx.emailCampaign.findUnique({
+      where: { id: input.id },
       select: { id: true, _count: { select: { enrollments: true } } },
     });
     if (!row) throw new NotFoundError("Campaign not found");
@@ -87,9 +84,9 @@ export const activateEmailCampaign = createService({
   action: "activate",
   schema: emailCampaignActivateSchema,
   permission: () => ({ type: "EmailCampaign" }),
-  exec: async ({ input, actor, tx }) => {
-    const row = await tx.emailCampaign.findFirst({
-      where: { id: input.id, organizationId: actor.orgId },
+  exec: async ({ input, tx }) => {
+    const row = await tx.emailCampaign.findUnique({
+      where: { id: input.id },
       include: { emails: { select: { id: true } } },
     });
     if (!row) throw new NotFoundError("Campaign not found");
@@ -111,9 +108,9 @@ export const createCampaignEmail = createService({
   action: "update",
   schema: campaignEmailCreateSchema,
   permission: () => ({ type: "CampaignEmail" }),
-  exec: async ({ input, actor, tx }) => {
-    const parent = await tx.emailCampaign.findFirst({
-      where: { id: input.campaignId, organizationId: actor.orgId },
+  exec: async ({ input, tx }) => {
+    const parent = await tx.emailCampaign.findUnique({
+      where: { id: input.campaignId },
       select: { id: true },
     });
     if (!parent) throw new NotFoundError("Campaign not found");
@@ -135,15 +132,10 @@ export const updateCampaignEmail = createService({
   action: "update",
   schema: campaignEmailUpdateSchema,
   permission: () => ({ type: "CampaignEmail" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const { id, ...rest } = input;
-    const existing = await tx.campaignEmail.findUnique({
-      where: { id },
-      include: { campaign: { select: { organizationId: true } } },
-    });
-    if (!existing || existing.campaign.organizationId !== actor.orgId) {
-      throw new NotFoundError("Email step not found");
-    }
+    const existing = await tx.campaignEmail.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError("Email step not found");
     return tx.campaignEmail.update({
       where: { id },
       data: {
@@ -162,14 +154,9 @@ export const deleteCampaignEmail = createService({
   action: "update",
   schema: campaignEmailDeleteSchema,
   permission: () => ({ type: "CampaignEmail" }),
-  exec: async ({ input, actor, tx }) => {
-    const existing = await tx.campaignEmail.findUnique({
-      where: { id: input.id },
-      include: { campaign: { select: { organizationId: true } } },
-    });
-    if (!existing || existing.campaign.organizationId !== actor.orgId) {
-      throw new NotFoundError("Email step not found");
-    }
+  exec: async ({ input, tx }) => {
+    const existing = await tx.campaignEmail.findUnique({ where: { id: input.id } });
+    if (!existing) throw new NotFoundError("Email step not found");
     await tx.campaignEmail.delete({ where: { id: input.id } });
     return { id: input.id };
   },
@@ -177,37 +164,30 @@ export const deleteCampaignEmail = createService({
 
 // ───────────────────────────────────────── Reads ──
 
-export function listEmailCampaigns(orgId: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.emailCampaign.findMany({
-      where: { organizationId: orgId },
-      orderBy: { updatedAt: "desc" },
-      include: {
-        _count: { select: { emails: true, enrollments: true } },
-        segments: { select: { id: true, name: true } },
-      },
-    }),
-  );
+export function listEmailCampaigns() {
+  return db.emailCampaign.findMany({
+    orderBy: { updatedAt: "desc" },
+    include: {
+      _count: { select: { emails: true, enrollments: true } },
+      segments: { select: { id: true, name: true } },
+    },
+  });
 }
 
-export async function getCampaignEmailForEdit(orgId: string, id: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.campaignEmail.findFirst({
-      where: { id, campaign: { organizationId: orgId } },
-      include: { campaign: { select: { id: true, name: true } } },
-    }),
-  );
+export function getCampaignEmailForEdit(id: string) {
+  return db.campaignEmail.findUnique({
+    where: { id },
+    include: { campaign: { select: { id: true, name: true } } },
+  });
 }
 
-export function getEmailCampaignForEdit(orgId: string, id: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.emailCampaign.findFirst({
-      where: { id, organizationId: orgId },
-      include: {
-        emails: { orderBy: { stepOrder: "asc" } },
-        segments: { select: { id: true, name: true } },
-        _count: { select: { enrollments: true } },
-      },
-    }),
-  );
+export function getEmailCampaignForEdit(id: string) {
+  return db.emailCampaign.findUnique({
+    where: { id },
+    include: {
+      emails: { orderBy: { stepOrder: "asc" } },
+      segments: { select: { id: true, name: true } },
+      _count: { select: { enrollments: true } },
+    },
+  });
 }

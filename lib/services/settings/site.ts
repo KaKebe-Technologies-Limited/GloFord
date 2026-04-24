@@ -1,21 +1,24 @@
 import { createService } from "@/lib/services/_shared";
 import { siteSettingsUpdateSchema } from "@/lib/validators/settings";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
+
+const SINGLETON = "singleton";
 
 export const updateSiteSettings = createService({
   module: "settings",
   action: "update",
   schema: siteSettingsUpdateSchema,
   permission: () => ({ type: "SiteSettings" }),
-  loadBefore: async ({ actor, tx }) =>
-    tx.siteSettings.findUnique({ where: { organizationId: actor.orgId } }),
-  exec: async ({ input, actor, tx }) =>
+  loadBefore: async ({ tx }) =>
+    tx.siteSettings.findUnique({ where: { id: SINGLETON } }),
+  exec: async ({ input, tx }) =>
     tx.siteSettings.upsert({
-      where: { organizationId: actor.orgId },
+      where: { id: SINGLETON },
       create: {
-        organizationId: actor.orgId,
+        id: SINGLETON,
         siteName: input.siteName,
         logoUrl: input.logoUrl ?? null,
+        loginBgUrl: input.loginBgUrl ?? null,
         contact: input.contact as never,
         socials: input.socials as never,
         seo: input.seo as never,
@@ -23,6 +26,7 @@ export const updateSiteSettings = createService({
       update: {
         siteName: input.siteName,
         logoUrl: input.logoUrl ?? null,
+        loginBgUrl: input.loginBgUrl ?? null,
         contact: input.contact as never,
         socials: input.socials as never,
         seo: input.seo as never,
@@ -31,8 +35,6 @@ export const updateSiteSettings = createService({
   version: (out) => ({ entityType: "SiteSettings", entityId: out.id }),
 });
 
-export function getSiteSettings(orgId: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.siteSettings.findUnique({ where: { organizationId: orgId } }),
-  );
+export function getSiteSettings() {
+  return db.siteSettings.findUnique({ where: { id: SINGLETON } });
 }

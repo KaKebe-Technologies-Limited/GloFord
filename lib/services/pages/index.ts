@@ -1,4 +1,4 @@
-import { revalidateTag } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { createService } from "@/lib/services/_shared";
 import {
   pageCreateSchema,
@@ -8,16 +8,16 @@ import {
 } from "@/lib/validators/pages";
 import { NotFoundError } from "@/lib/errors";
 import { tags } from "@/lib/cache";
+import { db } from "@/lib/db";
 
 export const createPage = createService({
   module: "pages",
   action: "create",
   schema: pageCreateSchema,
   permission: () => ({ type: "Page" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const row = await tx.page.create({
       data: {
-        organizationId: actor.orgId,
         slug: input.slug,
         title: input.title,
         seoTitle: input.seoTitle,
@@ -25,7 +25,7 @@ export const createPage = createService({
         blocks: input.blocks as never,
       },
     });
-    revalidateTag(tags.pages(actor.orgId));
+    revalidateTag(tags.pages());
     return row;
   },
   version: (out) => ({ entityType: "Page", entityId: out.id }),
@@ -37,7 +37,7 @@ export const updatePage = createService({
   schema: pageUpdateSchema,
   permission: () => ({ type: "Page" }),
   loadBefore: async ({ input, tx }) => tx.page.findUnique({ where: { id: input.id } }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const { id, ...rest } = input;
     const row = await tx.page.update({
       where: { id },
@@ -49,8 +49,8 @@ export const updatePage = createService({
         ...(rest.blocks !== undefined && { blocks: rest.blocks as never }),
       },
     });
-    revalidateTag(tags.pages(actor.orgId));
-    revalidateTag(tags.page(actor.orgId, row.slug));
+    revalidateTag(tags.pages());
+    revalidateTag(tags.page(row.slug));
     return row;
   },
   version: (out) => ({ entityType: "Page", entityId: out.id }),
@@ -62,7 +62,7 @@ export const setPageStatus = createService({
   schema: pagePublishSchema,
   permission: () => ({ type: "Page" }),
   loadBefore: async ({ input, tx }) => tx.page.findUnique({ where: { id: input.id } }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const row = await tx.page.update({
       where: { id: input.id },
       data: {
@@ -70,8 +70,8 @@ export const setPageStatus = createService({
         publishedAt: input.status === "PUBLISHED" ? new Date() : null,
       },
     });
-    revalidateTag(tags.pages(actor.orgId));
-    revalidateTag(tags.page(actor.orgId, row.slug));
+    revalidateTag(tags.pages());
+    revalidateTag(tags.page(row.slug));
     return row;
   },
   version: (out) => ({ entityType: "Page", entityId: out.id }),
@@ -82,48 +82,37 @@ export const deletePage = createService({
   action: "delete",
   schema: pageDeleteSchema,
   permission: () => ({ type: "Page" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const row = await tx.page.delete({ where: { id: input.id } });
-    revalidateTag(tags.pages(actor.orgId));
-    revalidateTag(tags.page(actor.orgId, row.slug));
+    revalidateTag(tags.pages());
+    revalidateTag(tags.page(row.slug));
     return { id: row.id };
   },
 });
 
-// ─── Read helpers (no createService — reads don't need audit/version) ─
+// ─── Read helpers ────────────────────────────────────────────
 
-import { runAsTenant } from "@/lib/tenant/context";
-import { unstable_cache } from "next/cache";
-
-export function listPages(orgId: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.page.findMany({
-      where: { organizationId: orgId },
-      orderBy: { updatedAt: "desc" },
-      select: { id: true, slug: true, title: true, status: true, publishedAt: true, updatedAt: true },
-    }),
-  );
+export function listPages() {
+  return db.page.findMany({
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, slug: true, title: true, status: true, publishedAt: true, updatedAt: true },
+  });
 }
 
-export function getPageForEdit(orgId: string, id: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.page.findFirst({ where: { id, organizationId: orgId } }),
-  );
+export function getPageForEdit(id: string) {
+  return db.page.findUnique({ where: { id } });
 }
 
-/** Public-facing cached read by slug. Revalidated via tags on publish. */
-export function getPublishedPageBySlug(orgId: string, s: string) {
+export function getPublishedPageBySlug(s: string) {
   return unstable_cache(
     async () => {
-      const row = await runAsTenant(orgId, (tx) =>
-        tx.page.findFirst({
-          where: { organizationId: orgId, slug: s, status: "PUBLISHED" },
-        }),
-      );
+      const row = await db.page.findFirst({
+        where: { slug: s, status: "PUBLISHED" },
+      });
       if (!row) throw new NotFoundError("Page");
       return row;
     },
-    [`page-pub`, orgId, s],
-    { tags: [tags.page(orgId, s), tags.pages(orgId)], revalidate: 3600 },
+    [`page-pub`, s],
+    { tags: [tags.page(s), tags.pages()], revalidate: 3600 },
   )();
 }

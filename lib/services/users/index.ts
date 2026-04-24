@@ -5,61 +5,45 @@ import {
   userDeactivateSchema,
 } from "@/lib/validators/users";
 import { db } from "@/lib/db";
-import { runAsSystem } from "@/lib/tenant/context";
 import { NotFoundError, ConflictError } from "@/lib/errors";
 import { inngest } from "@/lib/inngest/client";
 
 /**
- * Invite (or upsert) a user into this organization at a given role.
- *
- * First-time users land with no passwordHash. They'll set one via the
- * magic-link / OAuth flow on first sign-in. The actual email is sent by
- * an Inngest-backed invite function (not in scope here).
+ * Invite a user. No multi-tenant membership table — the user simply
+ * gets a row on the User table with the given role. First-time users
+ * land with no passwordHash and set one via the invite email / OAuth.
  */
 export const inviteUser = createService({
   module: "users",
   action: "invite",
   schema: userInviteSchema,
   permission: () => ({ type: "User" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const role = await tx.role.findUnique({ where: { name: input.role } });
     if (!role) throw new NotFoundError(`Role ${input.role} not found`);
 
-    const user = await tx.user.upsert({
-      where: { email: input.email },
-      create: { email: input.email, name: input.name },
-      update: { name: input.name ?? undefined },
-    });
+    const existing = await tx.user.findUnique({ where: { email: input.email } });
+    if (existing) throw new ConflictError("A user with this email already exists");
 
-    const existing = await tx.orgMembership.findUnique({
-      where: {
-        organizationId_userId: { organizationId: actor.orgId, userId: user.id },
+    const user = await tx.user.create({
+      data: {
+        email: input.email,
+        name: input.name,
+        roleId: role.id,
       },
-    });
-    if (existing) {
-      throw new ConflictError("User is already a member of this organization");
-    }
-
-    const membership = await tx.orgMembership.create({
-      data: { organizationId: actor.orgId, userId: user.id, roleId: role.id },
-      include: { user: true, role: true },
+      include: { role: true },
     });
 
-    // Fire invite email out-of-band.
     void inngest
       .send({
         name: "user/invite.send",
-        data: {
-          orgId: actor.orgId,
-          email: user.email,
-          name: user.name ?? undefined,
-        },
+        data: { email: user.email, name: user.name ?? undefined },
       })
       .catch(() => {});
 
-    return membership;
+    return user;
   },
-  version: (out) => ({ entityType: "OrgMembership", entityId: out.id }),
+  version: (out) => ({ entityType: "User", entityId: out.id }),
 });
 
 export const updateUserRole = createService({
@@ -67,22 +51,18 @@ export const updateUserRole = createService({
   action: "update",
   schema: userUpdateRoleSchema,
   permission: () => ({ type: "User" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const role = await tx.role.findUnique({ where: { name: input.role } });
     if (!role) throw new NotFoundError(`Role ${input.role} not found`);
-    const membership = await tx.orgMembership.findUnique({
-      where: {
-        organizationId_userId: { organizationId: actor.orgId, userId: input.userId },
-      },
-    });
-    if (!membership) throw new NotFoundError("Membership not found");
-    return tx.orgMembership.update({
-      where: { id: membership.id },
+    const user = await tx.user.findUnique({ where: { id: input.userId } });
+    if (!user) throw new NotFoundError("User not found");
+    return tx.user.update({
+      where: { id: input.userId },
       data: { roleId: role.id },
-      include: { user: true, role: true },
+      include: { role: true },
     });
   },
-  version: (out) => ({ entityType: "OrgMembership", entityId: out.id }),
+  version: (out) => ({ entityType: "User", entityId: out.id }),
 });
 
 export const deactivateUser = createService({
@@ -94,33 +74,27 @@ export const deactivateUser = createService({
     if (input.userId === actor.userId) {
       throw new ConflictError("You cannot deactivate yourself");
     }
-    const membership = await tx.orgMembership.findUnique({
-      where: {
-        organizationId_userId: { organizationId: actor.orgId, userId: input.userId },
-      },
+    const user = await tx.user.findUnique({ where: { id: input.userId } });
+    if (!user) throw new NotFoundError("User not found");
+    await tx.user.update({
+      where: { id: input.userId },
+      data: { isActive: false },
     });
-    if (!membership) throw new NotFoundError("Membership not found");
-    // Soft-remove: drop the membership for this org but keep the User.
-    await tx.orgMembership.delete({ where: { id: membership.id } });
     return { userId: input.userId };
   },
 });
 
-export function listOrgUsers(orgId: string) {
-  // OrgMembership RLS keys off userId (each user sees their own).
-  // Admin listing-all requires the SYSTEM bypass.
-  return runAsSystem((tx) =>
-    tx.orgMembership.findMany({
-      where: { organizationId: orgId },
-      include: { user: true, role: true },
-      orderBy: { joinedAt: "desc" },
-    }),
-  );
+export function listOrgUsers() {
+  return db.user.findMany({
+    where: { isActive: true },
+    include: { role: true },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export function listRoles() {
   return db.role.findMany({
     orderBy: { name: "asc" },
-    include: { _count: { select: { memberships: true } } },
+    include: { _count: { select: { users: true } } },
   });
 }

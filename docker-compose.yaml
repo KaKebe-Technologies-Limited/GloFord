@@ -1,19 +1,19 @@
-name: gloford
+name: ${COMPOSE_PROJECT_NAME:-platform}
 
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: gloford
-      POSTGRES_PASSWORD: gloford
-      POSTGRES_DB: gloford
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
     ports:
       - "5433:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gloford -d gloford"]
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
       interval: 5s
       timeout: 3s
       retries: 30
@@ -25,12 +25,14 @@ services:
       - ./:/app
       - migrate-node-modules:/app/node_modules
     environment:
-      # Migrations + seed run as superuser so DDL + RLS role creation work.
-      DATABASE_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
-      DIRECT_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
+      DATABASE_URL: postgresql://app:app@db:5432/app?sslmode=disable
+      DIRECT_URL: postgresql://app:app@db:5432/app?sslmode=disable
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-O2PqgJfqZ3eZk0kSzv6gOQ3aV2lT8WrxKEP0iFnPw9k=}
-      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@gloford.org}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.org}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-change-me-on-first-login}
+      BRAND_NAME: ${BRAND_NAME:-Platform}
+      BRAND_LOGO_URL: ${BRAND_LOGO_URL:-}
+      BRAND_PRIMARY_COLOR: ${BRAND_PRIMARY_COLOR:-#2563eb}
     depends_on:
       db:
         condition: service_healthy
@@ -42,6 +44,7 @@ services:
         corepack enable &&
         corepack prepare pnpm@10.0.0 --activate &&
         pnpm install --frozen-lockfile &&
+        pnpm prisma generate &&
         pnpm prisma migrate deploy &&
         pnpm db:seed
 
@@ -59,18 +62,17 @@ services:
       AUTH_URL: ${AUTH_URL:-http://localhost:3000}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
       AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
-      # Runtime connects as the non-superuser gloford_app role so RLS
-      # policies actually enforce (see migration 30000000000400_rls_app_role).
-      # DIRECT_URL stays on the superuser so Prisma can run DDL if needed
-      # (e.g., migrate deploy at boot).
-      DATABASE_URL: postgresql://gloford_app:gloford_app@db:5432/gloford?sslmode=disable
-      DIRECT_URL: postgresql://gloford:gloford@db:5432/gloford?sslmode=disable
+      DATABASE_URL: postgresql://app:app@db:5432/app?sslmode=disable
+      DIRECT_URL: postgresql://app:app@db:5432/app?sslmode=disable
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-O2PqgJfqZ3eZk0kSzv6gOQ3aV2lT8WrxKEP0iFnPw9k=}
       INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-}
       INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
       INNGEST_BASE_URL: http://inngest:8288
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      MAIL_FROM: ${MAIL_FROM:-Gloford <no-reply@gloford.org>}
+      MAIL_FROM: ${MAIL_FROM:-Platform <no-reply@example.org>}
+      BRAND_NAME: ${BRAND_NAME:-Platform}
+      BRAND_LOGO_URL: ${BRAND_LOGO_URL:-}
+      BRAND_PRIMARY_COLOR: ${BRAND_PRIMARY_COLOR:-#2563eb}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
     ports:

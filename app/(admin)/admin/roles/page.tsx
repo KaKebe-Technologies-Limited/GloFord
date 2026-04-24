@@ -30,7 +30,7 @@ export default async function RolesPage() {
                   <th key={r.id} className="px-4 py-3 text-center">
                     <div>{r.name}</div>
                     <div className="mt-1 text-[10px] font-normal normal-case text-[--color-muted-fg]">
-                      {r._count.memberships} member{r._count.memberships === 1 ? "" : "s"}
+                      {r._count.users} member{r._count.users === 1 ? "" : "s"}
                     </div>
                   </th>
                 ))}

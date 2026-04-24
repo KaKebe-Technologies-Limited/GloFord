@@ -7,10 +7,10 @@ import { NewsletterStatusBadge } from "../StatusBadge";
 
 export default async function EditNewsletter({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actor = await requireActorFromSession();
+  await requireActorFromSession();
   const [nl, segments] = await Promise.all([
-    getNewsletterForEdit(actor.orgId, id),
-    listSegments(actor.orgId),
+    getNewsletterForEdit(id),
+    listSegments(),
   ]);
   if (!nl) notFound();
 

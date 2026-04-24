@@ -8,8 +8,8 @@ import { NewsletterStatusBadge } from "./StatusBadge";
 export const metadata = { title: "Newsletters" };
 
 export default async function NewslettersPage() {
-  const actor = await requireActorFromSession();
-  const rows = await listNewsletters(actor.orgId);
+  await requireActorFromSession();
+  const rows = await listNewsletters();
 
   return (
     <div className="space-y-6">

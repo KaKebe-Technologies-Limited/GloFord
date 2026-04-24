@@ -6,33 +6,33 @@ import { tags } from "@/lib/cache";
  * Returns the flat token map injected onto <html>. Keys (without
  * the `--token-` prefix) must match the names in app/globals.css.
  *
- * For launch the platform is single-tenant, so we resolve the only
- * active organization's Theme. When routing becomes per-org (Phase 2+),
- * swap this for a host/subdomain lookup.
+ * Color values are space-separated RGB triplets (R G B) so they
+ * can be used with alpha: rgb(var(--token-primary) / 0.5).
  */
 export type ThemeTokens = Record<string, string>;
 
 const DEFAULTS: ThemeTokens = {
-  "bg": "0 0% 100%",
-  "fg": "224 71% 4%",
-  "muted": "220 14% 96%",
-  "muted-fg": "220 9% 46%",
-  "card": "0 0% 100%",
-  "card-fg": "224 71% 4%",
-  "border": "220 13% 91%",
-  "input": "220 13% 91%",
-  "ring": "215 20% 65%",
-  "primary": "212 92% 38%",
-  "primary-fg": "0 0% 100%",
-  "secondary": "220 14% 96%",
-  "secondary-fg": "224 71% 4%",
-  "accent": "35 92% 52%",
-  "accent-fg": "224 71% 4%",
-  "danger": "0 84% 60%",
-  "danger-fg": "0 0% 100%",
-  "success": "142 71% 45%",
+  "bg": "255 255 255",
+  "surface-2": "250 249 247",
+  "fg": "10 10 11",
+  "muted": "237 237 240",
+  "muted-fg": "74 76 85",
+  "card": "255 255 255",
+  "card-fg": "10 10 11",
+  "hairline": "15 23 42",
+  "input": "237 237 240",
+  "ring": "201 168 76",
+  "primary": "201 168 76",
+  "primary-fg": "255 255 255",
+  "secondary": "250 249 247",
+  "secondary-fg": "10 10 11",
+  "accent": "232 201 107",
+  "accent-fg": "10 10 11",
+  "danger": "239 68 68",
+  "danger-fg": "255 255 255",
+  "success": "34 197 94",
   "font-sans": '"Inter", ui-sans-serif, system-ui, sans-serif',
-  "font-serif": "ui-serif, Georgia, serif",
+  "font-serif": '"Playfair Display", ui-serif, Georgia, serif',
   "radius-sm": "0.25rem",
   "radius-md": "0.5rem",
   "radius-lg": "0.75rem",
@@ -40,14 +40,8 @@ const DEFAULTS: ThemeTokens = {
 
 async function loadActiveTheme(): Promise<ThemeTokens> {
   try {
-    const org = await db.organization.findFirst({
-      where: { isActive: true },
-      select: { id: true, theme: true },
-      orderBy: { createdAt: "asc" },
-    });
-
-    if (!org?.theme) return DEFAULTS;
-    const t = org.theme;
+    const t = await db.theme.findUnique({ where: { id: "singleton" } });
+    if (!t) return DEFAULTS;
     const merged: ThemeTokens = { ...DEFAULTS };
     const assign = (obj: unknown, prefix = "") => {
       if (!obj || typeof obj !== "object") return;

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { cuid, email } from "./common";
 
 export const donationIntentSchema = z.object({
-  provider: z.enum(["STRIPE", "PAYPAL", "MOBILE_MONEY"]),
+  provider: z.enum(["STRIPE", "PAYPAL", "PESAPAL", "FLUTTERWAVE", "MTN_MOMO", "AIRTEL_MONEY"]),
   amountCents: z.number().int().min(100, "Minimum donation is 1.00").max(100_000_000),
   currency: z.string().length(3),
   campaignSlug: z.string().optional(),

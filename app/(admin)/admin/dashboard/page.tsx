@@ -11,30 +11,24 @@ import {
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { requireActorFromSession } from "@/lib/auth-context";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { logger } from "@/lib/observability/log";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const t = await getTranslations("admin");
-  const actor = await requireActorFromSession();
-  const orgId = actor.orgId;
+  await requireActorFromSession();
 
   const since = new Date();
   since.setDate(since.getDate() - 30);
 
-  // Resilience: each KPI is its own promise — a single slow/failing
-  // query must not blank the whole dashboard. settle() returns the
-  // value if the promise resolved, otherwise a caller-supplied fallback
-  // + a log line that shows up in observability.
   async function settle<T>(label: string, p: Promise<T>, fallback: T): Promise<T> {
     try {
       return await p;
     } catch (err) {
       void logger.error("dashboard.kpi.failed", {
         kpi: label,
-        orgId,
         error: err instanceof Error ? err.message : String(err),
       });
       return fallback;
@@ -44,7 +38,7 @@ export default async function DashboardPage() {
   const empty = { _sum: { amountCents: 0 }, _count: 0 };
   const emptyTotal = { _sum: { amountCents: 0 } };
 
-  const {
+  const [
     pagesPublished,
     pagesDraft,
     programsPublished,
@@ -59,85 +53,61 @@ export default async function DashboardPage() {
     newslettersSent,
     recentAudit,
     dlqPending,
-  } = await runAsTenant(orgId, async (tx) => {
-    const [
-      pagesPublished,
-      pagesDraft,
-      programsPublished,
-      postsPublished,
-      subscribersActive,
-      subscribersPending,
-      donationsAgg,
-      donations30,
-      donationsTotalAgg,
-      eventsUpcoming,
-      newslettersDraft,
-      newslettersSent,
-      recentAudit,
-      dlqPending,
-    ] = await Promise.all([
-      settle("pagesPublished", tx.page.count({ where: { organizationId: orgId, status: "PUBLISHED" } }), 0),
-      settle("pagesDraft", tx.page.count({ where: { organizationId: orgId, status: "DRAFT" } }), 0),
-      settle("programsPublished", tx.program.count({ where: { organizationId: orgId, status: "PUBLISHED" } }), 0),
-      settle("postsPublished", tx.post.count({ where: { organizationId: orgId, status: "PUBLISHED" } }), 0),
-      settle("subscribersActive", tx.subscriber.count({ where: { organizationId: orgId, status: "ACTIVE" } }), 0),
-      settle("subscribersPending", tx.subscriber.count({ where: { organizationId: orgId, status: "PENDING" } }), 0),
-      settle(
-        "donationsAgg",
-        tx.donation.aggregate({
-          where: { organizationId: orgId, status: "SUCCEEDED", createdAt: { gte: since } },
-          _sum: { amountCents: true },
-          _count: true,
-        }),
-        empty,
-      ),
-      settle(
-        "donations30",
-        tx.donation.count({ where: { organizationId: orgId, createdAt: { gte: since } } }),
-        0,
-      ),
-      settle(
-        "donationsTotalAgg",
-        tx.donation.aggregate({
-          where: { organizationId: orgId, status: "SUCCEEDED" },
-          _sum: { amountCents: true },
-        }),
-        emptyTotal,
-      ),
-      settle(
-        "eventsUpcoming",
-        tx.event.count({ where: { organizationId: orgId, startsAt: { gte: new Date() } } }),
-        0,
-      ),
-      settle("newslettersDraft", tx.newsletter.count({ where: { organizationId: orgId, status: "DRAFT" } }), 0),
-      settle("newslettersSent", tx.newsletter.count({ where: { organizationId: orgId, status: "SENT" } }), 0),
-      settle(
-        "recentAudit",
-        tx.auditLog.findMany({
-          where: { organizationId: orgId },
-          orderBy: { createdAt: "desc" },
-          take: 6,
-          select: {
-            id: true,
-            action: true,
-            entityType: true,
-            createdAt: true,
-            userId: true,
-          },
-        }),
-        [] as Array<{
-          id: string;
-          action: string;
-          entityType: string | null;
-          createdAt: Date;
-          userId: string | null;
-        }>,
-      ),
-      settle("dlqPending", tx.deadLetter.count({ where: { organizationId: orgId, status: "PENDING" } }), 0),
-    ]);
-    return {
-      pagesPublished,
-      pagesDraft,
+  ] = await Promise.all([
+    settle("pagesPublished", db.page.count({ where: { status: "PUBLISHED" } }), 0),
+    settle("pagesDraft", db.page.count({ where: { status: "DRAFT" } }), 0),
+    settle("programsPublished", db.program.count({ where: { status: "PUBLISHED" } }), 0),
+    settle("postsPublished", db.post.count({ where: { status: "PUBLISHED" } }), 0),
+    settle("subscribersActive", db.subscriber.count({ where: { status: "ACTIVE" } }), 0),
+    settle("subscribersPending", db.subscriber.count({ where: { status: "PENDING" } }), 0),
+    settle(
+      "donationsAgg",
+      db.donation.aggregate({
+        where: { status: "SUCCEEDED", createdAt: { gte: since } },
+        _sum: { amountCents: true },
+        _count: true,
+      }),
+      empty,
+    ),
+    settle("donations30", db.donation.count({ where: { createdAt: { gte: since } } }), 0),
+    settle(
+      "donationsTotalAgg",
+      db.donation.aggregate({
+        where: { status: "SUCCEEDED" },
+        _sum: { amountCents: true },
+      }),
+      emptyTotal,
+    ),
+    settle("eventsUpcoming", db.event.count({ where: { startsAt: { gte: new Date() } } }), 0),
+    settle("newslettersDraft", db.newsletter.count({ where: { status: "DRAFT" } }), 0),
+    settle("newslettersSent", db.newsletter.count({ where: { status: "SENT" } }), 0),
+    settle(
+      "recentAudit",
+      db.auditLog.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: {
+          id: true,
+          action: true,
+          entityType: true,
+          createdAt: true,
+          userId: true,
+        },
+      }),
+      [] as Array<{
+        id: string;
+        action: string;
+        entityType: string | null;
+        createdAt: Date;
+        userId: string | null;
+      }>,
+    ),
+    settle("dlqPending", db.deadLetter.count({ where: { status: "PENDING" } }), 0),
+  ]);
+
+  const _unused = {
+    pagesPublished,
+    pagesDraft,
       programsPublished,
       postsPublished,
       subscribersActive,
@@ -151,7 +121,7 @@ export default async function DashboardPage() {
       recentAudit,
       dlqPending,
     };
-  });
+  void _unused;
 
   const fmt = new Intl.NumberFormat("en", { notation: "compact" });
   const currency = new Intl.NumberFormat("en", { style: "currency", currency: "USD" });

@@ -8,8 +8,8 @@ import { formatMoney } from "@/lib/utils/money";
 export const metadata = { title: "Campaigns" };
 
 export default async function CampaignsPage() {
-  const actor = await requireActorFromSession();
-  const rows = await listCampaigns(actor.orgId);
+  await requireActorFromSession();
+  const rows = await listCampaigns();
 
   return (
     <div className="space-y-6">

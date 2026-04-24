@@ -5,8 +5,8 @@ import { NewsletterForm } from "../NewsletterForm";
 export const metadata = { title: "New newsletter" };
 
 export default async function NewNewsletter() {
-  const actor = await requireActorFromSession();
-  const segments = await listSegments(actor.orgId);
+  await requireActorFromSession();
+  const segments = await listSegments();
   return (
     <div className="space-y-6">
       <header>

@@ -8,13 +8,11 @@ import type { RoleName } from "@prisma/client";
 
 type ActorPayload = {
   userId: string;
-  orgId: string;
   role: RoleName;
   email: string;
 };
 
 export type GloforEvents = {
-  // ─── Audit ─────────────────────────────────────────────
   "audit/log": {
     data: {
       actor: ActorPayload | null;
@@ -28,10 +26,8 @@ export type GloforEvents = {
     };
   };
 
-  // ─── Versioning ────────────────────────────────────────
   "versioning/snapshot": {
     data: {
-      orgId: string;
       entityType: string;
       entityId: string;
       before: unknown;
@@ -41,10 +37,8 @@ export type GloforEvents = {
     };
   };
 
-  // ─── Dead-letter ───────────────────────────────────────
   "deadletter/enqueue": {
     data: {
-      orgId?: string;
       source: string;
       eventType: string;
       payload: unknown;
@@ -52,16 +46,14 @@ export type GloforEvents = {
     };
   };
 
-  // ─── Subscriber lifecycle ──────────────────────────────
   "subscriber/signup": {
-    data: { orgId: string; subscriberId: string; source?: string };
+    data: { subscriberId: string; source?: string };
   };
   "subscriber/confirmed": {
-    data: { orgId: string; subscriberId: string };
+    data: { subscriberId: string };
   };
   "subscriber/donation.succeeded": {
     data: {
-      orgId: string;
       subscriberId: string;
       donationId: string;
       amountCents: number;
@@ -69,34 +61,29 @@ export type GloforEvents = {
     };
   };
 
-  // ─── Newsletter & campaigns ────────────────────────────
   "newsletter/scheduled": {
-    data: { orgId: string; newsletterId: string };
+    data: { newsletterId: string };
   };
   "newsletter/send": {
-    data: { orgId: string; newsletterId: string };
+    data: { newsletterId: string };
   };
   "campaign/enroll": {
-    data: { orgId: string; campaignId: string; subscriberId: string };
+    data: { campaignId: string; subscriberId: string };
   };
 
-  // ─── Events (the domain kind) ──────────────────────────
   "event/announce": {
-    data: { orgId: string; eventId: string; notificationId: string };
+    data: { eventId: string; notificationId: string };
   };
   "event/reminder": {
-    data: { orgId: string; eventId: string; notificationId: string };
+    data: { eventId: string; notificationId: string };
   };
 
-  // ─── User invitations ──────────────────────────────────
   "user/invite.send": {
-    data: { orgId: string; email: string; name?: string };
+    data: { email: string; name?: string };
   };
 
-  // ─── Version restore ───────────────────────────────────
   "version/restore.apply": {
     data: {
-      orgId: string;
       entityType: string;
       entityId: string;
       snapshot: unknown;

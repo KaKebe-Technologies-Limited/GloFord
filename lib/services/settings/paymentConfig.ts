@@ -5,10 +5,6 @@ import { paymentConfigSchema, toggleConfigSchema } from "@/lib/validators/paymen
 
 type PaymentConfigInput = z.infer<typeof paymentConfigSchema>;
 
-/**
- * Split the typed input into (publicConfig, secretsObject) for storage.
- * Secrets are encrypted with AES-GCM before they touch the DB.
- */
 function splitConfig(input: PaymentConfigInput) {
   switch (input.provider) {
     case "STRIPE":
@@ -52,18 +48,14 @@ export const savePaymentConfig = createService({
   action: "update",
   schema: paymentConfigSchema,
   permission: () => ({ type: "Settings" }),
-  loadBefore: async ({ input, tx, actor }) =>
-    tx.paymentConfiguration.findUnique({
-      where: { organizationId_provider: { organizationId: actor.orgId, provider: input.provider } },
-    }),
-  exec: async ({ input, actor, tx }) => {
+  loadBefore: async ({ input, tx }) =>
+    tx.paymentConfiguration.findUnique({ where: { provider: input.provider } }),
+  exec: async ({ input, tx }) => {
     const { publicConfig, secrets } = splitConfig(input);
     const encryptedSecrets = encryptJson(secrets);
 
-    const row = await tx.paymentConfiguration.upsert({
-      where: {
-        organizationId_provider: { organizationId: actor.orgId, provider: input.provider },
-      },
+    return tx.paymentConfiguration.upsert({
+      where: { provider: input.provider },
       update: {
         isEnabled: input.isEnabled,
         mode: input.mode,
@@ -72,7 +64,6 @@ export const savePaymentConfig = createService({
         verifyError: null,
       },
       create: {
-        organizationId: actor.orgId,
         provider: input.provider,
         isEnabled: input.isEnabled,
         mode: input.mode,
@@ -80,7 +71,6 @@ export const savePaymentConfig = createService({
         encryptedSecrets,
       },
     });
-    return row;
   },
   version: (out) => ({ entityType: "PaymentConfiguration", entityId: out.id }),
 });
@@ -90,20 +80,16 @@ export const togglePaymentProvider = createService({
   action: "update",
   schema: toggleConfigSchema,
   permission: () => ({ type: "Settings" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const existing = await tx.paymentConfiguration.findUnique({
-      where: { organizationId_provider: { organizationId: actor.orgId, provider: input.provider } },
+      where: { provider: input.provider },
     });
-    if (!existing) {
-      throw new Error("Configure keys before enabling this provider");
-    }
+    if (!existing) throw new Error("Configure keys before enabling this provider");
     if (input.isEnabled && !existing.encryptedSecrets) {
       throw new Error("Configure keys before enabling this provider");
     }
     return tx.paymentConfiguration.update({
-      where: {
-        organizationId_provider: { organizationId: actor.orgId, provider: input.provider },
-      },
+      where: { provider: input.provider },
       data: { isEnabled: input.isEnabled },
     });
   },

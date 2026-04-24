@@ -1,35 +1,20 @@
 import { inngest } from "../client";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { randomBytes } from "node:crypto";
 
-/**
- * On donation.succeeded:
- *   1. Find or create a Subscriber for the donor email (PENDING until
- *      double opt-in, but already addressable by segmentation).
- *   2. Ensure the "donors" system segment exists.
- *   3. Link subscriber to segment (source=EVENT, idempotent).
- *   4. Write a SubscriberEvent for the audit trail + automation
- *      triggers (ON_DONATION EmailCampaigns consume this).
- *
- * Fire-and-forget from applyDonationEvent. All writes are tenant-scoped
- * via runAsTenant so RLS enforces isolation.
- */
 export const donationTagDonor = inngest.createFunction(
   { id: "donation-tag-donor", retries: 3 },
   { event: "subscriber/donation.succeeded" },
   async ({ event }) => {
-    const { orgId, donationId, amountCents, currency } = event.data;
+    const { donationId, amountCents, currency } = event.data;
     const extra = event.data as typeof event.data & { donorEmail?: string; donorName?: string };
     if (!extra.donorEmail) return;
 
-    await runAsTenant(orgId, async (tx) => {
+    await db.$transaction(async (tx) => {
       const subscriber = await tx.subscriber.upsert({
-        where: {
-          organizationId_email: { organizationId: orgId, email: extra.donorEmail! },
-        },
+        where: { email: extra.donorEmail! },
         update: { name: extra.donorName ?? undefined },
         create: {
-          organizationId: orgId,
           email: extra.donorEmail!,
           name: extra.donorName,
           source: "donation",
@@ -38,10 +23,9 @@ export const donationTagDonor = inngest.createFunction(
       });
 
       const donorSegment = await tx.segment.upsert({
-        where: { organizationId_slug: { organizationId: orgId, slug: "donors" } },
+        where: { slug: "donors" },
         update: {},
         create: {
-          organizationId: orgId,
           slug: "donors",
           name: "Donors",
           description: "People who have donated at least once",

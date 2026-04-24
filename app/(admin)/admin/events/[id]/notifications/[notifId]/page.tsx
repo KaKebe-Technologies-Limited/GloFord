@@ -14,8 +14,8 @@ export default async function EditEventNotificationPage({
   params: Promise<{ id: string; notifId: string }>;
 }) {
   const { id, notifId } = await params;
-  const actor = await requireActorFromSession();
-  const row = await getEventNotificationForEdit(actor.orgId, notifId);
+  await requireActorFromSession();
+  const row = await getEventNotificationForEdit(notifId);
   if (!row || row.event.id !== id) notFound();
 
   return (

@@ -6,7 +6,7 @@ export const metadata = { title: "Users" };
 
 export default async function UsersPage() {
   const actor = await requireActorFromSession();
-  const rows = await listOrgUsers(actor.orgId);
+  const rows = await listOrgUsers();
 
   return (
     <div className="space-y-6">
@@ -19,17 +19,15 @@ export default async function UsersPage() {
 
       <UserManager
         currentUserId={actor.userId}
-        members={rows.map((m) => ({
-          id: m.id,
-          userId: m.userId,
-          email: m.user.email,
-          name: m.user.name ?? "",
-          role: m.role.name,
-          joinedAt: m.joinedAt.toLocaleDateString(),
-          lastLoginAt: m.user.lastLoginAt
-            ? m.user.lastLoginAt.toLocaleString()
-            : null,
-          isActive: m.user.isActive,
+        members={rows.map((u) => ({
+          id: u.id,
+          userId: u.id,
+          email: u.email,
+          name: u.name ?? "",
+          role: u.role?.name ?? "VIEWER",
+          joinedAt: u.createdAt.toLocaleDateString(),
+          lastLoginAt: u.lastLoginAt ? u.lastLoginAt.toLocaleString() : null,
+          isActive: u.isActive,
         }))}
       />
     </div>

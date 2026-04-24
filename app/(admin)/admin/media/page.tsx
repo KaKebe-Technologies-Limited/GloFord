@@ -6,8 +6,8 @@ import { MediaCard } from "./MediaCard";
 export const metadata = { title: "Media" };
 
 export default async function MediaLibraryPage() {
-  const actor = await requireActorFromSession();
-  const items = await listMedia(actor.orgId);
+  await requireActorFromSession();
+  const items = await listMedia();
 
   return (
     <div className="space-y-6">

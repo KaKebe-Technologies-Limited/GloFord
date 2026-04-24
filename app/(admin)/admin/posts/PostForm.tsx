@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { createPostAction, updatePostAction, deletePostAction } from "@/lib/actions/posts";
 import { BlockEditor } from "@/components/blocks/BlockEditor";
 import { Button } from "@/components/ui/Button";
+import { MediaPicker } from "@/components/ui/MediaPicker";
 import type { Block } from "@/lib/blocks/types";
 
 type Initial = {
@@ -13,6 +14,7 @@ type Initial = {
   excerpt?: string;
   body?: Block[];
   coverMediaId?: string;
+  coverUrl?: string | null;
   tagSlugs?: string[];
 };
 
@@ -22,6 +24,7 @@ export function PostForm({ initial }: { initial?: Initial }) {
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [coverMediaId, setCoverMediaId] = useState(initial?.coverMediaId ?? "");
+  const [coverUrl, setCoverUrl] = useState<string | null>(initial?.coverUrl ?? null);
   const [tagInput, setTagInput] = useState((initial?.tagSlugs ?? []).join(", "));
   const [body, setBody] = useState<Block[]>(initial?.body ?? []);
   const [error, setError] = useState<string | null>(null);
@@ -80,8 +83,16 @@ export function PostForm({ initial }: { initial?: Initial }) {
           <Field label="Excerpt">
             <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={3} className={inputCls} />
           </Field>
-          <Field label="Cover media ID">
-            <input value={coverMediaId} onChange={(e) => setCoverMediaId(e.target.value)} className={inputCls} />
+          <Field label="Cover image">
+            <MediaPicker
+              value={coverMediaId}
+              valueUrl={coverUrl}
+              onChange={(p) => {
+                setCoverMediaId(p?.id ?? "");
+                setCoverUrl(p?.url ?? null);
+              }}
+              placeholder="Post cover"
+            />
           </Field>
           <Field label="Tags" hint="Comma-separated, lowercase slugs. New tags are created automatically.">
             <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} className={inputCls} />

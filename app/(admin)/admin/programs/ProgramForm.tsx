@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/programs";
 import { BlockEditor } from "@/components/blocks/BlockEditor";
 import { Button } from "@/components/ui/Button";
+import { MediaPicker } from "@/components/ui/MediaPicker";
 import type { Block } from "@/lib/blocks/types";
 
 type Initial = {
@@ -17,6 +18,7 @@ type Initial = {
   summary?: string;
   body?: Block[];
   coverMediaId?: string;
+  coverUrl?: string | null;
   order?: number;
 };
 
@@ -26,6 +28,7 @@ export function ProgramForm({ initial }: { initial?: Initial }) {
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [summary, setSummary] = useState(initial?.summary ?? "");
   const [coverMediaId, setCoverMediaId] = useState(initial?.coverMediaId ?? "");
+  const [coverUrl, setCoverUrl] = useState<string | null>(initial?.coverUrl ?? null);
   const [order, setOrder] = useState(initial?.order ?? 0);
   const [body, setBody] = useState<Block[]>(initial?.body ?? []);
   const [error, setError] = useState<string | null>(null);
@@ -81,8 +84,16 @@ export function ProgramForm({ initial }: { initial?: Initial }) {
             <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} className={inputCls} />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Cover media ID">
-              <input value={coverMediaId} onChange={(e) => setCoverMediaId(e.target.value)} className={inputCls} />
+            <Field label="Cover image">
+              <MediaPicker
+                value={coverMediaId}
+                valueUrl={coverUrl}
+                onChange={(p) => {
+                  setCoverMediaId(p?.id ?? "");
+                  setCoverUrl(p?.url ?? null);
+                }}
+                placeholder="Program cover"
+              />
             </Field>
             <Field label="Order" hint="Lower number = shown first">
               <input type="number" value={order} onChange={(e) => setOrder(Number(e.target.value))} className={inputCls} />

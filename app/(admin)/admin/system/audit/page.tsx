@@ -9,10 +9,10 @@ export default async function AuditLogPage({
   searchParams: Promise<{ module?: string }>;
 }) {
   const { module: filterModule } = await searchParams;
-  const actor = await requireActorFromSession();
+  await requireActorFromSession();
   const [rows, modules] = await Promise.all([
-    listAuditLogs(actor.orgId, { module: filterModule }),
-    listAuditModules(actor.orgId),
+    listAuditLogs({ module: filterModule }),
+    listAuditModules(),
   ]);
 
   return (

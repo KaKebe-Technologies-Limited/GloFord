@@ -1,16 +1,12 @@
 import { requireActorFromSession } from "@/lib/auth-context";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { ThemeEditor } from "./ThemeEditor";
 
 export const metadata = { title: "Theme" };
 
 export default async function ThemePage() {
-  const actor = await requireActorFromSession();
-  const theme = await runAsTenant(actor.orgId, (tx) =>
-    tx.theme.findUnique({
-      where: { organizationId: actor.orgId },
-    }),
-  );
+  await requireActorFromSession();
+  const theme = await db.theme.findUnique({ where: { id: "singleton" } });
 
   return (
     <div className="space-y-6">

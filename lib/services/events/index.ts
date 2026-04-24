@@ -8,7 +8,7 @@ import {
   eventNotificationDeleteSchema,
   eventNotificationSendNowSchema,
 } from "@/lib/validators/events";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { inngest } from "@/lib/inngest/client";
 import { ConflictError, NotFoundError } from "@/lib/errors";
 
@@ -19,16 +19,15 @@ export const createEvent = createService({
   action: "create",
   schema: eventCreateSchema,
   permission: () => ({ type: "Event" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const existing = await tx.event.findUnique({
-      where: { organizationId_slug: { organizationId: actor.orgId, slug: input.slug } },
+      where: { slug: input.slug },
       select: { id: true },
     });
     if (existing) throw new ConflictError("An event with this slug already exists");
     const { segmentIds, ...rest } = input;
     return tx.event.create({
       data: {
-        organizationId: actor.orgId,
         ...rest,
         segments: segmentIds.length
           ? { connect: segmentIds.map((id) => ({ id })) }
@@ -45,9 +44,9 @@ export const updateEvent = createService({
   schema: eventUpdateSchema,
   permission: () => ({ type: "Event" }),
   loadBefore: async ({ input, tx }) => tx.event.findUnique({ where: { id: input.id } }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const { id, segmentIds, ...rest } = input;
-    const row = await tx.event.findFirst({ where: { id, organizationId: actor.orgId } });
+    const row = await tx.event.findUnique({ where: { id } });
     if (!row) throw new NotFoundError("Event not found");
     return tx.event.update({
       where: { id },
@@ -67,49 +66,37 @@ export const deleteEvent = createService({
   action: "delete",
   schema: eventDeleteSchema,
   permission: () => ({ type: "Event" }),
-  exec: async ({ input, actor, tx }) => {
-    const row = await tx.event.findFirst({
-      where: { id: input.id, organizationId: actor.orgId },
-      select: { id: true },
-    });
+  exec: async ({ input, tx }) => {
+    const row = await tx.event.findUnique({ where: { id: input.id }, select: { id: true } });
     if (!row) throw new NotFoundError("Event not found");
     await tx.event.delete({ where: { id: input.id } });
     return { id: input.id };
   },
 });
 
-export function listEvents(orgId: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.event.findMany({
-      where: { organizationId: orgId },
-      orderBy: { startsAt: "desc" },
-      include: { cover: { select: { url: true, alt: true } } },
-    }),
-  );
+export function listEvents() {
+  return db.event.findMany({
+    orderBy: { startsAt: "desc" },
+    include: { cover: { select: { url: true, alt: true } } },
+  });
 }
 
-export async function getEventNotificationForEdit(
-  orgId: string,
-  id: string,
-) {
-  return runAsTenant(orgId, (tx) =>
-    tx.eventNotification.findFirst({
-      where: { id, event: { organizationId: orgId } },
-      include: { event: { select: { id: true, title: true, slug: true } } },
-    }),
-  );
+export function getEventNotificationForEdit(id: string) {
+  return db.eventNotification.findUnique({
+    where: { id },
+    include: { event: { select: { id: true, title: true, slug: true } } },
+  });
 }
 
-export function getEventForEdit(orgId: string, id: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.event.findFirst({
-      where: { id, organizationId: orgId },
-      include: {
-        segments: { select: { id: true } },
-        notifications: { orderBy: { sendAt: "asc" } },
-      },
-    }),
-  );
+export function getEventForEdit(id: string) {
+  return db.event.findUnique({
+    where: { id },
+    include: {
+      cover: { select: { id: true, url: true } },
+      segments: { select: { id: true } },
+      notifications: { orderBy: { sendAt: "asc" } },
+    },
+  });
 }
 
 // ──────────────────────────────────── Event notifications ──
@@ -119,9 +106,9 @@ export const createEventNotification = createService({
   action: "update",
   schema: eventNotificationCreateSchema,
   permission: () => ({ type: "EventNotification" }),
-  exec: async ({ input, actor, tx }) => {
-    const event = await tx.event.findFirst({
-      where: { id: input.eventId, organizationId: actor.orgId },
+  exec: async ({ input, tx }) => {
+    const event = await tx.event.findUnique({
+      where: { id: input.eventId },
       select: { id: true },
     });
     if (!event) throw new NotFoundError("Event not found");
@@ -143,15 +130,10 @@ export const updateEventNotification = createService({
   action: "update",
   schema: eventNotificationUpdateSchema,
   permission: () => ({ type: "EventNotification" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const { id, ...rest } = input;
-    const notif = await tx.eventNotification.findUnique({
-      where: { id },
-      include: { event: { select: { organizationId: true } } },
-    });
-    if (!notif || notif.event.organizationId !== actor.orgId) {
-      throw new NotFoundError("Notification not found");
-    }
+    const notif = await tx.eventNotification.findUnique({ where: { id } });
+    if (!notif) throw new NotFoundError("Notification not found");
     if (notif.status === "SENT" || notif.status === "SENDING") {
       throw new ConflictError("Sent notifications cannot be edited");
     }
@@ -173,14 +155,9 @@ export const deleteEventNotification = createService({
   action: "update",
   schema: eventNotificationDeleteSchema,
   permission: () => ({ type: "EventNotification" }),
-  exec: async ({ input, actor, tx }) => {
-    const notif = await tx.eventNotification.findUnique({
-      where: { id: input.id },
-      include: { event: { select: { organizationId: true } } },
-    });
-    if (!notif || notif.event.organizationId !== actor.orgId) {
-      throw new NotFoundError("Notification not found");
-    }
+  exec: async ({ input, tx }) => {
+    const notif = await tx.eventNotification.findUnique({ where: { id: input.id } });
+    if (!notif) throw new NotFoundError("Notification not found");
     if (notif.status === "SENT" || notif.status === "SENDING") {
       throw new ConflictError("Sent notifications cannot be deleted");
     }
@@ -194,17 +171,13 @@ export const sendEventNotificationNow = createService({
   action: "update",
   schema: eventNotificationSendNowSchema,
   permission: () => ({ type: "EventNotification" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const notif = await tx.eventNotification.findUnique({
       where: { id: input.id },
-      include: { event: { select: { organizationId: true, id: true } } },
+      include: { event: { select: { id: true } } },
     });
-    if (!notif || notif.event.organizationId !== actor.orgId) {
-      throw new NotFoundError("Notification not found");
-    }
-    if (notif.status === "SENT") {
-      throw new ConflictError("Notification already sent");
-    }
+    if (!notif) throw new NotFoundError("Notification not found");
+    if (notif.status === "SENT") throw new ConflictError("Notification already sent");
     const row = await tx.eventNotification.update({
       where: { id: input.id },
       data: { status: "SENDING", sendAt: new Date() },
@@ -213,7 +186,7 @@ export const sendEventNotificationNow = createService({
     void inngest
       .send({
         name: eventName,
-        data: { orgId: actor.orgId, eventId: notif.event.id, notificationId: row.id },
+        data: { eventId: notif.event.id, notificationId: row.id },
       })
       .catch(() => {});
     return row;

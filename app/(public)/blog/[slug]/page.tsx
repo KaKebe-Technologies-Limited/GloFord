@@ -1,25 +1,14 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { db } from "@/lib/db";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { getPublishedPostBySlug } from "@/lib/services/posts";
-
-async function resolveOrg() {
-  return db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-}
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> },
 ): Promise<Metadata> {
   const { slug } = await params;
-  const org = await resolveOrg();
-  if (!org) return {};
   try {
-    const p = await getPublishedPostBySlug(org.id, slug);
+    const p = await getPublishedPostBySlug(slug);
     return { title: p.title, description: p.excerpt ?? undefined };
   } catch {
     return {};
@@ -28,12 +17,10 @@ export async function generateMetadata(
 
 export default async function PostDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const org = await resolveOrg();
-  if (!org) notFound();
 
   let post;
   try {
-    post = await getPublishedPostBySlug(org.id, slug);
+    post = await getPublishedPostBySlug(slug);
   } catch {
     notFound();
   }
@@ -60,7 +47,7 @@ export default async function PostDetail({ params }: { params: Promise<{ slug: s
           </ul>
         ) : null}
       </header>
-      <BlockRenderer blocks={post.body} orgId={org.id} />
+      <BlockRenderer blocks={post.body} />
     </article>
   );
 }

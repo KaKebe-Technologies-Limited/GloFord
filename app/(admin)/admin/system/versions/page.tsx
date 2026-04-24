@@ -10,10 +10,10 @@ export default async function VersionsPage({
   searchParams: Promise<{ entityType?: string; entityId?: string }>;
 }) {
   const { entityType, entityId } = await searchParams;
-  const actor = await requireActorFromSession();
+  await requireActorFromSession();
   const [rows, entityTypes] = await Promise.all([
-    listVersions(actor.orgId, { entityType, entityId }),
-    listVersionEntityTypes(actor.orgId),
+    listVersions({ entityType, entityId }),
+    listVersionEntityTypes(),
   ]);
 
   return (

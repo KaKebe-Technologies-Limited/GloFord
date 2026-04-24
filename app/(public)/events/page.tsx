@@ -1,19 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { CalendarDays, MapPin } from "lucide-react";
-import { db } from "@/lib/db";
 import { listPublicEvents } from "@/lib/services/events/public";
 
 export const metadata = { title: "Events" };
 
 export default async function EventsIndex() {
-  const org = await db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!org) return null;
-  const events = await listPublicEvents(org.id);
+  const events = await listPublicEvents();
 
   const now = Date.now();
   const upcoming = events.filter((e) => e.startsAt.getTime() >= now);

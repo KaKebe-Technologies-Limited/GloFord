@@ -7,6 +7,7 @@ import {
   deleteEventAction,
 } from "@/lib/actions/events";
 import { Button } from "@/components/ui/Button";
+import { MediaPicker } from "@/components/ui/MediaPicker";
 
 type Initial = {
   id?: string;
@@ -17,6 +18,7 @@ type Initial = {
   endsAt?: string | null;
   location?: string | null;
   coverMediaId?: string | null;
+  coverUrl?: string | null;
   isPublic?: boolean;
   segmentIds?: string[];
 };
@@ -37,6 +39,7 @@ export function EventForm({ initial }: { initial?: Initial }) {
   const [endsAt, setEndsAt] = useState(toLocalInput(initial?.endsAt));
   const [location, setLocation] = useState(initial?.location ?? "");
   const [coverMediaId, setCoverMediaId] = useState(initial?.coverMediaId ?? "");
+  const [coverUrl, setCoverUrl] = useState(initial?.coverUrl ?? "");
   const [isPublic, setIsPublic] = useState(initial?.isPublic ?? true);
   const [segmentIds, setSegmentIds] = useState<string>((initial?.segmentIds ?? []).join(","));
   const [error, setError] = useState<string | null>(null);
@@ -118,11 +121,15 @@ export function EventForm({ initial }: { initial?: Initial }) {
         <Field label="Location (optional)">
           <input value={location} onChange={(e) => setLocation(e.target.value)} className={inputCls} />
         </Field>
-        <Field label="Cover media id (optional)">
-          <input
+        <Field label="Cover image (optional)">
+          <MediaPicker
             value={coverMediaId}
-            onChange={(e) => setCoverMediaId(e.target.value)}
-            className={inputCls}
+            valueUrl={coverUrl}
+            onChange={(picked) => {
+              setCoverMediaId(picked?.id ?? "");
+              setCoverUrl(picked?.url ?? "");
+            }}
+            placeholder="Event cover"
           />
         </Field>
         <Field label="Notification segment ids (comma-separated)">

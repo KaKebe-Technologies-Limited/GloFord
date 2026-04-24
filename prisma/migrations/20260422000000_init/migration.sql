@@ -5,13 +5,13 @@ CREATE SCHEMA IF NOT EXISTS "public";
 CREATE TYPE "RoleName" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'EDITOR', 'VIEWER');
 
 -- CreateEnum
-CREATE TYPE "PermScope" AS ENUM ('GLOBAL', 'ORG', 'OWN');
+CREATE TYPE "PermScope" AS ENUM ('GLOBAL', 'OWN');
 
 -- CreateEnum
 CREATE TYPE "ContentStatus" AS ENUM ('DRAFT', 'REVIEW', 'PUBLISHED', 'ARCHIVED');
 
 -- CreateEnum
-CREATE TYPE "PaymentProvider" AS ENUM ('STRIPE', 'PAYPAL', 'MOBILE_MONEY', 'PESAPAL', 'FLUTTERWAVE', 'MTN_MOMO', 'AIRTEL_MONEY');
+CREATE TYPE "PaymentProvider" AS ENUM ('STRIPE', 'PAYPAL', 'PESAPAL', 'FLUTTERWAVE', 'MTN_MOMO', 'AIRTEL_MONEY');
 
 -- CreateEnum
 CREATE TYPE "DonationStatus" AS ENUM ('PENDING', 'SUCCEEDED', 'FAILED', 'REFUNDED');
@@ -47,31 +47,6 @@ CREATE TYPE "NavLocation" AS ENUM ('HEADER', 'FOOTER', 'ADMIN_SIDEBAR');
 CREATE TYPE "DLStatus" AS ENUM ('PENDING', 'RETRIED', 'RESOLVED', 'IGNORED');
 
 -- CreateTable
-CREATE TABLE "Organization" (
-    "id" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "logoUrl" TEXT,
-    "contactJson" JSONB NOT NULL DEFAULT '{}',
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "OrgMembership" (
-    "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "roleId" TEXT NOT NULL,
-    "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "OrgMembership_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -79,6 +54,7 @@ CREATE TABLE "User" (
     "name" TEXT,
     "image" TEXT,
     "passwordHash" TEXT,
+    "roleId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "lastLoginAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -166,7 +142,7 @@ CREATE TABLE "Permission" (
     "module" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "resourceType" TEXT,
-    "scope" "PermScope" NOT NULL DEFAULT 'ORG',
+    "scope" "PermScope" NOT NULL DEFAULT 'GLOBAL',
     "description" TEXT,
 
     CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
@@ -197,7 +173,6 @@ CREATE TABLE "ResourceGrant" (
 -- CreateTable
 CREATE TABLE "Page" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "seoTitle" TEXT,
@@ -214,7 +189,6 @@ CREATE TABLE "Page" (
 -- CreateTable
 CREATE TABLE "Program" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "summary" TEXT NOT NULL,
@@ -231,7 +205,6 @@ CREATE TABLE "Program" (
 -- CreateTable
 CREATE TABLE "Post" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "excerpt" TEXT,
@@ -249,7 +222,6 @@ CREATE TABLE "Post" (
 -- CreateTable
 CREATE TABLE "Tag" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "name" TEXT NOT NULL,
 
@@ -267,7 +239,6 @@ CREATE TABLE "PostTag" (
 -- CreateTable
 CREATE TABLE "Media" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "url" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "mime" TEXT NOT NULL,
@@ -284,7 +255,6 @@ CREATE TABLE "Media" (
 -- CreateTable
 CREATE TABLE "Campaign" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -303,7 +273,6 @@ CREATE TABLE "Campaign" (
 -- CreateTable
 CREATE TABLE "Donor" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT,
     "phone" TEXT,
@@ -316,7 +285,6 @@ CREATE TABLE "Donor" (
 -- CreateTable
 CREATE TABLE "Donation" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "donorId" TEXT,
     "campaignId" TEXT,
     "amountCents" INTEGER NOT NULL,
@@ -327,6 +295,10 @@ CREATE TABLE "Donation" (
     "type" "DonationType" NOT NULL DEFAULT 'ONE_TIME',
     "subscriptionId" TEXT,
     "receiptUrl" TEXT,
+    "refundedAt" TIMESTAMP(3),
+    "refundedById" TEXT,
+    "refundReason" TEXT,
+    "providerRefundId" TEXT,
     "metadata" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "completedAt" TIMESTAMP(3),
@@ -337,7 +309,6 @@ CREATE TABLE "Donation" (
 -- CreateTable
 CREATE TABLE "PaymentConfiguration" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "provider" "PaymentProvider" NOT NULL,
     "isEnabled" BOOLEAN NOT NULL DEFAULT false,
     "mode" TEXT NOT NULL DEFAULT 'sandbox',
@@ -353,10 +324,10 @@ CREATE TABLE "PaymentConfiguration" (
 
 -- CreateTable
 CREATE TABLE "SiteSettings" (
-    "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'singleton',
     "siteName" TEXT NOT NULL,
     "logoUrl" TEXT,
+    "loginBgUrl" TEXT,
     "contact" JSONB NOT NULL DEFAULT '{}',
     "socials" JSONB NOT NULL DEFAULT '{}',
     "seo" JSONB NOT NULL DEFAULT '{}',
@@ -367,8 +338,7 @@ CREATE TABLE "SiteSettings" (
 
 -- CreateTable
 CREATE TABLE "Theme" (
-    "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
+    "id" TEXT NOT NULL DEFAULT 'singleton',
     "colors" JSONB NOT NULL DEFAULT '{}',
     "typography" JSONB NOT NULL DEFAULT '{}',
     "radius" JSONB NOT NULL DEFAULT '{}',
@@ -382,7 +352,6 @@ CREATE TABLE "Theme" (
 -- CreateTable
 CREATE TABLE "Subscriber" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT,
     "status" "SubscriberStatus" NOT NULL DEFAULT 'PENDING',
@@ -398,7 +367,6 @@ CREATE TABLE "Subscriber" (
 -- CreateTable
 CREATE TABLE "Newsletter" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "subject" TEXT NOT NULL,
     "preheader" TEXT,
@@ -433,7 +401,6 @@ CREATE TABLE "NewsletterLog" (
 -- CreateTable
 CREATE TABLE "Segment" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -468,7 +435,6 @@ CREATE TABLE "SubscriberEvent" (
 -- CreateTable
 CREATE TABLE "EmailCampaign" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "trigger" "CampaignTrigger" NOT NULL,
@@ -511,7 +477,6 @@ CREATE TABLE "CampaignEnrollment" (
 -- CreateTable
 CREATE TABLE "Event" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -543,7 +508,6 @@ CREATE TABLE "EventNotification" (
 -- CreateTable
 CREATE TABLE "NavItem" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "location" "NavLocation" NOT NULL,
     "parentId" TEXT,
     "label" TEXT NOT NULL,
@@ -559,7 +523,6 @@ CREATE TABLE "NavItem" (
 -- CreateTable
 CREATE TABLE "FeatureFlag" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT,
     "key" TEXT NOT NULL,
     "description" TEXT,
     "isEnabled" BOOLEAN NOT NULL DEFAULT false,
@@ -573,7 +536,6 @@ CREATE TABLE "FeatureFlag" (
 -- CreateTable
 CREATE TABLE "AuditLog" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT,
     "userId" TEXT,
     "userRole" TEXT,
     "action" TEXT NOT NULL,
@@ -597,7 +559,6 @@ CREATE TABLE "AuditLog" (
 -- CreateTable
 CREATE TABLE "Version" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "entityType" TEXT NOT NULL,
     "entityId" TEXT NOT NULL,
     "snapshot" JSONB NOT NULL,
@@ -613,7 +574,6 @@ CREATE TABLE "Version" (
 -- CreateTable
 CREATE TABLE "DeadLetter" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT,
     "source" TEXT NOT NULL,
     "eventType" TEXT NOT NULL,
     "payload" JSONB NOT NULL,
@@ -628,9 +588,19 @@ CREATE TABLE "DeadLetter" (
 );
 
 -- CreateTable
+CREATE TABLE "RateLimitHit" (
+    "id" TEXT NOT NULL,
+    "bucket" TEXT NOT NULL,
+    "identifier" TEXT NOT NULL,
+    "count" INTEGER NOT NULL DEFAULT 0,
+    "windowEnd" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "RateLimitHit_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "WebhookEvent" (
     "id" TEXT NOT NULL,
-    "organizationId" TEXT,
     "provider" TEXT NOT NULL,
     "providerEventId" TEXT NOT NULL,
     "eventType" TEXT NOT NULL,
@@ -659,25 +629,13 @@ CREATE TABLE "_EventSegments" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Organization_slug_key" ON "Organization"("slug");
-
--- CreateIndex
-CREATE INDEX "Organization_isActive_idx" ON "Organization"("isActive");
-
--- CreateIndex
-CREATE INDEX "OrgMembership_userId_idx" ON "OrgMembership"("userId");
-
--- CreateIndex
-CREATE INDEX "OrgMembership_organizationId_idx" ON "OrgMembership"("organizationId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "OrgMembership_organizationId_userId_key" ON "OrgMembership"("organizationId", "userId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE INDEX "User_email_idx" ON "User"("email");
+
+-- CreateIndex
+CREATE INDEX "User_roleId_idx" ON "User"("roleId");
 
 -- CreateIndex
 CREATE INDEX "Account_userId_idx" ON "Account"("userId");
@@ -722,34 +680,31 @@ CREATE INDEX "ResourceGrant_resourceType_resourceId_idx" ON "ResourceGrant"("res
 CREATE UNIQUE INDEX "ResourceGrant_userId_resourceType_resourceId_action_key" ON "ResourceGrant"("userId", "resourceType", "resourceId", "action");
 
 -- CreateIndex
-CREATE INDEX "Page_organizationId_status_idx" ON "Page"("organizationId", "status");
+CREATE UNIQUE INDEX "Page_slug_key" ON "Page"("slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Page_organizationId_slug_key" ON "Page"("organizationId", "slug");
+CREATE INDEX "Page_status_idx" ON "Page"("status");
 
 -- CreateIndex
-CREATE INDEX "Program_organizationId_status_idx" ON "Program"("organizationId", "status");
+CREATE UNIQUE INDEX "Program_slug_key" ON "Program"("slug");
 
 -- CreateIndex
-CREATE INDEX "Program_organizationId_order_idx" ON "Program"("organizationId", "order");
+CREATE INDEX "Program_status_idx" ON "Program"("status");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Program_organizationId_slug_key" ON "Program"("organizationId", "slug");
+CREATE INDEX "Program_order_idx" ON "Program"("order");
 
 -- CreateIndex
-CREATE INDEX "Post_organizationId_status_publishedAt_idx" ON "Post"("organizationId", "status", "publishedAt");
+CREATE UNIQUE INDEX "Post_slug_key" ON "Post"("slug");
+
+-- CreateIndex
+CREATE INDEX "Post_status_publishedAt_idx" ON "Post"("status", "publishedAt");
 
 -- CreateIndex
 CREATE INDEX "Post_authorId_idx" ON "Post"("authorId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Post_organizationId_slug_key" ON "Post"("organizationId", "slug");
-
--- CreateIndex
-CREATE INDEX "Tag_organizationId_idx" ON "Tag"("organizationId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Tag_organizationId_slug_key" ON "Tag"("organizationId", "slug");
+CREATE UNIQUE INDEX "Tag_slug_key" ON "Tag"("slug");
 
 -- CreateIndex
 CREATE INDEX "PostTag_tagId_idx" ON "PostTag"("tagId");
@@ -758,25 +713,22 @@ CREATE INDEX "PostTag_tagId_idx" ON "PostTag"("tagId");
 CREATE UNIQUE INDEX "Media_key_key" ON "Media"("key");
 
 -- CreateIndex
-CREATE INDEX "Media_organizationId_createdAt_idx" ON "Media"("organizationId", "createdAt");
+CREATE INDEX "Media_createdAt_idx" ON "Media"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "Campaign_organizationId_isActive_idx" ON "Campaign"("organizationId", "isActive");
+CREATE UNIQUE INDEX "Campaign_slug_key" ON "Campaign"("slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Campaign_organizationId_slug_key" ON "Campaign"("organizationId", "slug");
+CREATE INDEX "Campaign_isActive_idx" ON "Campaign"("isActive");
 
 -- CreateIndex
-CREATE INDEX "Donor_organizationId_idx" ON "Donor"("organizationId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Donor_organizationId_email_key" ON "Donor"("organizationId", "email");
+CREATE UNIQUE INDEX "Donor_email_key" ON "Donor"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Donation_providerRef_key" ON "Donation"("providerRef");
 
 -- CreateIndex
-CREATE INDEX "Donation_organizationId_status_createdAt_idx" ON "Donation"("organizationId", "status", "createdAt");
+CREATE INDEX "Donation_status_createdAt_idx" ON "Donation"("status", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "Donation_donorId_idx" ON "Donation"("donorId");
@@ -785,40 +737,34 @@ CREATE INDEX "Donation_donorId_idx" ON "Donation"("donorId");
 CREATE INDEX "Donation_campaignId_idx" ON "Donation"("campaignId");
 
 -- CreateIndex
-CREATE INDEX "PaymentConfiguration_organizationId_isEnabled_idx" ON "PaymentConfiguration"("organizationId", "isEnabled");
+CREATE UNIQUE INDEX "PaymentConfiguration_provider_key" ON "PaymentConfiguration"("provider");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PaymentConfiguration_organizationId_provider_key" ON "PaymentConfiguration"("organizationId", "provider");
+CREATE INDEX "PaymentConfiguration_isEnabled_idx" ON "PaymentConfiguration"("isEnabled");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "SiteSettings_organizationId_key" ON "SiteSettings"("organizationId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Theme_organizationId_key" ON "Theme"("organizationId");
+CREATE UNIQUE INDEX "Subscriber_email_key" ON "Subscriber"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Subscriber_unsubToken_key" ON "Subscriber"("unsubToken");
 
 -- CreateIndex
-CREATE INDEX "Subscriber_organizationId_status_idx" ON "Subscriber"("organizationId", "status");
+CREATE INDEX "Subscriber_status_idx" ON "Subscriber"("status");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Subscriber_organizationId_email_key" ON "Subscriber"("organizationId", "email");
-
--- CreateIndex
-CREATE INDEX "Newsletter_organizationId_status_scheduledAt_idx" ON "Newsletter"("organizationId", "status", "scheduledAt");
+CREATE INDEX "Newsletter_status_scheduledAt_idx" ON "Newsletter"("status", "scheduledAt");
 
 -- CreateIndex
 CREATE INDEX "NewsletterLog_status_idx" ON "NewsletterLog"("status");
 
 -- CreateIndex
+CREATE INDEX "NewsletterLog_providerMsgId_idx" ON "NewsletterLog"("providerMsgId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "NewsletterLog_newsletterId_subscriberId_key" ON "NewsletterLog"("newsletterId", "subscriberId");
 
 -- CreateIndex
-CREATE INDEX "Segment_organizationId_idx" ON "Segment"("organizationId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Segment_organizationId_slug_key" ON "Segment"("organizationId", "slug");
+CREATE UNIQUE INDEX "Segment_slug_key" ON "Segment"("slug");
 
 -- CreateIndex
 CREATE INDEX "SubscriberSegment_segmentId_idx" ON "SubscriberSegment"("segmentId");
@@ -830,7 +776,7 @@ CREATE INDEX "SubscriberEvent_subscriberId_type_createdAt_idx" ON "SubscriberEve
 CREATE INDEX "SubscriberEvent_type_createdAt_idx" ON "SubscriberEvent"("type", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "EmailCampaign_organizationId_trigger_isActive_idx" ON "EmailCampaign"("organizationId", "trigger", "isActive");
+CREATE INDEX "EmailCampaign_trigger_isActive_idx" ON "EmailCampaign"("trigger", "isActive");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CampaignEmail_campaignId_stepOrder_key" ON "CampaignEmail"("campaignId", "stepOrder");
@@ -842,25 +788,22 @@ CREATE INDEX "CampaignEnrollment_status_nextSendAt_idx" ON "CampaignEnrollment"(
 CREATE UNIQUE INDEX "CampaignEnrollment_campaignId_subscriberId_key" ON "CampaignEnrollment"("campaignId", "subscriberId");
 
 -- CreateIndex
-CREATE INDEX "Event_organizationId_startsAt_idx" ON "Event"("organizationId", "startsAt");
+CREATE UNIQUE INDEX "Event_slug_key" ON "Event"("slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Event_organizationId_slug_key" ON "Event"("organizationId", "slug");
+CREATE INDEX "Event_startsAt_idx" ON "Event"("startsAt");
 
 -- CreateIndex
 CREATE INDEX "EventNotification_status_sendAt_idx" ON "EventNotification"("status", "sendAt");
 
 -- CreateIndex
-CREATE INDEX "NavItem_organizationId_location_order_idx" ON "NavItem"("organizationId", "location", "order");
+CREATE INDEX "NavItem_location_order_idx" ON "NavItem"("location", "order");
 
 -- CreateIndex
-CREATE INDEX "FeatureFlag_key_idx" ON "FeatureFlag"("key");
+CREATE UNIQUE INDEX "FeatureFlag_key_key" ON "FeatureFlag"("key");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "FeatureFlag_organizationId_key_key" ON "FeatureFlag"("organizationId", "key");
-
--- CreateIndex
-CREATE INDEX "AuditLog_organizationId_createdAt_idx" ON "AuditLog"("organizationId", "createdAt");
+CREATE INDEX "AuditLog_createdAt_idx" ON "AuditLog"("createdAt");
 
 -- CreateIndex
 CREATE INDEX "AuditLog_module_action_createdAt_idx" ON "AuditLog"("module", "action", "createdAt");
@@ -872,7 +815,7 @@ CREATE INDEX "AuditLog_userId_createdAt_idx" ON "AuditLog"("userId", "createdAt"
 CREATE INDEX "AuditLog_correlationId_idx" ON "AuditLog"("correlationId");
 
 -- CreateIndex
-CREATE INDEX "Version_organizationId_entityType_createdAt_idx" ON "Version"("organizationId", "entityType", "createdAt");
+CREATE INDEX "Version_entityType_createdAt_idx" ON "Version"("entityType", "createdAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Version_entityType_entityId_version_key" ON "Version"("entityType", "entityId", "version");
@@ -882,6 +825,15 @@ CREATE INDEX "DeadLetter_status_createdAt_idx" ON "DeadLetter"("status", "create
 
 -- CreateIndex
 CREATE INDEX "DeadLetter_source_idx" ON "DeadLetter"("source");
+
+-- CreateIndex
+CREATE INDEX "RateLimitHit_bucket_identifier_idx" ON "RateLimitHit"("bucket", "identifier");
+
+-- CreateIndex
+CREATE INDEX "RateLimitHit_windowEnd_idx" ON "RateLimitHit"("windowEnd");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RateLimitHit_bucket_identifier_windowEnd_key" ON "RateLimitHit"("bucket", "identifier", "windowEnd");
 
 -- CreateIndex
 CREATE INDEX "WebhookEvent_provider_createdAt_idx" ON "WebhookEvent"("provider", "createdAt");
@@ -896,13 +848,7 @@ CREATE INDEX "_CampaignSegments_B_index" ON "_CampaignSegments"("B");
 CREATE INDEX "_EventSegments_B_index" ON "_EventSegments"("B");
 
 -- AddForeignKey
-ALTER TABLE "OrgMembership" ADD CONSTRAINT "OrgMembership_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "OrgMembership" ADD CONSTRAINT "OrgMembership_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "OrgMembership" ADD CONSTRAINT "OrgMembership_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -929,16 +875,7 @@ ALTER TABLE "ResourceGrant" ADD CONSTRAINT "ResourceGrant_userId_fkey" FOREIGN K
 ALTER TABLE "ResourceGrant" ADD CONSTRAINT "ResourceGrant_grantedById_fkey" FOREIGN KEY ("grantedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Page" ADD CONSTRAINT "Page_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Program" ADD CONSTRAINT "Program_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Program" ADD CONSTRAINT "Program_coverMediaId_fkey" FOREIGN KEY ("coverMediaId") REFERENCES "Media"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Post" ADD CONSTRAINT "Post_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Post" ADD CONSTRAINT "Post_coverMediaId_fkey" FOREIGN KEY ("coverMediaId") REFERENCES "Media"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -947,28 +884,13 @@ ALTER TABLE "Post" ADD CONSTRAINT "Post_coverMediaId_fkey" FOREIGN KEY ("coverMe
 ALTER TABLE "Post" ADD CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Tag" ADD CONSTRAINT "Tag_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PostTag" ADD CONSTRAINT "PostTag_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PostTag" ADD CONSTRAINT "PostTag_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Media" ADD CONSTRAINT "Media_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Campaign" ADD CONSTRAINT "Campaign_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Campaign" ADD CONSTRAINT "Campaign_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Donor" ADD CONSTRAINT "Donor_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Donation" ADD CONSTRAINT "Donation_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Donation" ADD CONSTRAINT "Donation_donorId_fkey" FOREIGN KEY ("donorId") REFERENCES "Donor"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -977,28 +899,10 @@ ALTER TABLE "Donation" ADD CONSTRAINT "Donation_donorId_fkey" FOREIGN KEY ("dono
 ALTER TABLE "Donation" ADD CONSTRAINT "Donation_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "Campaign"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PaymentConfiguration" ADD CONSTRAINT "PaymentConfiguration_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "SiteSettings" ADD CONSTRAINT "SiteSettings_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Theme" ADD CONSTRAINT "Theme_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Subscriber" ADD CONSTRAINT "Subscriber_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Newsletter" ADD CONSTRAINT "Newsletter_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "NewsletterLog" ADD CONSTRAINT "NewsletterLog_newsletterId_fkey" FOREIGN KEY ("newsletterId") REFERENCES "Newsletter"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "NewsletterLog" ADD CONSTRAINT "NewsletterLog_subscriberId_fkey" FOREIGN KEY ("subscriberId") REFERENCES "Subscriber"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Segment" ADD CONSTRAINT "Segment_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "SubscriberSegment" ADD CONSTRAINT "SubscriberSegment_subscriberId_fkey" FOREIGN KEY ("subscriberId") REFERENCES "Subscriber"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1010,9 +914,6 @@ ALTER TABLE "SubscriberSegment" ADD CONSTRAINT "SubscriberSegment_segmentId_fkey
 ALTER TABLE "SubscriberEvent" ADD CONSTRAINT "SubscriberEvent_subscriberId_fkey" FOREIGN KEY ("subscriberId") REFERENCES "Subscriber"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "EmailCampaign" ADD CONSTRAINT "EmailCampaign_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "CampaignEmail" ADD CONSTRAINT "CampaignEmail_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "EmailCampaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1022,31 +923,13 @@ ALTER TABLE "CampaignEnrollment" ADD CONSTRAINT "CampaignEnrollment_campaignId_f
 ALTER TABLE "CampaignEnrollment" ADD CONSTRAINT "CampaignEnrollment_subscriberId_fkey" FOREIGN KEY ("subscriberId") REFERENCES "Subscriber"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Event" ADD CONSTRAINT "Event_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Event" ADD CONSTRAINT "Event_coverMediaId_fkey" FOREIGN KEY ("coverMediaId") REFERENCES "Media"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "EventNotification" ADD CONSTRAINT "EventNotification_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "NavItem" ADD CONSTRAINT "NavItem_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "NavItem" ADD CONSTRAINT "NavItem_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "NavItem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "FeatureFlag" ADD CONSTRAINT "FeatureFlag_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Version" ADD CONSTRAINT "Version_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "DeadLetter" ADD CONSTRAINT "DeadLetter_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "WebhookEvent" ADD CONSTRAINT "WebhookEvent_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_CampaignSegments" ADD CONSTRAINT "_CampaignSegments_A_fkey" FOREIGN KEY ("A") REFERENCES "EmailCampaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;

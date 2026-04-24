@@ -1,17 +1,10 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
 import { listPublishedPosts } from "@/lib/services/posts";
 
 export const metadata = { title: "Blog" };
 
 export default async function BlogIndex() {
-  const org = await db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!org) return null;
-  const posts = await listPublishedPosts(org.id);
+  const posts = await listPublishedPosts();
 
   return (
     <section className="mx-auto max-w-4xl px-4 py-12 sm:py-16">

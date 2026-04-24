@@ -1,5 +1,4 @@
-import { revalidateTag } from "next/cache";
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { createService } from "@/lib/services/_shared";
 import {
   programCreateSchema,
@@ -9,17 +8,16 @@ import {
 } from "@/lib/validators/programs";
 import { NotFoundError } from "@/lib/errors";
 import { tags } from "@/lib/cache";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 
 export const createProgram = createService({
   module: "programs",
   action: "create",
   schema: programCreateSchema,
   permission: () => ({ type: "Program" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const row = await tx.program.create({
       data: {
-        organizationId: actor.orgId,
         slug: input.slug,
         title: input.title,
         summary: input.summary,
@@ -28,7 +26,7 @@ export const createProgram = createService({
         order: input.order,
       },
     });
-    revalidateTag(tags.programs(actor.orgId));
+    revalidateTag(tags.programs());
     return row;
   },
   version: (out) => ({ entityType: "Program", entityId: out.id }),
@@ -40,7 +38,7 @@ export const updateProgram = createService({
   schema: programUpdateSchema,
   permission: () => ({ type: "Program" }),
   loadBefore: async ({ input, tx }) => tx.program.findUnique({ where: { id: input.id } }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const { id, ...rest } = input;
     const row = await tx.program.update({
       where: { id },
@@ -53,8 +51,8 @@ export const updateProgram = createService({
         ...(rest.order !== undefined && { order: rest.order }),
       },
     });
-    revalidateTag(tags.programs(actor.orgId));
-    revalidateTag(tags.program(actor.orgId, row.slug));
+    revalidateTag(tags.programs());
+    revalidateTag(tags.program(row.slug));
     return row;
   },
   version: (out) => ({ entityType: "Program", entityId: out.id }),
@@ -66,13 +64,13 @@ export const setProgramStatus = createService({
   schema: programStatusSchema,
   permission: () => ({ type: "Program" }),
   loadBefore: async ({ input, tx }) => tx.program.findUnique({ where: { id: input.id } }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const row = await tx.program.update({
       where: { id: input.id },
       data: { status: input.status },
     });
-    revalidateTag(tags.programs(actor.orgId));
-    revalidateTag(tags.program(actor.orgId, row.slug));
+    revalidateTag(tags.programs());
+    revalidateTag(tags.program(row.slug));
     return row;
   },
   version: (out) => ({ entityType: "Program", entityId: out.id }),
@@ -83,57 +81,51 @@ export const deleteProgram = createService({
   action: "delete",
   schema: programDeleteSchema,
   permission: () => ({ type: "Program" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const row = await tx.program.delete({ where: { id: input.id } });
-    revalidateTag(tags.programs(actor.orgId));
-    revalidateTag(tags.program(actor.orgId, row.slug));
+    revalidateTag(tags.programs());
+    revalidateTag(tags.program(row.slug));
     return { id: row.id };
   },
 });
 
-export function listPrograms(orgId: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.program.findMany({
-      where: { organizationId: orgId },
-      orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
-      select: { id: true, slug: true, title: true, status: true, order: true, updatedAt: true },
-    }),
-  );
+export function listPrograms() {
+  return db.program.findMany({
+    orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
+    select: { id: true, slug: true, title: true, status: true, order: true, updatedAt: true },
+  });
 }
 
-export function getProgramForEdit(orgId: string, id: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.program.findFirst({ where: { id, organizationId: orgId } }),
-  );
+export function getProgramForEdit(id: string) {
+  return db.program.findUnique({
+    where: { id },
+    include: { cover: { select: { id: true, url: true } } },
+  });
 }
 
-export function listPublishedPrograms(orgId: string) {
+export function listPublishedPrograms() {
   return unstable_cache(
     async () =>
-      runAsTenant(orgId, (tx) =>
-        tx.program.findMany({
-          where: { organizationId: orgId, status: "PUBLISHED" },
-          orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
-          select: { id: true, slug: true, title: true, summary: true },
-        }),
-      ),
-    ["programs-pub", orgId],
-    { tags: [tags.programs(orgId)], revalidate: 3600 },
+      db.program.findMany({
+        where: { status: "PUBLISHED" },
+        orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
+        select: { id: true, slug: true, title: true, summary: true },
+      }),
+    ["programs-pub"],
+    { tags: [tags.programs()], revalidate: 3600 },
   )();
 }
 
-export function getPublishedProgramBySlug(orgId: string, s: string) {
+export function getPublishedProgramBySlug(s: string) {
   return unstable_cache(
     async () => {
-      const row = await runAsTenant(orgId, (tx) =>
-        tx.program.findFirst({
-          where: { organizationId: orgId, slug: s, status: "PUBLISHED" },
-        }),
-      );
+      const row = await db.program.findFirst({
+        where: { slug: s, status: "PUBLISHED" },
+      });
       if (!row) throw new NotFoundError("Program");
       return row;
     },
-    ["program-pub", orgId, s],
-    { tags: [tags.program(orgId, s), tags.programs(orgId)], revalidate: 3600 },
+    ["program-pub", s],
+    { tags: [tags.program(s), tags.programs()], revalidate: 3600 },
   )();
 }

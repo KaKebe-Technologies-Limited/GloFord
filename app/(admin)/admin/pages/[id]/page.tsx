@@ -7,8 +7,8 @@ import { PublishControls } from "../PublishControls";
 
 export default async function EditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actor = await requireActorFromSession();
-  const page = await getPageForEdit(actor.orgId, id);
+  await requireActorFromSession();
+  const page = await getPageForEdit(id);
   if (!page) notFound();
 
   return (

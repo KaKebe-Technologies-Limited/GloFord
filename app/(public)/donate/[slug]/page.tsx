@@ -10,13 +10,11 @@ export default async function CampaignDonatePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const ctx = await getPublicDonationContext();
-  if (!ctx) notFound();
-  const { org, providers } = ctx;
+  const { providers } = await getPublicDonationContext();
 
   let campaign;
   try {
-    campaign = await getActiveCampaignBySlug(org.id, slug);
+    campaign = await getActiveCampaignBySlug(slug);
   } catch {
     notFound();
   }

@@ -13,11 +13,11 @@ export default async function DeadLetterPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status } = await searchParams;
-  const actor = await requireActorFromSession();
+  await requireActorFromSession();
   const normalized = ["PENDING", "RETRIED", "RESOLVED", "IGNORED"].includes(status ?? "")
     ? (status as Status)
     : undefined;
-  const rows = await listDeadLetters(actor.orgId, { status: normalized });
+  const rows = await listDeadLetters({ status: normalized });
 
   return (
     <div className="space-y-6">

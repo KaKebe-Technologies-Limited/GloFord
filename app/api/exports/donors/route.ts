@@ -9,9 +9,9 @@ export async function GET() {
   const actor = await requireActorFromSession();
   await authorize(actor, "donors.export", { type: "Donor" });
 
-  const donors = await runAsTenant(actor.orgId, (tx) =>
+  const donors = await runAsTenant((tx) =>
     tx.donor.findMany({
-      where: { organizationId: actor.orgId },
+      where: {  },
       include: {
         donations: {
           where: { status: "SUCCEEDED" },

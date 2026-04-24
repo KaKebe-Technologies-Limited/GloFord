@@ -4,10 +4,12 @@ import { useState, useTransition } from "react";
 import { Save } from "lucide-react";
 import { updateSiteSettingsAction } from "@/lib/actions/settings";
 import { Button } from "@/components/ui/Button";
+import { ImagePicker } from "@/components/ui/ImagePicker";
 
 type Initial = {
   siteName: string;
   logoUrl: string;
+  loginBgUrl: string;
   contact: { email: string; phone: string; address: string };
   socials: {
     twitter: string;
@@ -33,6 +35,7 @@ export function SiteSettingsForm({ initial }: { initial: Initial }) {
         await updateSiteSettingsAction({
           siteName: state.siteName,
           logoUrl: state.logoUrl || null,
+          loginBgUrl: state.loginBgUrl || null,
           contact: state.contact,
           socials: state.socials,
           seo: state.seo,
@@ -53,14 +56,23 @@ export function SiteSettingsForm({ initial }: { initial: Initial }) {
               value={state.siteName}
               onChange={(e) => setState((s) => ({ ...s, siteName: e.target.value }))}
               className={inputCls}
+              placeholder="Your site name"
             />
           </Field>
-          <Field label="Logo URL">
-            <input
+          <Field label="Logo">
+            <ImagePicker
               value={state.logoUrl}
-              onChange={(e) => setState((s) => ({ ...s, logoUrl: e.target.value }))}
-              className={inputCls}
-              placeholder="https://…"
+              onChange={(url) => setState((s) => ({ ...s, logoUrl: url ?? "" }))}
+              placeholder="Logo"
+              aspect="3/1"
+            />
+          </Field>
+          <Field label="Login page background">
+            <ImagePicker
+              value={state.loginBgUrl}
+              onChange={(url) => setState((s) => ({ ...s, loginBgUrl: url ?? "" }))}
+              placeholder="Login background"
+              aspect="16/9"
             />
           </Field>
         </Card>
@@ -148,14 +160,14 @@ export function SiteSettingsForm({ initial }: { initial: Initial }) {
               className={inputCls}
             />
           </Field>
-          <Field label="Open Graph image URL">
-            <input
+          <Field label="Open Graph image">
+            <ImagePicker
               value={state.seo.ogImageUrl}
-              onChange={(e) =>
-                setState((s) => ({ ...s, seo: { ...s.seo, ogImageUrl: e.target.value } }))
+              onChange={(url) =>
+                setState((s) => ({ ...s, seo: { ...s.seo, ogImageUrl: url ?? "" } }))
               }
-              className={inputCls}
-              placeholder="https://…"
+              placeholder="OG image (1200×630)"
+              aspect="1200/630"
             />
           </Field>
         </Card>

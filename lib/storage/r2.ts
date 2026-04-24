@@ -32,13 +32,13 @@ function getClient() {
   return cachedClient;
 }
 
-export function buildMediaKey(orgId: string, originalName: string): string {
+export function buildMediaKey(originalName: string): string {
   const safe = originalName
     .toLowerCase()
     .replace(/[^a-z0-9.-]+/g, "-")
     .replace(/-+/g, "-")
     .slice(-80);
-  return `${orgId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safe}`;
+  return `${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safe}`;
 }
 
 export function publicUrlFor(key: string): string {

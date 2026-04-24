@@ -1,4 +1,4 @@
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { UpstreamError, ValidationError } from "@/lib/errors";
 import { loadConfig } from "./config";
 import type {
@@ -8,28 +8,12 @@ import type {
   WebhookVerifyResult,
 } from "./types";
 
-/**
- * Airtel Money (Open API 2.0) adapter.
- *
- * Flow:
- *   1. POST /auth/oauth2/token with client_id/client_secret/grant_type
- *      -> { access_token }.
- *   2. POST /merchant/v1/payments with reference, amount, currency,
- *      country, subscriber.msisdn. Returns { transaction.id, status }.
- *   3. Donor authorizes on phone.
- *   4. Airtel calls our callback OR we poll
- *      GET /standard/v1/payments/{id}.
- */
-
 function baseUrl(mode: string) {
   return mode === "live" ? "https://openapiuat.airtel.africa" : "https://openapiuat.airtel.africa";
-  // Airtel Open API uses the same host for sandbox/production with
-  // different subscription keys and country headers. Operators can
-  // override via publicConfig if Airtel issues them a distinct host.
 }
 
-async function getToken(orgId: string) {
-  const cfg = await loadConfig(orgId, "AIRTEL_MONEY");
+async function getToken() {
+  const cfg = await loadConfig("AIRTEL_MONEY");
   const base = baseUrl(cfg.mode);
   const res = await fetch(`${base}/auth/oauth2/token`, {
     method: "POST",
@@ -61,11 +45,11 @@ export const airtelMoneyAdapter: PaymentProviderAdapter = {
       throw new ValidationError("Airtel Money recurring donations are not supported yet");
     }
 
-    const { token, cfg, base } = await getToken(params.orgId);
+    const { token, cfg, base } = await getToken();
     const phone = normalizePhone(params.donorPhone);
     const country = cfg.publicConfig.country ?? "KE";
     const currency = (cfg.publicConfig.currency ?? params.currency).toUpperCase();
-    const reference = `gfd_${crypto.randomUUID().slice(0, 20)}`;
+    const reference = `don_${crypto.randomUUID().slice(0, 20)}`;
 
     const res = await fetch(`${base}/merchant/v1/payments/`, {
       method: "POST",
@@ -101,22 +85,14 @@ export const airtelMoneyAdapter: PaymentProviderAdapter = {
     }
     const transactionId = json.data.transaction.id;
 
-    const { donation } = await runAsTenant(params.orgId, async (tx) => {
+    const { donation } = await db.$transaction(async (tx) => {
       const donor = await tx.donor.upsert({
-        where: {
-          organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
-        },
+        where: { email: params.donorEmail },
         update: { name: params.donorName ?? undefined, phone },
-        create: {
-          organizationId: params.orgId,
-          email: params.donorEmail,
-          name: params.donorName,
-          phone,
-        },
+        create: { email: params.donorEmail, name: params.donorName, phone },
       });
       const donation = await tx.donation.create({
         data: {
-          organizationId: params.orgId,
           donorId: donor.id,
           campaignId: params.campaignId,
           amountCents: params.amountCents,
@@ -168,8 +144,8 @@ export const airtelMoneyAdapter: PaymentProviderAdapter = {
   },
 };
 
-export async function airtelMoneyGetStatus(orgId: string, transactionId: string) {
-  const { token, cfg, base } = await getToken(orgId);
+export async function airtelMoneyGetStatus(transactionId: string) {
+  const { token, cfg, base } = await getToken();
   const country = cfg.publicConfig.country ?? "KE";
   const currency = cfg.publicConfig.currency ?? "KES";
   const res = await fetch(
