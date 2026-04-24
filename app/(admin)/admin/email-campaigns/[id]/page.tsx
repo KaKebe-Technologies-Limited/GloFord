@@ -12,8 +12,8 @@ export default async function EditEmailCampaignPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const actor = await requireActorFromSession();
-  const row = await getEmailCampaignForEdit(actor.orgId, id);
+  await requireActorFromSession();
+  const row = await getEmailCampaignForEdit(id);
   if (!row) notFound();
 
   return (

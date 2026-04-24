@@ -1,28 +1,24 @@
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { ForbiddenError } from "@/lib/errors";
-import { runAsSystem, type Actor } from "@/lib/tenant/context";
+import type { Actor } from "@/lib/tenant/context";
 
 type ResourceRef = {
   type: string;
   id?: string;
   ownerId?: string;
-  organizationId?: string;
 };
 
 /**
  * Service-layer entry for every mutation. Throws ForbiddenError on deny.
  *
  * `permKey` is the full "<module>.<action>" string from the permission
- * catalog (e.g. "pages.publish", "donations.refund"). The service layer
- * builds it from the service's own module/action, not from the resource
- * type, so singular/plural mismatches can't happen.
+ * catalog (e.g. "pages.publish", "donations.refund").
  *
  * Resolution order:
  *   1. SUPER_ADMIN bypass.
- *   2. Cross-tenant refusal (actor.orgId vs resource.organizationId).
- *   3. Role permission check (scope = ORG | OWN | GLOBAL).
- *   4. Per-resource override via ResourceGrant.
+ *   2. Role permission check (scope = GLOBAL | OWN).
+ *   3. Per-resource override via ResourceGrant.
  */
 export async function authorize(
   actor: Actor,
@@ -31,14 +27,9 @@ export async function authorize(
 ): Promise<void> {
   if (actor.role === "SUPER_ADMIN") return;
 
-  if (resource.organizationId && resource.organizationId !== actor.orgId) {
-    throw new ForbiddenError("Cross-tenant access denied");
-  }
-
   const perm = await getRolePermission(actor.roleId, permKey);
 
   if (perm) {
-    if (perm.scope === "ORG") return;
     if (perm.scope === "OWN" && resource.ownerId === actor.userId) return;
     if (perm.scope === "GLOBAL") return;
   }
@@ -63,17 +54,12 @@ export const getRolePermission = cache(async (roleId: string, key: string) => {
 
 export const getResourceGrant = cache(
   async (userId: string, resourceType: string, resourceId: string, action: string) => {
-    // Runs during authorization, BEFORE the tenant context is set
-    // (createService calls authorize then runWithTenant). SYSTEM bypass
-    // lets us read the grant without needing app.current_user yet.
-    const grant = await runAsSystem((tx) =>
-      tx.resourceGrant.findUnique({
-        where: {
-          userId_resourceType_resourceId_action: { userId, resourceType, resourceId, action },
-        },
-        select: { expiresAt: true },
-      }),
-    );
+    const grant = await db.resourceGrant.findUnique({
+      where: {
+        userId_resourceType_resourceId_action: { userId, resourceType, resourceId, action },
+      },
+      select: { expiresAt: true },
+    });
     if (!grant) return null;
     if (grant.expiresAt && grant.expiresAt < new Date()) return null;
     return grant;

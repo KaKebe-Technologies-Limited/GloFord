@@ -9,9 +9,9 @@ export async function GET() {
   const actor = await requireActorFromSession();
   await authorize(actor, "subscribers.export", { type: "Subscriber" });
 
-  const rows = await runAsTenant(actor.orgId, (tx) =>
+  const rows = await runAsTenant((tx) =>
     tx.subscriber.findMany({
-      where: { organizationId: actor.orgId },
+      where: {  },
       include: { segments: { include: { segment: { select: { slug: true } } } } },
       orderBy: { createdAt: "desc" },
     }),

@@ -5,8 +5,8 @@ import { NavManager } from "./NavManager";
 export const metadata = { title: "Navigation" };
 
 export default async function NavPage() {
-  const actor = await requireActorFromSession();
-  const items = await listNavItems(actor.orgId);
+  await requireActorFromSession();
+  const items = await listNavItems();
 
   return (
     <div className="space-y-6">

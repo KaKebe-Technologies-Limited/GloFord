@@ -7,8 +7,8 @@ import { PostStatusControl } from "../PostStatusControl";
 
 export default async function EditPost({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actor = await requireActorFromSession();
-  const post = await getPostForEdit(actor.orgId, id);
+  await requireActorFromSession();
+  const post = await getPostForEdit(id);
   if (!post) notFound();
 
   return (
@@ -31,6 +31,7 @@ export default async function EditPost({ params }: { params: Promise<{ id: strin
           excerpt: post.excerpt ?? undefined,
           body: (post.body as never) ?? [],
           coverMediaId: post.coverMediaId ?? undefined,
+          coverUrl: post.cover?.url ?? null,
           tagSlugs: post.tags.map((pt) => pt.tag.slug),
         }}
       />

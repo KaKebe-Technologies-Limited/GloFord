@@ -5,10 +5,10 @@ import { SubscriberStatusBadge } from "./StatusBadge";
 export const metadata = { title: "Subscribers" };
 
 export default async function SubscribersPage() {
-  const actor = await requireActorFromSession();
+  await requireActorFromSession();
   const [rows, activeCount] = await Promise.all([
-    listSubscribers(actor.orgId),
-    countActiveSubscribers(actor.orgId),
+    listSubscribers(),
+    countActiveSubscribers(),
   ]);
 
   return (

@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/Button";
 export const metadata = { title: "Programs" };
 
 export default async function ProgramsListPage() {
-  const actor = await requireActorFromSession();
-  const rows = await listPrograms(actor.orgId);
+  await requireActorFromSession();
+  const rows = await listPrograms();
 
   return (
     <div className="space-y-6">

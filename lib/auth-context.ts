@@ -12,7 +12,6 @@ export async function requireActorFromSession(): Promise<Actor> {
   if (!session?.user?.id) throw new UnauthorizedError();
   return {
     userId: session.user.id,
-    orgId: session.user.orgId,
     roleId: session.user.roleId,
     role: session.user.role,
     email: session.user.email ?? "",
@@ -24,7 +23,6 @@ export async function getActorFromSession(): Promise<Actor | null> {
   if (!session?.user?.id) return null;
   return {
     userId: session.user.id,
-    orgId: session.user.orgId,
     roleId: session.user.roleId,
     role: session.user.role,
     email: session.user.email ?? "",

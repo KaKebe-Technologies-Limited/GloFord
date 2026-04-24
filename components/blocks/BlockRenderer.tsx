@@ -9,7 +9,7 @@ import { blocksSchema, type Block } from "@/lib/blocks/types";
  * boundary so a corrupt JSON blob can't crash the renderer. Any block
  * that fails validation is silently dropped (logged in dev).
  */
-export async function BlockRenderer({ blocks, orgId }: { blocks: unknown; orgId: string }) {
+export async function BlockRenderer({ blocks }: { blocks: unknown }) {
   const parsed = blocksSchema.safeParse(blocks);
   if (!parsed.success) {
     if (process.env.NODE_ENV === "development") {
@@ -20,13 +20,13 @@ export async function BlockRenderer({ blocks, orgId }: { blocks: unknown; orgId:
   return (
     <>
       {parsed.data.map((b) => (
-        <BlockSwitch key={b.id} block={b} orgId={orgId} />
+        <BlockSwitch key={b.id} block={b} />
       ))}
     </>
   );
 }
 
-async function BlockSwitch({ block, orgId }: { block: Block; orgId: string }) {
+async function BlockSwitch({ block }: { block: Block }) {
   switch (block.type) {
     case "hero":
       return <HeroBlock data={block.data} />;
@@ -41,15 +41,22 @@ async function BlockSwitch({ block, orgId }: { block: Block; orgId: string }) {
     case "donateCta":
       return <DonateCtaBlock data={block.data} />;
     case "programGrid":
-      return <ProgramGridBlock data={block.data} orgId={orgId} />;
+      return <ProgramGridBlock data={block.data} />;
     case "postList":
-      return <PostListBlock data={block.data} orgId={orgId} />;
+      return <PostListBlock data={block.data} />;
   }
 }
 
 // ─── Individual block components ─────────────────────────────
 
-function HeroBlock({ data }: { data: Extract<Block, { type: "hero" }>["data"] }) {
+async function HeroBlock({ data }: { data: Extract<Block, { type: "hero" }>["data"] }) {
+  const media = data.imageMediaId
+    ? await db.media.findUnique({
+        where: { id: data.imageMediaId },
+        select: { url: true, alt: true },
+      })
+    : null;
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:py-24">
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:gap-12">
@@ -69,6 +76,18 @@ function HeroBlock({ data }: { data: Extract<Block, { type: "hero" }>["data"] })
             </Link>
           ) : null}
         </div>
+        {media?.url ? (
+          <div className="flex-1">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[--radius-lg] bg-[--color-muted]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={media.url}
+                alt={media.alt ?? ""}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -171,13 +190,11 @@ function DonateCtaBlock({ data }: { data: Extract<Block, { type: "donateCta" }>[
 
 async function ProgramGridBlock({
   data,
-  orgId,
 }: {
   data: Extract<Block, { type: "programGrid" }>["data"];
-  orgId: string;
 }) {
   const programs = await db.program.findMany({
-    where: { organizationId: orgId, status: "PUBLISHED" },
+    where: { status: "PUBLISHED" },
     orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
     take: data.limit,
     select: { id: true, slug: true, title: true, summary: true },
@@ -206,13 +223,11 @@ async function ProgramGridBlock({
 
 async function PostListBlock({
   data,
-  orgId,
 }: {
   data: Extract<Block, { type: "postList" }>["data"];
-  orgId: string;
 }) {
   const posts = await db.post.findMany({
-    where: { organizationId: orgId, status: "PUBLISHED" },
+    where: { status: "PUBLISHED" },
     orderBy: { publishedAt: "desc" },
     take: data.limit,
     select: { id: true, slug: true, title: true, excerpt: true, publishedAt: true },

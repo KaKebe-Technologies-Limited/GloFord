@@ -1,5 +1,5 @@
 import type { PaymentProvider as ProviderEnum } from "@prisma/client";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import type { PaymentProviderAdapter } from "./types";
 import { stripeAdapter } from "./stripe";
 import { paypalAdapter } from "./paypal";
@@ -11,7 +11,6 @@ import { airtelMoneyAdapter } from "./airtel-money";
 const ADAPTERS: Record<ProviderEnum, PaymentProviderAdapter> = {
   STRIPE: stripeAdapter,
   PAYPAL: paypalAdapter,
-  MOBILE_MONEY: mtnMomoAdapter, // legacy alias
   PESAPAL: pesapalAdapter,
   FLUTTERWAVE: flutterwaveAdapter,
   MTN_MOMO: mtnMomoAdapter,
@@ -22,26 +21,21 @@ export function getAdapter(id: ProviderEnum): PaymentProviderAdapter {
   return ADAPTERS[id];
 }
 
-/** List providers the given org has enabled in its PaymentConfiguration. */
-export async function listEnabledProviders(orgId: string) {
-  const rows = await runAsTenant(orgId, (tx) =>
-    tx.paymentConfiguration.findMany({
-      where: { organizationId: orgId, isEnabled: true },
-      select: { provider: true, mode: true, publicConfig: true },
-    }),
-  );
-  return rows
-    .filter((r) => r.provider !== "MOBILE_MONEY") // legacy
-    .map((r) => {
-      const a = ADAPTERS[r.provider];
-      return {
-        id: r.provider,
-        label: a.label,
-        flow: a.flow,
-        mode: r.mode,
-        publicConfig: r.publicConfig as Record<string, unknown>,
-      };
-    });
+export async function listEnabledProviders() {
+  const rows = await db.paymentConfiguration.findMany({
+    where: { isEnabled: true },
+    select: { provider: true, mode: true, publicConfig: true },
+  });
+  return rows.map((r) => {
+    const a = ADAPTERS[r.provider];
+    return {
+      id: r.provider,
+      label: a.label,
+      flow: a.flow,
+      mode: r.mode,
+      publicConfig: r.publicConfig as Record<string, unknown>,
+    };
+  });
 }
 
 export const ALL_PROVIDERS: {

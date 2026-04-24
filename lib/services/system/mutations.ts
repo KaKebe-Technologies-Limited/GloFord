@@ -11,10 +11,6 @@ import { inngest } from "@/lib/inngest/client";
 
 // ─────────────────────────────────── Dead letter ──
 
-/**
- * Max manual retries before the DLQ refuses to re-emit. Prevents a code
- * bug from looping forever if an operator keeps clicking "Retry".
- */
 const DLQ_MAX_RETRIES = 5;
 
 export const retryDeadLetter = createService({
@@ -22,10 +18,8 @@ export const retryDeadLetter = createService({
   action: "retry",
   schema: deadLetterRetrySchema,
   permission: () => ({ type: "DeadLetter" }),
-  exec: async ({ input, actor, tx }) => {
-    const dl = await tx.deadLetter.findFirst({
-      where: { id: input.id, organizationId: actor.orgId },
-    });
+  exec: async ({ input, tx }) => {
+    const dl = await tx.deadLetter.findUnique({ where: { id: input.id } });
     if (!dl) throw new NotFoundError("Dead letter not found");
     if (dl.status === "RESOLVED" || dl.status === "IGNORED") {
       throw new ConflictError(`Already ${dl.status.toLowerCase()}`);
@@ -35,13 +29,8 @@ export const retryDeadLetter = createService({
         `Retry cap reached (${DLQ_MAX_RETRIES} attempts). Mark as resolved or ignored instead.`,
       );
     }
-    // Re-emit the original event. If the handler fails again it will
-    // re-enter the dead-letter pipeline through deadletter/enqueue.
     void inngest
-      .send({
-        name: dl.eventType as never,
-        data: dl.payload as never,
-      })
+      .send({ name: dl.eventType as never, data: dl.payload as never })
       .catch(() => {});
     return tx.deadLetter.update({
       where: { id: dl.id },
@@ -56,9 +45,7 @@ export const resolveDeadLetter = createService({
   schema: deadLetterResolveSchema,
   permission: () => ({ type: "DeadLetter" }),
   exec: async ({ input, actor, tx }) => {
-    const dl = await tx.deadLetter.findFirst({
-      where: { id: input.id, organizationId: actor.orgId },
-    });
+    const dl = await tx.deadLetter.findUnique({ where: { id: input.id } });
     if (!dl) throw new NotFoundError("Dead letter not found");
     return tx.deadLetter.update({
       where: { id: dl.id },
@@ -79,19 +66,12 @@ export const restoreVersion = createService({
   schema: versionRestoreSchema,
   permission: () => ({ type: "Version" }),
   exec: async ({ input, actor, tx }) => {
-    const v = await tx.version.findFirst({
-      where: { id: input.id, organizationId: actor.orgId },
-    });
+    const v = await tx.version.findUnique({ where: { id: input.id } });
     if (!v) throw new NotFoundError("Version not found");
-    // Actual restore logic is entity-specific and lives in per-entity
-    // services. This endpoint records intent + emits an event that an
-    // entity-aware handler can react to.
-    // 1. Fire the actual restore (handler per entity in version-restore.ts).
     void inngest
       .send({
         name: "version/restore.apply",
         data: {
-          orgId: actor.orgId,
           entityType: v.entityType,
           entityId: v.entityId,
           snapshot: v.snapshot,
@@ -99,12 +79,10 @@ export const restoreVersion = createService({
         },
       })
       .catch(() => {});
-    // 2. Snapshot the restore itself so version history stays monotonic.
     void inngest
       .send({
         name: "versioning/snapshot",
         data: {
-          orgId: actor.orgId,
           entityType: v.entityType,
           entityId: v.entityId,
           before: null,
@@ -125,13 +103,10 @@ export const upsertFeatureFlag = createService({
   action: "update",
   schema: featureFlagUpsertSchema,
   permission: () => ({ type: "FeatureFlag" }),
-  exec: async ({ input, actor, tx }) =>
+  exec: async ({ input, tx }) =>
     tx.featureFlag.upsert({
-      where: {
-        organizationId_key: { organizationId: actor.orgId, key: input.key },
-      },
+      where: { key: input.key },
       create: {
-        organizationId: actor.orgId,
         key: input.key,
         description: input.description,
         isEnabled: input.isEnabled,
@@ -151,10 +126,8 @@ export const deleteFeatureFlag = createService({
   action: "update",
   schema: featureFlagDeleteSchema,
   permission: () => ({ type: "FeatureFlag" }),
-  exec: async ({ input, actor, tx }) => {
-    const row = await tx.featureFlag.findFirst({
-      where: { id: input.id, organizationId: actor.orgId },
-    });
+  exec: async ({ input, tx }) => {
+    const row = await tx.featureFlag.findUnique({ where: { id: input.id } });
     if (!row) throw new NotFoundError("Feature flag not found");
     await tx.featureFlag.delete({ where: { id: input.id } });
     return { id: input.id };

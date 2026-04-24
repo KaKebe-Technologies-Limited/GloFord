@@ -8,8 +8,8 @@ export const metadata = { title: "Edit event" };
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actor = await requireActorFromSession();
-  const row = await getEventForEdit(actor.orgId, id);
+  await requireActorFromSession();
+  const row = await getEventForEdit(id);
   if (!row) notFound();
 
   return (
@@ -31,6 +31,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
           endsAt: row.endsAt ? row.endsAt.toISOString() : null,
           location: row.location,
           coverMediaId: row.coverMediaId,
+          coverUrl: row.cover?.url ?? null,
           isPublic: row.isPublic,
           segmentIds: row.segments.map((s) => s.id),
         }}

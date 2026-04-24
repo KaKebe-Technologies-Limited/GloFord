@@ -6,7 +6,7 @@ import {
   newsletterSendNowSchema,
   newsletterDeleteSchema,
 } from "@/lib/validators/newsletters";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { inngest } from "@/lib/inngest/client";
 import { ConflictError } from "@/lib/errors";
 
@@ -18,7 +18,6 @@ export const createNewsletter = createService({
   exec: async ({ input, actor, tx }) =>
     tx.newsletter.create({
       data: {
-        organizationId: actor.orgId,
         title: input.title,
         subject: input.subject,
         preheader: input.preheader,
@@ -61,16 +60,14 @@ export const scheduleNewsletter = createService({
   action: "send",
   schema: newsletterScheduleSchema,
   permission: () => ({ type: "Newsletter" }),
-  exec: async ({ input, tx }) => {
-    const row = await tx.newsletter.update({
+  exec: async ({ input, tx }) =>
+    tx.newsletter.update({
       where: { id: input.id },
       data: {
         scheduledAt: input.scheduledAt,
         status: input.scheduledAt ? "SCHEDULED" : "DRAFT",
       },
-    });
-    return row;
-  },
+    }),
 });
 
 export const sendNewsletterNow = createService({
@@ -78,18 +75,15 @@ export const sendNewsletterNow = createService({
   action: "send",
   schema: newsletterSendNowSchema,
   permission: () => ({ type: "Newsletter" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const row = await tx.newsletter.update({
       where: { id: input.id },
       data: { status: "SENDING", scheduledAt: null },
     });
-    // Kick off dispatch async — if Inngest is down, the newsletter is
-    // still in SENDING status and will be picked up by the dispatch
-    // cron on next tick.
     void inngest
       .send({
         name: "newsletter/send",
-        data: { orgId: actor.orgId, newsletterId: row.id },
+        data: { newsletterId: row.id },
       })
       .catch(() => {});
     return row;
@@ -114,17 +108,10 @@ export const deleteNewsletter = createService({
   },
 });
 
-export function listNewsletters(orgId: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.newsletter.findMany({
-      where: { organizationId: orgId },
-      orderBy: { updatedAt: "desc" },
-    }),
-  );
+export function listNewsletters() {
+  return db.newsletter.findMany({ orderBy: { updatedAt: "desc" } });
 }
 
-export function getNewsletterForEdit(orgId: string, id: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.newsletter.findFirst({ where: { id, organizationId: orgId } }),
-  );
+export function getNewsletterForEdit(id: string) {
+  return db.newsletter.findUnique({ where: { id } });
 }

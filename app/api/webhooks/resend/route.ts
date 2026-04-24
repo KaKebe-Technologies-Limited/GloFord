@@ -1,18 +1,10 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { runAsSystem, runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-/**
- * Resend webhook — updates NewsletterLog rows based on delivery events.
- *
- * Verification: Resend signs each webhook with RESEND_WEBHOOK_SECRET
- * using svix-style headers (svix-id, svix-timestamp, svix-signature).
- * We do a bare-bones HMAC SHA-256 comparison; operators configure the
- * endpoint secret in the Resend dashboard.
- */
 export async function POST(req: Request) {
   const raw = await req.text();
   const secret = process.env.RESEND_WEBHOOK_SECRET;
@@ -72,43 +64,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true, ignored: type });
   }
 
-  // Resolve the tenant: prefer the orgId tag (stamped when we sent
-  // the message). If missing, look it up via the NewsletterLog →
-  // Newsletter join using a SYSTEM-scoped read.
-  const tagOrgId = event.data?.tags?.find((t) => t.name === "orgId")?.value;
-  const orgId =
-    tagOrgId ??
-    (await runAsSystem(async (tx) => {
-      const log = await tx.newsletterLog.findFirst({
-        where: { providerMsgId },
-        select: { newsletter: { select: { organizationId: true } } },
-      });
-      return log?.newsletter.organizationId ?? null;
-    }));
+  await db.newsletterLog.updateMany({
+    where: { providerMsgId },
+    data: update,
+  });
 
-  if (!orgId) {
-    // Nothing to update — the message isn't one of ours or predates
-    // tag-stamping. Acknowledge so Resend doesn't keep retrying.
-    return NextResponse.json({ received: true, ignored: "unknown-tenant" });
-  }
-
-  await runAsTenant(orgId, (tx) =>
-    tx.newsletterLog.updateMany({
-      where: { providerMsgId },
-      data: update,
-    }),
-  );
-
-  // Flip subscribers to BOUNCED/COMPLAINED so they're excluded from future sends.
   if (type === "email.bounced" || type === "email.complained") {
     const subscriberId = event.data?.tags?.find((t) => t.name === "subscriberId")?.value;
     if (subscriberId) {
-      await runAsTenant(orgId, (tx) =>
-        tx.subscriber.update({
-          where: { id: subscriberId },
-          data: { status: type === "email.bounced" ? "BOUNCED" : "COMPLAINED" },
-        }),
-      );
+      await db.subscriber.update({
+        where: { id: subscriberId },
+        data: { status: type === "email.bounced" ? "BOUNCED" : "COMPLAINED" },
+      });
     }
   }
 

@@ -5,15 +5,15 @@ import { FeatureFlagManager } from "./FeatureFlagManager";
 export const metadata = { title: "Feature flags" };
 
 export default async function FeatureFlagsPage() {
-  const actor = await requireActorFromSession();
-  const rows = await listFeatureFlags(actor.orgId);
+  await requireActorFromSession();
+  const rows = await listFeatureFlags();
 
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Feature flags</h1>
         <p className="text-sm text-[--color-muted-fg]">
-          Per-tenant toggles. Global flags (no org) are read-only here.
+          Toggles for optional features.
         </p>
       </header>
 
@@ -23,7 +23,7 @@ export default async function FeatureFlagsPage() {
           key: f.key,
           description: f.description ?? "",
           isEnabled: f.isEnabled,
-          isGlobal: f.organizationId === null,
+          isGlobal: false,
         }))}
       />
     </div>

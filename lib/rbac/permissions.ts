@@ -26,7 +26,7 @@ const p = (
   module,
   action,
   resourceType: opts.resourceType,
-  scope: opts.scope ?? "ORG",
+  scope: opts.scope ?? "GLOBAL",
   description: opts.description,
 });
 

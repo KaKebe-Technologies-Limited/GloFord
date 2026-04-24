@@ -1,14 +1,13 @@
 /**
  * PaymentProvider: the small, stable interface every donation backend
- * implements. Swapping Stripe -> Adyen or adding a new country-specific
- * wallet means writing one file that conforms to this shape.
+ * implements.
  *
- * The DonateWidget handles two UX shapes, both declared here:
- *   • REDIRECT  — Stripe, Pesapal, Flutterwave: browser navigates to
- *                 a hosted checkout URL, returns to our success page.
+ * Two UX shapes:
+ *   • REDIRECT  — Stripe, Pesapal, Flutterwave: browser navigates to a
+ *                 hosted checkout URL, returns to our success page.
  *   • AWAIT_PHONE — MTN MoMo, Airtel Money: the donor authorizes on
- *                 their phone; we poll /api/donations/[id]/status
- *                 until the webhook flips it to SUCCEEDED or FAILED.
+ *                 their phone; we poll /api/donations/[id]/status until
+ *                 the webhook flips it to SUCCEEDED or FAILED.
  */
 
 import type { PaymentProvider as ProviderEnum } from "@prisma/client";
@@ -19,10 +18,8 @@ export type MoneyInput = {
 };
 
 export type CreateIntentParams = MoneyInput & {
-  orgId: string;
   donorEmail: string;
   donorName?: string;
-  /** Required for phone-authorized providers (MoMo/Airtel). */
   donorPhone?: string;
   campaignId?: string;
   recurring: boolean;
@@ -34,16 +31,8 @@ export type CreateIntentResult = {
   donationId: string;
   providerRef: string;
 } & (
-  | {
-      kind: "REDIRECT";
-      /** Browser navigates here to complete payment. */
-      redirectUrl: string;
-    }
-  | {
-      kind: "AWAIT_PHONE";
-      /** Phone the donor authorized against, echoed back for UI. */
-      phone: string;
-    }
+  | { kind: "REDIRECT"; redirectUrl: string }
+  | { kind: "AWAIT_PHONE"; phone: string }
 );
 
 export type WebhookVerifyResult = {
@@ -62,22 +51,13 @@ export type DonationTransition = {
 export interface PaymentProviderAdapter {
   readonly id: ProviderEnum;
   readonly label: string;
-  /** REDIRECT adapters need no donor phone; AWAIT_PHONE adapters require it. */
   readonly flow: "REDIRECT" | "AWAIT_PHONE";
 
   createIntent(params: CreateIntentParams): Promise<CreateIntentResult>;
-
   verifyWebhook(req: Request, rawBody: string): Promise<WebhookVerifyResult>;
-
   interpretEvent(event: unknown): DonationTransition | null;
 
-  /**
-   * Issue a refund for a previously-succeeded donation. Optional: adapters
-   * that don't support refunds (mobile money in most countries) omit this
-   * and the admin refund button surfaces "unsupported" from the service.
-   */
   refund?(params: {
-    orgId: string;
     providerRef: string;
     amountCents?: number;
     reason?: string;

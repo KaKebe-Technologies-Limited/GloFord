@@ -14,8 +14,8 @@ const TRIGGER_LABEL: Record<string, string> = {
 };
 
 export default async function EmailCampaignsPage() {
-  const actor = await requireActorFromSession();
-  const rows = await listEmailCampaigns(actor.orgId);
+  await requireActorFromSession();
+  const rows = await listEmailCampaigns();
 
   return (
     <div className="space-y-6">

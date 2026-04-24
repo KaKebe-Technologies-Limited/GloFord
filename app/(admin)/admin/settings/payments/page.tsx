@@ -8,8 +8,8 @@ import { ToggleProviderButton } from "./ToggleProviderButton";
 export const metadata = { title: "Payment providers" };
 
 export default async function PaymentsSettingsPage() {
-  const actor = await requireActorFromSession();
-  const existing = await listConfigs(actor.orgId);
+  await requireActorFromSession();
+  const existing = await listConfigs();
   const byId = new Map(existing.map((c) => [c.provider, c]));
 
   return (

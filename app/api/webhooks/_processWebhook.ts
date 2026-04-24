@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { runAsSystem } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { isAppError } from "@/lib/errors";
 import type { PaymentProvider } from "@prisma/client";
 import type { PaymentProviderAdapter } from "@/lib/services/payments/types";
@@ -13,18 +13,12 @@ import { applyDonationEvent } from "@/lib/services/donations";
  *   3. Interpret the event -> DonationTransition.
  *   4. Apply the transition.
  *   5. Mark WebhookEvent processed.
- *
- * If any step fails, error is stored on WebhookEvent and the provider
- * receives a 500 (triggering their retry). Idempotency is guaranteed
- * by the unique (provider, providerEventId) constraint.
  */
 export async function processWebhook(
   req: Request,
   provider: PaymentProvider,
   adapter: PaymentProviderAdapter,
   hooks?: {
-    /** Optional extra step after interpretEvent — e.g. Pesapal calls
-     *  GetTransactionStatus here because its IPN doesn't include state. */
     enrich?: (verified: Awaited<ReturnType<PaymentProviderAdapter["verifyWebhook"]>>) => Promise<
       Parameters<typeof applyDonationEvent>[0] | null
     >;
@@ -40,12 +34,10 @@ export async function processWebhook(
     return NextResponse.json({ error: "invalid_signature" }, { status });
   }
 
-  const existing = await runAsSystem((tx) =>
-    tx.webhookEvent.findUnique({
-      where: { provider_providerEventId: { provider, providerEventId: verified.eventId } },
-      select: { id: true, processedAt: true },
-    }),
-  );
+  const existing = await db.webhookEvent.findUnique({
+    where: { provider_providerEventId: { provider, providerEventId: verified.eventId } },
+    select: { id: true, processedAt: true },
+  });
 
   if (existing?.processedAt) {
     return NextResponse.json({ received: true, duplicate: true });
@@ -53,17 +45,15 @@ export async function processWebhook(
 
   const record = existing
     ? existing
-    : await runAsSystem((tx) =>
-        tx.webhookEvent.create({
-          data: {
-            provider,
-            providerEventId: verified.eventId,
-            eventType: verified.type,
-            payload: verified.event as never,
-          },
-          select: { id: true, processedAt: true },
-        }),
-      );
+    : await db.webhookEvent.create({
+        data: {
+          provider,
+          providerEventId: verified.eventId,
+          eventType: verified.type,
+          payload: verified.event as never,
+        },
+        select: { id: true, processedAt: true },
+      });
 
   try {
     const transition = hooks?.enrich
@@ -71,20 +61,16 @@ export async function processWebhook(
       : adapter.interpretEvent(verified.event);
     if (transition) await applyDonationEvent(transition);
 
-    await runAsSystem((tx) =>
-      tx.webhookEvent.update({
-        where: { id: record.id },
-        data: { processedAt: new Date(), error: null },
-      }),
-    );
+    await db.webhookEvent.update({
+      where: { id: record.id },
+      data: { processedAt: new Date(), error: null },
+    });
     return NextResponse.json({ received: true });
   } catch (e) {
-    await runAsSystem((tx) =>
-      tx.webhookEvent.update({
-        where: { id: record.id },
-        data: { error: e instanceof Error ? e.message : String(e) },
-      }),
-    );
+    await db.webhookEvent.update({
+      where: { id: record.id },
+      data: { error: e instanceof Error ? e.message : String(e) },
+    });
     return NextResponse.json({ error: "processing_failed" }, { status: 500 });
   }
 }

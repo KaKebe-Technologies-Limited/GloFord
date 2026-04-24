@@ -1,19 +1,15 @@
 import type { Prisma } from "@prisma/client";
 import type { z, ZodTypeAny } from "zod";
 import { headers } from "next/headers";
+import { db } from "@/lib/db";
 import { ValidationError } from "@/lib/errors";
 import { authorize } from "@/lib/rbac/authorize";
-import { runWithTenant, type Actor } from "@/lib/tenant/context";
+import type { Actor } from "@/lib/tenant/context";
 import { inngest } from "@/lib/inngest/client";
 import { captureException } from "@/lib/observability/sentry";
 
 const CORRELATION_HEADER = "x-correlation-id";
 
-/**
- * Best-effort correlation-ID read. Server Actions run inside a request
- * scope so `headers()` resolves; Inngest-triggered service calls have
- * no request headers available and simply skip the tag.
- */
 async function readCorrelationId(): Promise<string | undefined> {
   try {
     const h = await headers();
@@ -41,7 +37,6 @@ type ResourceRef = {
   type: string;
   id?: string;
   ownerId?: string;
-  organizationId?: string;
 };
 
 export type ServiceContext<TInput> = {
@@ -56,13 +51,9 @@ export type ServiceConfig<S extends ZodTypeAny, TOut> = {
   module: string;
   action: string;
   schema: S;
-  /** Build a ResourceRef from parsed input so RBAC can check cross-tenant + scope. */
   permission: (input: z.infer<S>, actor: Actor) => ResourceRef;
-  /** Run the business logic inside a tenant-scoped transaction. */
   exec: (ctx: ServiceContext<z.infer<S>>) => Promise<TOut>;
-  /** If provided, a Version snapshot is queued after the mutation succeeds. */
   version?: (out: TOut, input: z.infer<S>) => VersionRef | null;
-  /** If provided, loaded BEFORE exec so versioning can diff. */
   loadBefore?: (ctx: {
     actor: Actor;
     input: z.infer<S>;
@@ -71,11 +62,11 @@ export type ServiceConfig<S extends ZodTypeAny, TOut> = {
 };
 
 /**
- * The one and only way to define a service. Composes:
- *   parse → authorize → transact (RLS-enforced) → audit/version events → return.
+ * Compose a service from:
+ *   parse → authorize → transact → audit/version events → return.
  *
- * Audit + versioning are fire-and-forget through Inngest; if they fail,
- * the mutation is already durable. See §10, §11, §14 of the blueprint.
+ * Audit + versioning are fire-and-forget through Inngest; failures
+ * there don't affect the caller. See the resilience guide in BACKUP.md.
  */
 export function createService<S extends ZodTypeAny, TOut>(cfg: ServiceConfig<S, TOut>) {
   return async (actor: Actor, raw: unknown): Promise<TOut> => {
@@ -92,16 +83,13 @@ export function createService<S extends ZodTypeAny, TOut>(cfg: ServiceConfig<S, 
     let before: unknown = undefined;
     let out: TOut;
     try {
-      out = await runWithTenant(actor, async (tx) => {
+      out = await db.$transaction(async (tx) => {
         if (cfg.loadBefore) before = await cfg.loadBefore({ actor, input, tx });
         return cfg.exec({ actor, input, tx });
       });
     } catch (err) {
-      // Capture service-layer errors before rethrowing so Sentry (or the
-      // logger fallback) sees them even if the caller swallows the throw.
       captureException(err, {
         action: `${cfg.module}.${cfg.action}`,
-        orgId: actor.orgId,
         userId: actor.userId,
       });
       throw err;
@@ -118,8 +106,7 @@ export function createService<S extends ZodTypeAny, TOut>(cfg: ServiceConfig<S, 
         data: {
           actor: {
             userId: actor.userId,
-            orgId: actor.orgId,
-            role: actor.role,
+            role: actor.role as never,
             email: actor.email,
           },
           action: `${cfg.module}.${cfg.action}`,
@@ -135,7 +122,6 @@ export function createService<S extends ZodTypeAny, TOut>(cfg: ServiceConfig<S, 
       eventsToSend.push({
         name: "versioning/snapshot" as never,
         data: {
-          orgId: actor.orgId,
           entityType: versionRef.entityType,
           entityId: versionRef.entityId,
           before,
@@ -144,11 +130,8 @@ export function createService<S extends ZodTypeAny, TOut>(cfg: ServiceConfig<S, 
         } as never,
       });
     }
-    // Fire-and-forget — never block the request on observability.
     for (const ev of eventsToSend) {
-      void inngest.send(ev).catch(() => {
-        /* swallow; resilience rule §14 */
-      });
+      void inngest.send(ev).catch(() => {});
     }
 
     return out;

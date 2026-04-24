@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/Button";
 export const metadata = { title: "Events" };
 
 export default async function EventsPage() {
-  const actor = await requireActorFromSession();
-  const rows = await listEvents(actor.orgId);
+  await requireActorFromSession();
+  const rows = await listEvents();
   const now = Date.now();
 
   return (

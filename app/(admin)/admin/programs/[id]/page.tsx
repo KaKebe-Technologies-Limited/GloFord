@@ -7,8 +7,8 @@ import { ProgramStatusControl } from "../ProgramStatusControl";
 
 export default async function EditProgram({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actor = await requireActorFromSession();
-  const program = await getProgramForEdit(actor.orgId, id);
+  await requireActorFromSession();
+  const program = await getProgramForEdit(id);
   if (!program) notFound();
 
   return (
@@ -31,6 +31,7 @@ export default async function EditProgram({ params }: { params: Promise<{ id: st
           summary: program.summary,
           body: (program.body as never) ?? [],
           coverMediaId: program.coverMediaId ?? undefined,
+          coverUrl: program.cover?.url ?? null,
           order: program.order,
         }}
       />

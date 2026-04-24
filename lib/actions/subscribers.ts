@@ -3,8 +3,7 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { requireActorFromSession } from "@/lib/auth-context";
-import { NotFoundError, ValidationError } from "@/lib/errors";
-import { db } from "@/lib/db";
+import { ValidationError } from "@/lib/errors";
 import { rateLimit } from "@/lib/ratelimit";
 import {
   publicSubscribe,
@@ -14,16 +13,6 @@ import {
   deleteSubscriber,
   assignSubscriberSegments,
 } from "@/lib/services/subscribers";
-
-async function resolveOrgId() {
-  const org = await db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!org) throw new NotFoundError("Organization");
-  return org.id;
-}
 
 export async function subscribeAction(raw: unknown) {
   const h = await headers();
@@ -35,25 +24,22 @@ export async function subscribeAction(raw: unknown) {
     bucket: "newsletter-subscribe",
     identifier: ip,
     limit: 5,
-    windowSeconds: 600, // 5 sign-ups per 10 min per IP
+    windowSeconds: 600,
   });
   if (!rl.ok) {
     throw new ValidationError(
       `Too many sign-up attempts. Try again after ${rl.resetAt.toLocaleTimeString()}.`,
     );
   }
-  const orgId = await resolveOrgId();
-  return publicSubscribe(orgId, raw);
+  return publicSubscribe(raw);
 }
 
 export async function confirmSubscriberAction(token: string) {
-  const orgId = await resolveOrgId();
-  return confirmSubscriber(orgId, token);
+  return confirmSubscriber(token);
 }
 
 export async function unsubscribeAction(token: string) {
-  const orgId = await resolveOrgId();
-  return unsubscribe(orgId, token);
+  return unsubscribe(token);
 }
 
 export async function updateSubscriberAction(raw: unknown) {

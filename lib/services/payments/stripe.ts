@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { runAsTenant, runAsSystem } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { UpstreamError, ValidationError } from "@/lib/errors";
 import { loadConfig } from "./config";
 import type {
@@ -9,8 +9,8 @@ import type {
   WebhookVerifyResult,
 } from "./types";
 
-async function stripeFor(orgId: string) {
-  const cfg = await loadConfig(orgId, "STRIPE");
+async function stripeClient() {
+  const cfg = await loadConfig("STRIPE");
   return new Stripe(cfg.secrets.secretKey, { apiVersion: "2025-02-24.acacia" });
 }
 
@@ -20,25 +20,16 @@ export const stripeAdapter: PaymentProviderAdapter = {
   flow: "REDIRECT",
 
   async createIntent(params: CreateIntentParams): Promise<CreateIntentResult> {
-    const stripe = await stripeFor(params.orgId);
+    const stripe = await stripeClient();
 
-    const donor = await runAsTenant(params.orgId, (tx) =>
-      tx.donor.upsert({
-        where: {
-          organizationId_email: { organizationId: params.orgId, email: params.donorEmail },
-        },
-        update: { name: params.donorName ?? undefined },
-        create: {
-          organizationId: params.orgId,
-          email: params.donorEmail,
-          name: params.donorName,
-        },
-      }),
-    );
+    const donor = await db.donor.upsert({
+      where: { email: params.donorEmail },
+      update: { name: params.donorName ?? undefined },
+      create: { email: params.donorEmail, name: params.donorName },
+    });
 
     const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const baseMetadata = {
-      orgId: params.orgId,
       donorId: donor.id,
       campaignId: params.campaignId ?? "",
       recurring: params.recurring ? "1" : "0",
@@ -75,22 +66,19 @@ export const stripeAdapter: PaymentProviderAdapter = {
       (typeof session.subscription === "string" ? session.subscription : null) ??
       session.id;
 
-    const donation = await runAsTenant(params.orgId, (tx) =>
-      tx.donation.create({
-        data: {
-          organizationId: params.orgId,
-          donorId: donor.id,
-          campaignId: params.campaignId,
-          amountCents: params.amountCents,
-          currency: params.currency.toUpperCase(),
-          provider: "STRIPE",
-          providerRef,
-          type: params.recurring ? "RECURRING" : "ONE_TIME",
-          status: "PENDING",
-          metadata: { checkoutSessionId: session.id } as never,
-        },
-      }),
-    );
+    const donation = await db.donation.create({
+      data: {
+        donorId: donor.id,
+        campaignId: params.campaignId,
+        amountCents: params.amountCents,
+        currency: params.currency.toUpperCase(),
+        provider: "STRIPE",
+        providerRef,
+        type: params.recurring ? "RECURRING" : "ONE_TIME",
+        status: "PENDING",
+        metadata: { checkoutSessionId: session.id } as never,
+      },
+    });
 
     return {
       kind: "REDIRECT",
@@ -104,20 +92,7 @@ export const stripeAdapter: PaymentProviderAdapter = {
     const sig = req.headers.get("stripe-signature");
     const secret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!sig || !secret) throw new ValidationError("Missing Stripe webhook signature or secret");
-
-    // We need a Stripe client to verify the signature. Since all webhooks
-    // use the same *signing* secret (env-scoped), any configured org's
-    // secret key works — grab the first enabled Stripe config under a
-    // SYSTEM-scoped read (cross-tenant lookup).
-    const cfg = await runAsSystem((tx) =>
-      tx.paymentConfiguration.findFirst({
-        where: { provider: "STRIPE", isEnabled: true },
-        select: { organizationId: true },
-      }),
-    );
-    if (!cfg) throw new ValidationError("No Stripe configuration available");
-    const stripe = await stripeFor(cfg.organizationId);
-
+    const stripe = await stripeClient();
     let event: Stripe.Event;
     try {
       event = stripe.webhooks.constructEvent(rawBody, sig, secret);
@@ -127,16 +102,18 @@ export const stripeAdapter: PaymentProviderAdapter = {
     return { eventId: event.id, type: event.type, event };
   },
 
-  async refund({ orgId, providerRef, amountCents, reason }) {
-    const stripe = await stripeFor(orgId);
-    // providerRef is typically a PaymentIntent id for one-time donations.
+  async refund({ providerRef, amountCents, reason }) {
+    const stripe = await stripeClient();
     const refund = await stripe.refunds.create({
       payment_intent: providerRef,
       ...(amountCents !== undefined && { amount: amountCents }),
       ...(reason && { reason: "requested_by_customer" as const }),
-      metadata: { orgId, reason: reason ?? "" },
+      metadata: { reason: reason ?? "" },
     });
-    return { ok: refund.status === "succeeded" || refund.status === "pending", providerRefundId: refund.id };
+    return {
+      ok: refund.status === "succeeded" || refund.status === "pending",
+      providerRefundId: refund.id,
+    };
   },
 
   interpretEvent(raw) {

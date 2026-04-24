@@ -1,6 +1,7 @@
 {
-  "name": "gloford",
+  "name": "ngo-platform",
   "version": "0.1.0",
+  "description": "White-label NGO platform — single-tenant, env-configured. Fork once per client.",
   "private": true,
   "engines": {
     "node": ">=20.0.0"
@@ -58,12 +59,14 @@
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
     "inngest": "^3.27.5",
     "jsondiffpatch": "^0.6.0",
     "lucide-react": "^0.469.0",
     "next": "^15.1.4",
     "next-auth": "5.0.0-beta.25",
     "next-intl": "^3.26.3",
+    "next-themes": "^0.4.6",
     "nuqs": "^2.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

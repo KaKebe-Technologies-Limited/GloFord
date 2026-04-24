@@ -6,8 +6,8 @@ import { SegmentRow } from "./SegmentRow";
 export const metadata = { title: "Segments" };
 
 export default async function SegmentsPage() {
-  const actor = await requireActorFromSession();
-  const rows = await listSegments(actor.orgId);
+  await requireActorFromSession();
+  const rows = await listSegments();
 
   return (
     <div className="space-y-6">

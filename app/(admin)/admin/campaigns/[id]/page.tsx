@@ -5,8 +5,8 @@ import { CampaignForm } from "../CampaignForm";
 
 export default async function EditCampaign({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actor = await requireActorFromSession();
-  const campaign = await getCampaignForEdit(actor.orgId, id);
+  await requireActorFromSession();
+  const campaign = await getCampaignForEdit(id);
   if (!campaign) notFound();
 
   return (

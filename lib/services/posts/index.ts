@@ -8,21 +8,20 @@ import {
 } from "@/lib/validators/posts";
 import { NotFoundError } from "@/lib/errors";
 import { tags } from "@/lib/cache";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 
-/** Upsert tags for the org and return their ids, preserving order. */
+/** Upsert tags by slug and return their ids, preserving order. */
 async function upsertTags(
   tx: Prisma.TransactionClient,
-  orgId: string,
   slugs: string[],
 ): Promise<string[]> {
   const ids: string[] = [];
   for (const s of slugs) {
     const tag = await tx.tag.upsert({
-      where: { organizationId_slug: { organizationId: orgId, slug: s } },
+      where: { slug: s },
       update: {},
-      create: { organizationId: orgId, slug: s, name: s.replace(/-/g, " ") },
+      create: { slug: s, name: s.replace(/-/g, " ") },
       select: { id: true },
     });
     ids.push(tag.id);
@@ -36,10 +35,9 @@ export const createPost = createService({
   schema: postCreateSchema,
   permission: () => ({ type: "Post" }),
   exec: async ({ input, actor, tx }) => {
-    const tagIds = await upsertTags(tx, actor.orgId, input.tagSlugs);
+    const tagIds = await upsertTags(tx, input.tagSlugs);
     const row = await tx.post.create({
       data: {
-        organizationId: actor.orgId,
         slug: input.slug,
         title: input.title,
         excerpt: input.excerpt,
@@ -49,7 +47,7 @@ export const createPost = createService({
         tags: { create: tagIds.map((tagId) => ({ tagId })) },
       },
     });
-    revalidateTag(tags.posts(actor.orgId));
+    revalidateTag(tags.posts());
     return row;
   },
   version: (out) => ({ entityType: "Post", entityId: out.id }),
@@ -62,7 +60,7 @@ export const updatePost = createService({
   permission: () => ({ type: "Post" }),
   loadBefore: async ({ input, tx }) =>
     tx.post.findUnique({ where: { id: input.id }, include: { tags: true } }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const { id, tagSlugs, ...rest } = input;
     const row = await tx.post.update({
       where: { id },
@@ -76,7 +74,7 @@ export const updatePost = createService({
     });
 
     if (tagSlugs !== undefined) {
-      const tagIds = await upsertTags(tx, actor.orgId, tagSlugs);
+      const tagIds = await upsertTags(tx, tagSlugs);
       await tx.postTag.deleteMany({ where: { postId: id } });
       await tx.postTag.createMany({
         data: tagIds.map((tagId) => ({ postId: id, tagId })),
@@ -84,8 +82,8 @@ export const updatePost = createService({
       });
     }
 
-    revalidateTag(tags.posts(actor.orgId));
-    revalidateTag(tags.post(actor.orgId, row.slug));
+    revalidateTag(tags.posts());
+    revalidateTag(tags.post(row.slug));
     return row;
   },
   version: (out) => ({ entityType: "Post", entityId: out.id }),
@@ -97,7 +95,7 @@ export const setPostStatus = createService({
   schema: postStatusSchema,
   permission: () => ({ type: "Post" }),
   loadBefore: async ({ input, tx }) => tx.post.findUnique({ where: { id: input.id } }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const row = await tx.post.update({
       where: { id: input.id },
       data: {
@@ -105,8 +103,8 @@ export const setPostStatus = createService({
         publishedAt: input.status === "PUBLISHED" ? new Date() : null,
       },
     });
-    revalidateTag(tags.posts(actor.orgId));
-    revalidateTag(tags.post(actor.orgId, row.slug));
+    revalidateTag(tags.posts());
+    revalidateTag(tags.post(row.slug));
     return row;
   },
   version: (out) => ({ entityType: "Post", entityId: out.id }),
@@ -117,67 +115,61 @@ export const deletePost = createService({
   action: "delete",
   schema: postDeleteSchema,
   permission: () => ({ type: "Post" }),
-  exec: async ({ input, actor, tx }) => {
+  exec: async ({ input, tx }) => {
     const row = await tx.post.delete({ where: { id: input.id } });
-    revalidateTag(tags.posts(actor.orgId));
-    revalidateTag(tags.post(actor.orgId, row.slug));
+    revalidateTag(tags.posts());
+    revalidateTag(tags.post(row.slug));
     return { id: row.id };
   },
 });
 
-export function listPosts(orgId: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.post.findMany({
-      where: { organizationId: orgId },
-      orderBy: { updatedAt: "desc" },
-      select: {
-        id: true, slug: true, title: true, status: true, publishedAt: true, updatedAt: true,
-        author: { select: { name: true, email: true } },
-      },
-    }),
-  );
+export function listPosts() {
+  return db.post.findMany({
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true, slug: true, title: true, status: true, publishedAt: true, updatedAt: true,
+      author: { select: { name: true, email: true } },
+    },
+  });
 }
 
-export function getPostForEdit(orgId: string, id: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.post.findFirst({
-      where: { id, organizationId: orgId },
-      include: { tags: { include: { tag: true } } },
-    }),
-  );
+export function getPostForEdit(id: string) {
+  return db.post.findUnique({
+    where: { id },
+    include: {
+      cover: { select: { id: true, url: true } },
+      tags: { include: { tag: true } },
+    },
+  });
 }
 
-export function listPublishedPosts(orgId: string, take = 20) {
+export function listPublishedPosts(take = 20) {
   return unstable_cache(
     async () =>
-      runAsTenant(orgId, (tx) =>
-        tx.post.findMany({
-          where: { organizationId: orgId, status: "PUBLISHED" },
-          orderBy: { publishedAt: "desc" },
-          take,
-          select: {
-            id: true, slug: true, title: true, excerpt: true, publishedAt: true,
-          },
-        }),
-      ),
-    ["posts-pub", orgId, String(take)],
-    { tags: [tags.posts(orgId)], revalidate: 3600 },
+      db.post.findMany({
+        where: { status: "PUBLISHED" },
+        orderBy: { publishedAt: "desc" },
+        take,
+        select: {
+          id: true, slug: true, title: true, excerpt: true, publishedAt: true,
+        },
+      }),
+    ["posts-pub", String(take)],
+    { tags: [tags.posts()], revalidate: 3600 },
   )();
 }
 
-export function getPublishedPostBySlug(orgId: string, s: string) {
+export function getPublishedPostBySlug(s: string) {
   return unstable_cache(
     async () => {
-      const row = await runAsTenant(orgId, (tx) =>
-        tx.post.findFirst({
-          where: { organizationId: orgId, slug: s, status: "PUBLISHED" },
-          include: { author: { select: { name: true } }, tags: { include: { tag: true } } },
-        }),
-      );
+      const row = await db.post.findFirst({
+        where: { slug: s, status: "PUBLISHED" },
+        include: { author: { select: { name: true } }, tags: { include: { tag: true } } },
+      });
       if (!row) throw new NotFoundError("Post");
       return row;
     },
-    ["post-pub", orgId, s],
-    { tags: [tags.post(orgId, s), tags.posts(orgId)], revalidate: 3600 },
+    ["post-pub", s],
+    { tags: [tags.post(s), tags.posts()], revalidate: 3600 },
   )();
 }

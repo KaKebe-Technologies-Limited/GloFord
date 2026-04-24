@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  if (!session?.user?.id || !session.user.orgId) {
+  if (!session?.user?.id) {
     redirect("/login?next=/admin");
   }
   return (

@@ -8,10 +8,8 @@ export const metadata = { title: "Donate" };
 
 export default async function DonatePage() {
   const ctx = await getPublicDonationContext();
-  if (!ctx) return null;
   const { org, providers } = ctx;
-
-  const campaigns = await listActiveCampaigns(org.id);
+  const campaigns = await listActiveCampaigns();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">

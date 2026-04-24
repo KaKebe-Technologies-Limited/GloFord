@@ -2,17 +2,16 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
 import { createDonationIntent, refundDonation } from "@/lib/services/donations";
 import { requireActorFromSession } from "@/lib/auth-context";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { ValidationError } from "@/lib/errors";
 import { rateLimit } from "@/lib/ratelimit";
 
 /**
  * Public Server Action: create a donation intent. No auth required —
  * anyone on the donate page can call this. Abuse is mitigated by:
  *   • Zod validation of amount + currency.
- *   • Provider-side fraud screening (Stripe Radar).
+ *   • Provider-side fraud screening.
  *   • IP-based rate limiting via `rateLimit`.
  */
 export async function createDonationIntentAction(raw: unknown) {
@@ -25,20 +24,14 @@ export async function createDonationIntentAction(raw: unknown) {
     bucket: "donate-intent",
     identifier: ip,
     limit: 10,
-    windowSeconds: 600, // 10 attempts per 10 min per IP
+    windowSeconds: 600,
   });
   if (!rl.ok) {
     throw new ValidationError(
       `Too many donation attempts. Try again after ${rl.resetAt.toLocaleTimeString()}.`,
     );
   }
-  const org = await db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!org) throw new NotFoundError("Organization");
-  return createDonationIntent(org.id, raw);
+  return createDonationIntent(raw);
 }
 
 export async function refundDonationAction(raw: unknown) {

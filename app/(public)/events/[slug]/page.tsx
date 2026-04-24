@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, MapPin, ArrowLeft } from "lucide-react";
-import { db } from "@/lib/db";
 import { getPublicEvent } from "@/lib/services/events/public";
 
 export async function generateMetadata({
@@ -11,13 +10,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const org = await db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!org) return { title: "Event" };
-  const e = await getPublicEvent(org.id, slug);
+  const e = await getPublicEvent(slug);
   if (!e) return { title: "Event" };
   return {
     title: e.title,
@@ -31,13 +24,7 @@ export default async function EventDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const org = await db.organization.findFirst({
-    where: { isActive: true },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!org) notFound();
-  const e = await getPublicEvent(org.id, slug);
+  const e = await getPublicEvent(slug);
   if (!e) notFound();
   const cover = e.cover;
 

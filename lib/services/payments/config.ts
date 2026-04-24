@@ -1,11 +1,11 @@
 import type { PaymentProvider as ProviderEnum } from "@prisma/client";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 import { decryptJson } from "@/lib/crypto/encrypt";
 
 /**
  * Typed config shapes per provider. A provider's adapter calls
- * `loadConfig(orgId, provider)` to get a fully-resolved, decrypted
- * view; loadConfig refuses to return if the provider is disabled.
+ * `loadConfig(provider)` to get a fully-resolved, decrypted view;
+ * loadConfig refuses to return if the provider is disabled.
  */
 
 export type StripeSecrets = { secretKey: string; publishableKey?: string };
@@ -45,15 +45,10 @@ export type ProviderConfig<P extends ProviderEnum> = P extends "STRIPE"
             : never;
 
 export async function loadConfig<P extends ProviderEnum>(
-  orgId: string,
   provider: P,
 ): Promise<ProviderConfig<P>> {
-  const row = await runAsTenant(orgId, (tx) =>
-    tx.paymentConfiguration.findUnique({
-      where: { organizationId_provider: { organizationId: orgId, provider } },
-    }),
-  );
-  if (!row) throw new Error(`Provider ${provider} is not configured for this organization`);
+  const row = await db.paymentConfiguration.findUnique({ where: { provider } });
+  if (!row) throw new Error(`Provider ${provider} is not configured`);
   if (!row.isEnabled) throw new Error(`Provider ${provider} is disabled`);
   if (!row.encryptedSecrets) throw new Error(`Provider ${provider} is missing secrets`);
 
@@ -65,22 +60,18 @@ export async function loadConfig<P extends ProviderEnum>(
   } as ProviderConfig<P>;
 }
 
-/** Used by the admin UI to show provider status without decrypting secrets. */
-export async function listConfigs(orgId: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.paymentConfiguration.findMany({
-      where: { organizationId: orgId },
-      orderBy: { provider: "asc" },
-      select: {
-        id: true,
-        provider: true,
-        isEnabled: true,
-        mode: true,
-        publicConfig: true,
-        lastVerifiedAt: true,
-        verifyError: true,
-        updatedAt: true,
-      },
-    }),
-  );
+export async function listConfigs() {
+  return db.paymentConfiguration.findMany({
+    orderBy: { provider: "asc" },
+    select: {
+      id: true,
+      provider: true,
+      isEnabled: true,
+      mode: true,
+      publicConfig: true,
+      lastVerifiedAt: true,
+      verifyError: true,
+      updatedAt: true,
+    },
+  });
 }

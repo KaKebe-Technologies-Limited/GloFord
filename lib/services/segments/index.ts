@@ -4,17 +4,16 @@ import {
   segmentUpdateSchema,
   segmentDeleteSchema,
 } from "@/lib/validators/segments";
-import { runAsTenant } from "@/lib/tenant/context";
+import { db } from "@/lib/db";
 
 export const createSegment = createService({
   module: "segments",
   action: "create",
   schema: segmentCreateSchema,
   permission: () => ({ type: "Segment" }),
-  exec: async ({ input, actor, tx }) =>
+  exec: async ({ input, tx }) =>
     tx.segment.create({
       data: {
-        organizationId: actor.orgId,
         slug: input.slug,
         name: input.name,
         description: input.description,
@@ -53,20 +52,15 @@ export const deleteSegment = createService({
       where: { id: input.id },
       select: { isSystem: true },
     });
-    if (row?.isSystem) {
-      throw new Error("System segments cannot be deleted");
-    }
+    if (row?.isSystem) throw new Error("System segments cannot be deleted");
     await tx.segment.delete({ where: { id: input.id } });
     return { id: input.id };
   },
 });
 
-export function listSegments(orgId: string) {
-  return runAsTenant(orgId, (tx) =>
-    tx.segment.findMany({
-      where: { organizationId: orgId },
-      orderBy: [{ isSystem: "desc" }, { name: "asc" }],
-      include: { _count: { select: { subscribers: true } } },
-    }),
-  );
+export function listSegments() {
+  return db.segment.findMany({
+    orderBy: [{ isSystem: "desc" }, { name: "asc" }],
+    include: { _count: { select: { subscribers: true } } },
+  });
 }

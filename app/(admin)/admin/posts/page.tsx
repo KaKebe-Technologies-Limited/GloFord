@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/Button";
 export const metadata = { title: "Blog" };
 
 export default async function PostsListPage() {
-  const actor = await requireActorFromSession();
-  const rows = await listPosts(actor.orgId);
+  await requireActorFromSession();
+  const rows = await listPosts();
 
   return (
     <div className="space-y-6">

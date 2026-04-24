@@ -1,109 +1,51 @@
-import { db, type Db } from "@/lib/db";
-import { Prisma, type RoleName } from "@prisma/client";
-import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
-
 /**
- * An Actor is the authenticated principal for a request. Every service
- * call receives one; if null, the service refuses to run.
+ * Single-tenant compatibility shim.
+ *
+ * Earlier versions of this codebase were multi-tenant and used these
+ * helpers to scope queries per-org via Postgres RLS + session GUCs.
+ * The platform is now single-tenant (one org per deployment) so the
+ * helpers collapse to thin wrappers around the default Prisma client.
+ *
+ * They exist only so existing call sites don't have to change their
+ * shape in one giant PR. New code should call `db` directly.
  */
+import type { Prisma } from "@prisma/client";
+import { db } from "@/lib/db";
+
 export type Actor = {
   userId: string;
-  orgId: string;
   roleId: string;
-  role: RoleName;
+  role: string;
   email: string;
 };
 
-export function requireActor(actor: Actor | null | undefined): asserts actor is Actor {
-  if (!actor) throw new UnauthorizedError();
-}
-
 /**
- * Run a function inside a Postgres transaction with session-local GUCs
- * set so every query in the transaction is RLS-enforced against the
- * actor's organization.
- *
- * Security: the actor fields are validated (CUIDs + enum whitelist) before
- * being injected via SET LOCAL. We still use parameterized SET via SELECT
- * set_config(...) to avoid any string concatenation into SQL.
+ * Run a block against the DB. The old "tenant transaction" semantics
+ * are gone — this is just `db.$transaction` with a nicer name so the
+ * service layer's intent reads clearly.
  */
 export async function runWithTenant<T>(
-  actor: Actor,
+  _actor: Actor,
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
 ): Promise<T> {
-  assertSafeActor(actor);
-  return db.$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT set_config('app.current_org',  ${actor.orgId},  true)`;
-    await tx.$executeRaw`SELECT set_config('app.current_user', ${actor.userId}, true)`;
-    await tx.$executeRaw`SELECT set_config('app.current_role', ${actor.role},   true)`;
-    return fn(tx);
-  });
+  return db.$transaction(fn);
 }
 
-/**
- * For read paths that need the tenant GUC but don't need a transaction
- * for correctness. Uses $transaction for GUC isolation — session-level
- * GUCs would leak across pooled connections.
- */
+export async function runAsTenant<T>(
+  fn: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  return db.$transaction(fn);
+}
+
+export async function runAsSystem<T>(
+  fn: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  return db.$transaction(fn);
+}
+
 export async function readWithTenant<T>(
   actor: Actor,
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
 ): Promise<T> {
   return runWithTenant(actor, fn);
 }
-
-/**
- * Tenant-scoped write without an Actor. Use this from webhooks, Inngest
- * functions, and cron handlers that have a verified `orgId` but no
- * authenticated user. Sets `app.current_org` so the strict tenant policy
- * passes — service-layer RBAC isn't applicable for system code paths.
- *
- * Security: caller MUST ensure the orgId comes from a verified source
- * (signed webhook payload, DB lookup from a system-scoped query, etc.).
- * Anything derived from user input needs its own authorization check first.
- */
-export async function runAsTenant<T>(
-  orgId: string,
-  fn: (tx: Prisma.TransactionClient) => Promise<T>,
-): Promise<T> {
-  assertCuid(orgId, "orgId");
-  return db.$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT set_config('app.current_org', ${orgId}, true)`;
-    return fn(tx);
-  });
-}
-
-/**
- * Cross-tenant write or read for trusted system code (cron dispatchers,
- * boot-time jobs). Sets `app.current_role = 'SYSTEM'`, which the RLS
- * policies recognize as a bypass clause (see migration
- * 30000000000400_rls_app_role). Only use this from code paths you
- * fully trust — a misuse is a cross-tenant information leak.
- */
-export async function runAsSystem<T>(
-  fn: (tx: Prisma.TransactionClient) => Promise<T>,
-): Promise<T> {
-  return db.$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT set_config('app.current_role', 'SYSTEM', true)`;
-    return fn(tx);
-  });
-}
-
-function assertCuid(value: string, label: string) {
-  if (!/^[a-z0-9]{20,40}$/i.test(value)) {
-    throw new ForbiddenError(`Invalid ${label}`);
-  }
-}
-
-function assertSafeActor(a: Actor) {
-  const cuid = /^[a-z0-9]{20,40}$/i;
-  if (!cuid.test(a.userId)) throw new ForbiddenError("Invalid actor.userId");
-  if (!cuid.test(a.orgId)) throw new ForbiddenError("Invalid actor.orgId");
-  if (!cuid.test(a.roleId)) throw new ForbiddenError("Invalid actor.roleId");
-  const roles: RoleName[] = ["SUPER_ADMIN", "ADMIN", "EDITOR", "VIEWER"];
-  if (!roles.includes(a.role)) throw new ForbiddenError("Invalid actor.role");
-}
-
-/** Re-export db so services have one import. */
-export { db };
-export type { Db };

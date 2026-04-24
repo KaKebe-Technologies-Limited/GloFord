@@ -7,8 +7,8 @@ export const metadata = { title: "Site settings" };
 type Obj = Record<string, string | undefined>;
 
 export default async function SiteSettingsPage() {
-  const actor = await requireActorFromSession();
-  const s = await getSiteSettings(actor.orgId);
+  await requireActorFromSession();
+  const s = await getSiteSettings();
   const contact = (s?.contact as Obj) ?? {};
   const socials = (s?.socials as Obj) ?? {};
   const seo = (s?.seo as Obj) ?? {};
@@ -24,8 +24,9 @@ export default async function SiteSettingsPage() {
 
       <SiteSettingsForm
         initial={{
-          siteName: s?.siteName ?? "Gloford",
+          siteName: s?.siteName ?? "Platform",
           logoUrl: s?.logoUrl ?? "",
+          loginBgUrl: s?.loginBgUrl ?? "",
           contact: {
             email: contact.email ?? "",
             phone: contact.phone ?? "",
