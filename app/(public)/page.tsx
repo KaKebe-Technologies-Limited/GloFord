@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { getPublishedPageBySlug } from "@/lib/services/pages";
+import { FALLBACK_IMAGES } from "@/lib/utils/images";
 
 /**
  * Home page.
@@ -52,7 +54,16 @@ async function Fallback() {
         </div>
       </div>
       <div className="flex-1">
-        <div className="aspect-[4/3] w-full rounded-[--radius-lg] bg-gradient-to-br from-[--color-primary] via-[--color-accent] to-[--color-secondary] opacity-90" />
+        <div className="aspect-[4/3] w-full overflow-hidden rounded-[--radius-lg] bg-[--color-muted] shadow-xl relative">
+          <Image
+            src={FALLBACK_IMAGES.hero}
+            alt="Community action"
+            fill
+            className="object-cover transition-transform duration-700 hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
+          />
+        </div>
       </div>
     </section>
   );

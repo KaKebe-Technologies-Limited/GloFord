@@ -5,6 +5,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { getActiveThemeTokens } from "@/lib/theme/service";
 import { getBrand } from "@/config/brand";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { TooltipProvider } from "@/components/ui/Tooltip";
 import "./globals.css";
 
 const inter = Inter({
@@ -62,7 +63,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <ThemeProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            {children}
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

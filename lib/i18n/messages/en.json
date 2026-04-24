@@ -59,6 +59,46 @@
       "deadLetter": "Dead letter",
       "featureFlags": "Feature flags",
       "health": "Health"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "snapshot": "A snapshot of your organization's last 30 days.",
+      "kpi": {
+        "pages": "Published pages",
+        "pagesSub": "{count} in draft",
+        "programs": "Programs",
+        "programsSub": "Published",
+        "posts": "Posts",
+        "postsSub": "Published",
+        "subscribers": "Active subscribers",
+        "subscribersSub": "{count} pending confirm",
+        "donations30": "Donations — 30d",
+        "donations30Sub": "{successful} successful · {attempted} attempted",
+        "donationsTotal": "Donations — lifetime",
+        "donationsTotalSub": "Successful only",
+        "events": "Upcoming events",
+        "eventsSub": "Starting today or later",
+        "newsletters": "Newsletters",
+        "newslettersSub": "{count} in draft"
+      },
+      "recentActivity": {
+        "title": "Recent activity",
+        "viewAudit": "Audit log",
+        "empty": "No activity yet. Your first action will appear here.",
+        "onEntity": "on {type}"
+      },
+      "deadLetter": {
+        "title": "Dead-letter queue",
+        "zero": "Inbox zero",
+        "pending": "events waiting for review",
+        "action": "Review now"
+      },
+      "quickLinks": {
+        "title": "Quick links",
+        "health": "System health",
+        "payments": "Payment providers",
+        "users": "Invite users"
+      }
     }
   },
   "auth": {

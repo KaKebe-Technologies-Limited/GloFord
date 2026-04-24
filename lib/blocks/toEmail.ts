@@ -65,8 +65,14 @@ function renderHtml(b: Block): string {
     case "gallery":
     case "programGrid":
     case "postList":
+    case "featureSplit":
+    case "actionCards":
+    case "eventList":
+    case "partnerLogos":
       // Email-unsuitable blocks collapse to a heading + link back to site.
       return `<p style="margin:12px 0;color:#6b7280">See more on our site.</p>`;
+    default:
+      return "";
   }
 }
 

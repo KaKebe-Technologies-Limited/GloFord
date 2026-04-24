@@ -17,10 +17,13 @@ import { z } from "zod";
 // ─── Individual block data schemas ───────────────────────────
 
 export const heroBlockSchema = z.object({
+  eyebrow: z.string().max(80).optional(),
   heading: z.string().min(1).max(200),
   subheading: z.string().max(400).optional(),
   ctaLabel: z.string().max(40).optional(),
   ctaHref: z.string().max(500).optional(),
+  secondaryCtaLabel: z.string().max(40).optional(),
+  secondaryCtaHref: z.string().max(500).optional(),
   imageMediaId: z.string().optional(),
 });
 
@@ -64,12 +67,52 @@ export const donateCtaBlockSchema = z.object({
 
 export const programGridBlockSchema = z.object({
   heading: z.string().max(200).optional(),
+  intro: z.string().max(400).optional(),
   limit: z.number().int().min(1).max(12).default(6),
 });
 
 export const postListBlockSchema = z.object({
   heading: z.string().max(200).optional(),
+  intro: z.string().max(400).optional(),
   limit: z.number().int().min(1).max(12).default(3),
+});
+
+export const featureSplitBlockSchema = z.object({
+  eyebrow: z.string().max(80).optional(),
+  heading: z.string().min(1).max(200),
+  body: z.string().max(1000),
+  ctaLabel: z.string().max(40).optional(),
+  ctaHref: z.string().max(500).optional(),
+  imageMediaId: z.string().optional(),
+  reverse: z.boolean().default(false),
+});
+
+export const actionCardsBlockSchema = z.object({
+  heading: z.string().max(200).optional(),
+  intro: z.string().max(400).optional(),
+  items: z
+    .array(
+      z.object({
+        title: z.string().min(1).max(120),
+        body: z.string().min(1).max(240),
+        href: z.string().min(1).max(500),
+        label: z.string().min(1).max(40),
+      }),
+    )
+    .min(1)
+    .max(6),
+});
+
+export const eventListBlockSchema = z.object({
+  heading: z.string().max(200).optional(),
+  intro: z.string().max(400).optional(),
+  limit: z.number().int().min(1).max(6).default(3),
+});
+
+export const partnerLogosBlockSchema = z.object({
+  heading: z.string().max(200).optional(),
+  intro: z.string().max(400).optional(),
+  mediaIds: z.array(z.string()).max(16).default([]),
 });
 
 // ─── Discriminated union (the block envelope) ─────────────────
@@ -83,6 +126,10 @@ export const blockSchema = z.discriminatedUnion("type", [
   z.object({ id: z.string(), type: z.literal("donateCta"), data: donateCtaBlockSchema }),
   z.object({ id: z.string(), type: z.literal("programGrid"), data: programGridBlockSchema }),
   z.object({ id: z.string(), type: z.literal("postList"), data: postListBlockSchema }),
+  z.object({ id: z.string(), type: z.literal("featureSplit"), data: featureSplitBlockSchema }),
+  z.object({ id: z.string(), type: z.literal("actionCards"), data: actionCardsBlockSchema }),
+  z.object({ id: z.string(), type: z.literal("eventList"), data: eventListBlockSchema }),
+  z.object({ id: z.string(), type: z.literal("partnerLogos"), data: partnerLogosBlockSchema }),
 ]);
 
 export type Block = z.infer<typeof blockSchema>;
@@ -135,6 +182,29 @@ export const BLOCK_META: Record<
     label: "Latest posts",
     description: "Auto-populated with latest published blog posts",
     emptyData: { limit: 3 },
+  },
+  featureSplit: {
+    label: "Feature split",
+    description: "Two-column story section with image and CTA",
+    emptyData: { heading: "Mission in action", body: "Tell the story behind the work." },
+  },
+  actionCards: {
+    label: "Action cards",
+    description: "Grid of CTA cards like volunteer, careers, or partner",
+    emptyData: {
+      heading: "Get involved",
+      items: [{ title: "Volunteer", body: "Join a local effort.", href: "/volunteer", label: "Learn more" }],
+    },
+  },
+  eventList: {
+    label: "Upcoming events",
+    description: "Auto-populated with public events",
+    emptyData: { limit: 3 },
+  },
+  partnerLogos: {
+    label: "Partner logos",
+    description: "Trusted partners and supporters",
+    emptyData: { mediaIds: [] },
   },
 };
 

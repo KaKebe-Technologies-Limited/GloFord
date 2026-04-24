@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   FileText,
-  Newspaper,
+  Briefcase,
+  PenTool,
   Image,
   HandCoins,
   Users,
@@ -22,8 +23,14 @@ import {
   AlertTriangle,
   CreditCard,
   X,
+  Navigation,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/Tooltip";
 
 type Group = {
   key: string;
@@ -36,8 +43,8 @@ const GROUPS: Group[] = [
     items: [
       { href: "/admin/dashboard", key: "dashboard", icon: LayoutDashboard },
       { href: "/admin/pages", key: "pages", icon: FileText },
-      { href: "/admin/programs", key: "programs", icon: Newspaper },
-      { href: "/admin/posts", key: "posts", icon: Newspaper },
+      { href: "/admin/programs", key: "programs", icon: Briefcase },
+      { href: "/admin/posts", key: "posts", icon: PenTool },
       { href: "/admin/media", key: "media", icon: Image },
     ],
   },
@@ -65,7 +72,7 @@ const GROUPS: Group[] = [
       { href: "/admin/users", key: "users", icon: Users },
       { href: "/admin/roles", key: "roles", icon: Shield },
       { href: "/admin/theme", key: "theme", icon: Palette },
-      { href: "/admin/nav", key: "nav", icon: FileText },
+      { href: "/admin/nav", key: "nav", icon: Navigation },
       { href: "/admin/settings", key: "settings", icon: Settings },
       { href: "/admin/settings/payments", key: "payments", icon: CreditCard },
     ],
@@ -137,20 +144,26 @@ export function Sidebar({
                   const active = pathname === href || pathname.startsWith(href + "/");
                   return (
                     <li key={href}>
-                      <Link
-                        href={href}
-                        onClick={onMobileClose}
-                        className={cn(
-                          "flex items-center gap-3 rounded-[--radius-md] px-3 py-2 text-sm transition-colors",
-                          active
-                            ? "bg-[--color-primary] text-[--color-primary-fg]"
-                            : "text-[--color-fg]/80 hover:bg-[--color-muted]",
-                        )}
-                        title={t(key)}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        <span className="md:hidden lg:inline">{t(key)}</span>
-                      </Link>
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <Link
+                            href={href}
+                            onClick={onMobileClose}
+                            className={cn(
+                              "flex items-center gap-3 rounded-[--radius-md] px-3 py-2 text-sm transition-colors",
+                              active
+                                ? "bg-[--color-primary] text-[--color-primary-fg]"
+                                : "text-[--color-fg]/80 hover:bg-[--color-muted]",
+                            )}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span className="md:hidden lg:inline">{t(key)}</span>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="md:block lg:hidden">
+                          {t(key)}
+                        </TooltipContent>
+                      </Tooltip>
                     </li>
                   );
                 })}
