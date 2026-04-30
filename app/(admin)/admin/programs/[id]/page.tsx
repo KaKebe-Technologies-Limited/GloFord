@@ -16,7 +16,7 @@ export default async function EditProgram({ params }: { params: Promise<{ id: st
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{program.title}</h1>
-          <p className="text-sm text-[--color-muted-fg]">/programs/{program.slug}</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">/programs/{program.slug}</p>
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={program.status} />

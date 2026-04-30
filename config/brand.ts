@@ -29,7 +29,7 @@ const DEFAULT: BrandConfig = {
   logoUrl: null,
   supportEmail: null,
   fromEmail: "no-reply@example.org",
-  primaryColor: "#2563eb",
+  primaryColor: "#1a3c34",
   country: null,
   defaultCurrency: "USD",
   locale: "en",

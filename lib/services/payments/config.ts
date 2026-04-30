@@ -8,17 +8,8 @@ import { decryptJson } from "@/lib/crypto/encrypt";
  * loadConfig refuses to return if the provider is disabled.
  */
 
-export type StripeSecrets = { secretKey: string; publishableKey?: string };
-export type StripePublic = { webhookEndpointSecretRef?: string };
-
-export type PayPalSecrets = { clientId: string; clientSecret: string };
-export type PayPalPublic = Record<string, never>;
-
 export type PesapalSecrets = { consumerKey: string; consumerSecret: string };
 export type PesapalPublic = { callbackUrl?: string; ipnId?: string; country?: string };
-
-export type FlutterwaveSecrets = { secretKey: string; publicKey: string };
-export type FlutterwavePublic = { country?: string };
 
 export type MtnMomoSecrets = {
   subscriptionKey: string;
@@ -30,19 +21,13 @@ export type MtnMomoPublic = { targetEnvironment?: string; currency?: string; cal
 export type AirtelMoneySecrets = { clientId: string; clientSecret: string };
 export type AirtelMoneyPublic = { country?: string; currency?: string };
 
-export type ProviderConfig<P extends ProviderEnum> = P extends "STRIPE"
-  ? { secrets: StripeSecrets; publicConfig: StripePublic; mode: string }
-  : P extends "PAYPAL"
-    ? { secrets: PayPalSecrets; publicConfig: PayPalPublic; mode: string }
-    : P extends "PESAPAL"
-      ? { secrets: PesapalSecrets; publicConfig: PesapalPublic; mode: string }
-      : P extends "FLUTTERWAVE"
-        ? { secrets: FlutterwaveSecrets; publicConfig: FlutterwavePublic; mode: string }
-        : P extends "MTN_MOMO"
-          ? { secrets: MtnMomoSecrets; publicConfig: MtnMomoPublic; mode: string }
-          : P extends "AIRTEL_MONEY"
-            ? { secrets: AirtelMoneySecrets; publicConfig: AirtelMoneyPublic; mode: string }
-            : never;
+export type ProviderConfig<P extends ProviderEnum> = P extends "PESAPAL"
+  ? { secrets: PesapalSecrets; publicConfig: PesapalPublic; mode: string }
+  : P extends "MTN_MOMO"
+    ? { secrets: MtnMomoSecrets; publicConfig: MtnMomoPublic; mode: string }
+    : P extends "AIRTEL_MONEY"
+      ? { secrets: AirtelMoneySecrets; publicConfig: AirtelMoneyPublic; mode: string }
+      : never;
 
 export async function loadConfig<P extends ProviderEnum>(
   provider: P,

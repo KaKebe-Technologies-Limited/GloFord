@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
+/* ─── Smooth scroll for entire page ─── */
+html {
+  scroll-behavior: smooth;
+}
+
 /* ────────────────────────────────────────────────────────────
-   Design System — Gold Brand
+   Design System — Dark Forest Green Brand
 
    Color format: space-separated RGB triplets (R G B)
    Usage: rgb(var(--token) / <alpha>)
@@ -33,20 +38,20 @@
   --color-surface-2:    rgb(var(--token-surface-2));
   --color-border:       rgb(var(--token-hairline) / var(--hairline-a));
 
-  /* Brand scale — static, supports Tailwind opacity modifiers */
-  --color-brand:     rgb(201 168 76);
-  --color-brand-light: rgb(232 201 107);
-  --color-brand-dark:  rgb(154 122 46);
-  --color-brand-50:  rgb(250 244 225);
-  --color-brand-100: rgb(244 233 194);
-  --color-brand-200: rgb(232 210 133);
-  --color-brand-300: rgb(221 191 88);
-  --color-brand-400: rgb(210 176 78);
-  --color-brand-500: rgb(201 168 76);
-  --color-brand-600: rgb(177 143 58);
-  --color-brand-700: rgb(142 112 41);
-  --color-brand-800: rgb(106 82 32);
-  --color-brand-900: rgb(70 55 21);
+  /* Brand scale — dark forest green */
+  --color-brand:       rgb(26 60 52);
+  --color-brand-light: rgb(37 85 73);
+  --color-brand-dark:  rgb(18 42 36);
+  --color-brand-50:    rgb(240 247 244);
+  --color-brand-100:   rgb(220 237 230);
+  --color-brand-200:   rgb(185 218 205);
+  --color-brand-300:   rgb(140 192 172);
+  --color-brand-400:   rgb(85 150 128);
+  --color-brand-500:   rgb(45 105 88);
+  --color-brand-600:   rgb(30 78 66);
+  --color-brand-700:   rgb(26 60 52);
+  --color-brand-800:   rgb(18 42 36);
+  --color-brand-900:   rgb(10 28 22);
 
   /* Typography */
   --font-sans:    var(--font-inter);
@@ -65,22 +70,22 @@
   --font-playfair:  'Playfair Display', ui-serif, Georgia, serif;
 
   --token-bg:           255 255 255;
-  --token-surface-2:    250 249 247;
+  --token-surface-2:    248 250 249;
   --token-card:         255 255 255;
-  --token-muted:        237 237 240;
+  --token-muted:        243 245 244;
   --token-fg:           10 10 11;
-  --token-muted-fg:     74 76 85;
-  --token-hairline:     15 23 42;
-  --hairline-a:         0.08;
-  --token-ring:         201 168 76;
-  --token-input:        237 237 240;
+  --token-muted-fg:     100 107 105;
+  --token-hairline:     26 60 52;
+  --hairline-a:         0.10;
+  --token-ring:         26 60 52;
+  --token-input:        243 245 244;
 
-  --token-primary:      201 168 76;
+  --token-primary:      26 60 52;
   --token-primary-fg:   255 255 255;
-  --token-secondary:    250 249 247;
+  --token-secondary:    248 250 249;
   --token-secondary-fg: 10 10 11;
-  --token-accent:       232 201 107;
-  --token-accent-fg:    10 10 11;
+  --token-accent:       13 122 61;
+  --token-accent-fg:    255 255 255;
   --token-danger:       239 68 68;
   --token-danger-fg:    255 255 255;
   --token-success:      34 197 94;
@@ -102,13 +107,13 @@
   --hairline-a:         0.08;
   --token-input:        36 38 45;
 
-  --token-primary:      201 168 76;
+  --token-primary:      37 85 73;
   --token-primary-fg:   255 255 255;
   --token-secondary:    21 23 28;
   --token-secondary-fg: 247 247 248;
-  --token-accent:       232 201 107;
+  --token-accent:       45 170 100;
   --token-accent-fg:    10 10 11;
-  --token-ring:         201 168 76;
+  --token-ring:         37 85 73;
 }
 
 /* ─── Base layer ─── */
@@ -130,12 +135,13 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-playfair);
+  font-family: var(--font-inter);
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 ::selection {
-  background: rgb(201 168 76 / 0.25);
+  background: rgb(26 60 52 / 0.18);
   color: inherit;
 }
 

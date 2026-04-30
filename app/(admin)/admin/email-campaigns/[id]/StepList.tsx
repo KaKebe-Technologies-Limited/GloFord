@@ -78,20 +78,20 @@ export function StepList({
   return (
     <section className="space-y-4">
       <header className="flex items-center gap-2">
-        <Mail className="h-5 w-5 text-[--color-muted-fg]" aria-hidden="true" />
+        <Mail className="h-5 w-5 text-[var(--color-muted-fg)]" aria-hidden="true" />
         <h2 className="text-lg font-semibold">Email steps</h2>
       </header>
 
-      <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         {steps.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-[--color-muted-fg]">
+          <p className="px-4 py-6 text-sm text-[var(--color-muted-fg)]">
             Add the first email in the sequence below.
           </p>
         ) : (
-          <ol className="divide-y divide-[--color-border]">
+          <ol className="divide-y divide-[var(--color-border)]">
             {steps.map((s, i) => (
               <li key={s.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[--color-primary] text-xs font-semibold text-[--color-primary-fg]">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-[var(--color-primary-fg)]">
                   {i + 1}
                 </span>
                 <Link
@@ -100,7 +100,7 @@ export function StepList({
                 >
                   {s.subject}
                 </Link>
-                <label className="flex items-center gap-1.5 text-xs text-[--color-muted-fg]">
+                <label className="flex items-center gap-1.5 text-xs text-[var(--color-muted-fg)]">
                   <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                   Delay (min):
                   <input
@@ -111,7 +111,7 @@ export function StepList({
                       const v = Number(e.target.value);
                       if (v !== s.delayMinutes) updateDelay(s.id, v);
                     }}
-                    className="w-20 rounded-[--radius-sm] border border-[--color-input] bg-[--color-bg] px-2 py-1 text-sm"
+                    className="w-20 rounded-[var(--radius-sm)] border border-[var(--color-input)] bg-[var(--color-bg)] px-2 py-1 text-sm"
                   />
                 </label>
                 <Button asChild size="sm" variant="outline">
@@ -128,7 +128,7 @@ export function StepList({
         )}
       </div>
 
-      <div className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-4">
+      <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-4">
         <h3 className="text-sm font-semibold">Add a step</h3>
         <div className="grid gap-3 md:grid-cols-[1fr_1fr_120px_auto]">
           <input
@@ -160,7 +160,7 @@ export function StepList({
         {error ? (
           <p
             role="alert"
-            className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]"
+            className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]"
           >
             {error}
           </p>
@@ -171,4 +171,4 @@ export function StepList({
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";

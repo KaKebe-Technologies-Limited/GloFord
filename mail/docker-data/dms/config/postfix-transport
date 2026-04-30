@@ -1,0 +1,10 @@
+# ── mail/docker-data/dms/config/postfix-transport ────────────
+# Maps no-reply@gloford.org to the discard transport.
+# docker-mailserver runs `postmap` on this file automatically at startup.
+#
+# To apply changes while the container is running:
+#   docker exec mailserver postmap /etc/postfix/transport
+#   docker exec mailserver postfix reload
+# ─────────────────────────────────────────────────────────────
+
+no-reply@gloford.org    discard:silently discarded

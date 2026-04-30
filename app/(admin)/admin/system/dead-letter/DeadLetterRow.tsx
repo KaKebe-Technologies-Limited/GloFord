@@ -43,25 +43,25 @@ export function DeadLetterRow({ row }: { row: Row }) {
   };
 
   return (
-    <tr className="border-b border-[--color-border] last:border-0 align-top">
-      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[--color-muted-fg]">
+    <tr className="border-b border-[var(--color-border)] last:border-0 align-top">
+      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[var(--color-muted-fg)]">
         {row.createdAt}
       </td>
-      <td className="px-4 py-3 text-[--color-muted-fg]">{row.source}</td>
+      <td className="px-4 py-3 text-[var(--color-muted-fg)]">{row.source}</td>
       <td className="px-4 py-3 font-mono text-xs">{row.eventType}</td>
-      <td className="max-w-xs truncate px-4 py-3 text-xs text-[--color-danger]" title={row.error}>
+      <td className="max-w-xs truncate px-4 py-3 text-xs text-[var(--color-danger)]" title={row.error}>
         {row.error}
       </td>
-      <td className="px-4 py-3 text-[--color-muted-fg]">{row.attempts}</td>
+      <td className="px-4 py-3 text-[var(--color-muted-fg)]">{row.attempts}</td>
       <td className="px-4 py-3">
         <span
           className={
             "inline-flex items-center rounded-full px-2 py-0.5 text-xs " +
             (row.status === "PENDING"
-              ? "bg-[--color-warning]/10 text-[--color-warning]"
+              ? "bg-[rgb(239_180_0/0.10)] text-amber-600"
               : row.status === "RESOLVED"
-              ? "bg-[--color-success]/10 text-[--color-success]"
-              : "bg-[--color-muted] text-[--color-muted-fg]")
+              ? "bg-[rgb(var(--token-success)/0.10)] text-[var(--color-success)]"
+              : "bg-[var(--color-muted)] text-[var(--color-muted-fg)]")
           }
         >
           {row.status}
@@ -82,7 +82,7 @@ export function DeadLetterRow({ row }: { row: Row }) {
               </Button>
             </div>
           ) : null}
-          {err ? <span className="text-xs text-[--color-danger]">{err}</span> : null}
+          {err ? <span className="text-xs text-[var(--color-danger)]">{err}</span> : null}
         </div>
       </td>
     </tr>

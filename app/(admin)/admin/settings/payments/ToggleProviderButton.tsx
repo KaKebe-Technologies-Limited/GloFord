@@ -29,11 +29,11 @@ export function ToggleProviderButton({
         })
       }
       className={`inline-flex h-6 w-11 items-center rounded-full transition ${
-        isEnabled ? "bg-[--color-primary]" : "bg-[--color-muted]"
+        isEnabled ? "bg-[var(--color-primary)]" : "bg-[var(--color-muted)]"
       } ${pending ? "opacity-50" : ""}`}
     >
       <span
-        className={`inline-block h-5 w-5 transform rounded-full bg-[--color-bg] shadow transition ${
+        className={`inline-block h-5 w-5 transform rounded-full bg-[var(--color-bg)] shadow transition ${
           isEnabled ? "translate-x-5" : "translate-x-0.5"
         }`}
         aria-hidden="true"

@@ -2,11 +2,11 @@ import type { SubscriberStatus } from "@prisma/client";
 import { cn } from "@/lib/utils/cn";
 
 const STYLES: Record<SubscriberStatus, string> = {
-  PENDING: "bg-[--color-muted] text-[--color-muted-fg]",
-  ACTIVE: "bg-[--color-success]/20 text-[--color-success]",
-  UNSUBSCRIBED: "bg-[--color-muted] text-[--color-muted-fg] line-through",
-  BOUNCED: "bg-[--color-danger]/10 text-[--color-danger]",
-  COMPLAINED: "bg-[--color-danger]/10 text-[--color-danger]",
+  PENDING: "bg-[var(--color-muted)] text-[var(--color-muted-fg)]",
+  ACTIVE: "bg-[rgb(var(--token-success)/0.20)] text-[var(--color-success)]",
+  UNSUBSCRIBED: "bg-[var(--color-muted)] text-[var(--color-muted-fg)] line-through",
+  BOUNCED: "bg-[rgb(var(--token-danger)/0.10)] text-[var(--color-danger)]",
+  COMPLAINED: "bg-[rgb(var(--token-danger)/0.10)] text-[var(--color-danger)]",
 };
 
 export function SubscriberStatusBadge({ status }: { status: SubscriberStatus }) {

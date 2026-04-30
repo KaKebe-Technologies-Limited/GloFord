@@ -7,20 +7,10 @@ type PaymentConfigInput = z.infer<typeof paymentConfigSchema>;
 
 function splitConfig(input: PaymentConfigInput) {
   switch (input.provider) {
-    case "STRIPE":
-      return {
-        publicConfig: {},
-        secrets: { secretKey: input.secretKey, publishableKey: input.publishableKey },
-      };
     case "PESAPAL":
       return {
         publicConfig: { ipnId: input.ipnId, country: input.country },
         secrets: { consumerKey: input.consumerKey, consumerSecret: input.consumerSecret },
-      };
-    case "FLUTTERWAVE":
-      return {
-        publicConfig: { country: input.country },
-        secrets: { secretKey: input.secretKey, publicKey: input.publicKey },
       };
     case "MTN_MOMO":
       return {

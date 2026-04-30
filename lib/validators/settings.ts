@@ -4,6 +4,8 @@ export const siteSettingsUpdateSchema = z.object({
   siteName: z.string().trim().min(1).max(120),
   logoUrl: z.string().trim().max(500).optional().nullable(),
   loginBgUrl: z.string().trim().max(500).optional().nullable(),
+  donationsEnabled: z.boolean().default(true),
+  campaignsEnabled: z.boolean().default(true),
   contact: z
     .object({
       email: z.string().email().optional().or(z.literal("")),

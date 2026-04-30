@@ -6,6 +6,7 @@ node_modules
 .env
 .env.local
 .env.*.local
+.env.production
 npm-debug.log
 yarn-error.log
 pnpm-debug.log
@@ -26,3 +27,5 @@ vitest.config.ts
 .prettierignore
 .prettierrc.json
 .eslintrc.json
+mail
+gloford-mail-dev

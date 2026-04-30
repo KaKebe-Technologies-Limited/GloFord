@@ -13,21 +13,21 @@ export type ThemeTokens = Record<string, string>;
 
 const DEFAULTS: ThemeTokens = {
   "bg": "255 255 255",
-  "surface-2": "250 249 247",
+  "surface-2": "248 250 249",
   "fg": "10 10 11",
-  "muted": "237 237 240",
-  "muted-fg": "74 76 85",
+  "muted": "243 245 244",
+  "muted-fg": "100 107 105",
   "card": "255 255 255",
   "card-fg": "10 10 11",
-  "hairline": "15 23 42",
-  "input": "237 237 240",
-  "ring": "201 168 76",
-  "primary": "201 168 76",
+  "hairline": "26 60 52",
+  "input": "243 245 244",
+  "ring": "26 60 52",
+  "primary": "26 60 52",
   "primary-fg": "255 255 255",
-  "secondary": "250 249 247",
+  "secondary": "248 250 249",
   "secondary-fg": "10 10 11",
-  "accent": "232 201 107",
-  "accent-fg": "10 10 11",
+  "accent": "13 122 61",
+  "accent-fg": "255 255 255",
   "danger": "239 68 68",
   "danger-fg": "255 255 255",
   "success": "34 197 94",
@@ -54,9 +54,6 @@ async function loadActiveTheme(): Promise<ThemeTokens> {
     assign(t.radius, "radius-");
     return merged;
   } catch {
-    // DB unreachable (e.g. before first migration). Fall back to defaults
-    // so the site still renders. Theme edits via admin will propagate
-    // once the database is available.
     return DEFAULTS;
   }
 }

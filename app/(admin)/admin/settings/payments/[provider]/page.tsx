@@ -6,9 +6,7 @@ import { db } from "@/lib/db";
 import { PaymentConfigForm } from "./Form";
 
 const SLUG_TO_PROVIDER = {
-  stripe: "STRIPE",
   pesapal: "PESAPAL",
-  flutterwave: "FLUTTERWAVE",
   "mtn-momo": "MTN_MOMO",
   "airtel-money": "AIRTEL_MONEY",
 } as const;
@@ -41,21 +39,21 @@ export default async function ProviderConfigPage({
       <div>
         <Link
           href="/admin/settings/payments"
-          className="inline-flex items-center gap-1 text-sm text-[--color-muted-fg] hover:text-[--color-fg]"
+          className="inline-flex items-center gap-1 text-sm text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]"
         >
           <ChevronLeft className="h-4 w-4" /> Back to providers
         </Link>
       </div>
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{LABELS[mapped]}</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           {existing
             ? `Last updated ${new Date(existing.updatedAt).toLocaleDateString()}`
             : "Not yet configured. Paste keys to enable."}
         </p>
       </header>
-      <div className="max-w-xl rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
-        <p className="rounded-[--radius-sm] bg-[--color-accent]/10 p-3 text-xs text-[--color-accent-fg]">
+      <div className="max-w-xl rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+        <p className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-accent)/0.10)] p-3 text-xs text-[var(--color-accent-fg)]">
           Keys are encrypted at rest. For security, the current secret values are not re-shown;
           re-enter them to save. Leaving this form will not expose them.
         </p>
@@ -75,9 +73,7 @@ export default async function ProviderConfigPage({
 }
 
 const LABELS: Record<string, string> = {
-  STRIPE: "Stripe",
   PESAPAL: "Pesapal",
-  FLUTTERWAVE: "Flutterwave",
   MTN_MOMO: "MTN Mobile Money",
   AIRTEL_MONEY: "Airtel Money",
 };

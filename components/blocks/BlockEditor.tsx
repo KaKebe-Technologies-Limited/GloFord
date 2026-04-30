@@ -49,7 +49,7 @@ export function BlockEditor({
   return (
     <div className="space-y-3">
       {value.length === 0 ? (
-        <div className="rounded-[--radius-lg] border border-dashed border-[--color-border] bg-[--color-muted] p-10 text-center text-sm text-[--color-muted-fg]">
+        <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-muted)] p-10 text-center text-sm text-[var(--color-muted-fg)]">
           No blocks yet. Add your first block below.
         </div>
       ) : (
@@ -74,17 +74,17 @@ export function BlockEditor({
         {pickerOpen ? (
           <div
             role="menu"
-            className="absolute left-0 top-full z-10 mt-1 grid w-72 grid-cols-1 gap-1 rounded-[--radius-md] border border-[--color-border] bg-[--color-card] p-2 shadow-md"
+            className="absolute left-0 top-full z-10 mt-1 grid w-72 grid-cols-1 gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card)] p-2 shadow-md"
           >
             {(Object.keys(BLOCK_META) as BlockType[]).map((t) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => add(t)}
-                className="rounded-[--radius-sm] px-3 py-2 text-left text-sm hover:bg-[--color-muted]"
+                className="rounded-[var(--radius-sm)] px-3 py-2 text-left text-sm hover:bg-[var(--color-muted)]"
               >
                 <p className="font-medium">{BLOCK_META[t].label}</p>
-                <p className="text-xs text-[--color-muted-fg]">{BLOCK_META[t].description}</p>
+                <p className="text-xs text-[var(--color-muted-fg)]">{BLOCK_META[t].description}</p>
               </button>
             ))}
           </div>
@@ -112,9 +112,9 @@ function BlockCard({
   onUpdate: (data: unknown) => void;
 }) {
   return (
-    <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
-      <header className="flex items-center justify-between gap-2 border-b border-[--color-border] px-4 py-2">
-        <p className="text-xs font-medium uppercase tracking-wider text-[--color-muted-fg]">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
+      <header className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] px-4 py-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-[var(--color-muted-fg)]">
           {BLOCK_META[block.type].label}
         </p>
         <div className="flex items-center gap-1">
@@ -156,8 +156,8 @@ function IconBtn({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-[--radius-sm] hover:bg-[--color-muted] disabled:pointer-events-none disabled:opacity-40",
-        danger && "text-[--color-danger] hover:bg-[--color-danger]/10",
+        "inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] hover:bg-[var(--color-muted)] disabled:pointer-events-none disabled:opacity-40",
+        danger && "text-[var(--color-danger)] hover:bg-[rgb(var(--token-danger)/0.10)]",
       )}
     >
       {children}
@@ -257,7 +257,7 @@ function BlockForm({ block, onChange }: { block: Block; onChange: (d: unknown) =
               <div key={i} className="flex gap-2">
                 <input placeholder="Label" value={it.label} onChange={(e) => update(i, { label: e.target.value })} className={inputCls} />
                 <input placeholder="Value" value={it.value} onChange={(e) => update(i, { value: e.target.value })} className={inputCls} />
-                <button type="button" onClick={() => remove(i)} className="text-[--color-danger]" aria-label="Remove stat">
+                <button type="button" onClick={() => remove(i)} className="text-[var(--color-danger)]" aria-label="Remove stat">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -365,7 +365,7 @@ function BlockForm({ block, onChange }: { block: Block; onChange: (d: unknown) =
             </Field>
           </div>
           {d.items.map((item, i) => (
-            <div key={i} className="grid grid-cols-1 gap-3 rounded-[--radius-md] border border-[--color-border] p-3 md:grid-cols-2">
+            <div key={i} className="grid grid-cols-1 gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-3 md:grid-cols-2">
               <Field label="Title">
                 <input type="text" value={item.title} onChange={(e) => update(i, { title: e.target.value })} className={inputCls} />
               </Field>
@@ -423,6 +423,30 @@ function BlockForm({ block, onChange }: { block: Block; onChange: (d: unknown) =
         </div>
       );
     }
+    case "pageCollection": {
+      const d = block.data;
+      return (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <Field label="Heading">
+            <input type="text" value={d.heading ?? ""} onChange={(e) => onChange({ ...d, heading: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Collection">
+            <select value={d.collection} onChange={(e) => onChange({ ...d, collection: e.target.value })} className={inputCls}>
+              <option value="impactStory">Impact stories</option>
+              <option value="team">Team / leadership</option>
+              <option value="report">Reports</option>
+              <option value="partner">Partners</option>
+            </select>
+          </Field>
+          <Field label="Intro" className="md:col-span-2">
+            <input type="text" value={d.intro ?? ""} onChange={(e) => onChange({ ...d, intro: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="Limit">
+            <input type="number" min={1} max={12} value={d.limit} onChange={(e) => onChange({ ...d, limit: Number(e.target.value) })} className={inputCls} />
+          </Field>
+        </div>
+      );
+    }
     case "gallery": {
       const d = block.data;
       return (
@@ -440,7 +464,7 @@ function BlockForm({ block, onChange }: { block: Block; onChange: (d: unknown) =
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";
 
 function Field({
   label,
@@ -453,7 +477,7 @@ function Field({
 }) {
   return (
     <label className={cn("block space-y-1.5", className)}>
-      <span className="text-xs font-medium text-[--color-muted-fg]">{label}</span>
+      <span className="text-xs font-medium text-[var(--color-muted-fg)]">{label}</span>
       {children}
     </label>
   );

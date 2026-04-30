@@ -29,23 +29,23 @@ export function SegmentRow({ segment }: Props) {
     });
   };
   return (
-    <tr className="border-b border-[--color-border] last:border-0">
+    <tr className="border-b border-[var(--color-border)] last:border-0">
       <td className="px-4 py-3 font-medium">{segment.name}</td>
-      <td className="px-4 py-3 font-mono text-xs text-[--color-muted-fg]">{segment.slug}</td>
-      <td className="px-4 py-3 text-[--color-muted-fg]">{segment._count.subscribers}</td>
-      <td className="px-4 py-3 text-xs text-[--color-muted-fg]">
+      <td className="px-4 py-3 font-mono text-xs text-[var(--color-muted-fg)]">{segment.slug}</td>
+      <td className="px-4 py-3 text-[var(--color-muted-fg)]">{segment._count.subscribers}</td>
+      <td className="px-4 py-3 text-xs text-[var(--color-muted-fg)]">
         {segment.isSystem ? "System" : "Custom"}
       </td>
       <td className="px-4 py-3 text-right">
         {segment.isSystem ? (
-          <span className="text-xs text-[--color-muted-fg]">locked</span>
+          <span className="text-xs text-[var(--color-muted-fg)]">locked</span>
         ) : (
           <button
             type="button"
             onClick={del}
             disabled={pending}
             aria-label={`Delete ${segment.name}`}
-            className="rounded-[--radius-sm] p-1.5 text-[--color-danger] hover:bg-[--color-danger]/10"
+            className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-danger)] hover:bg-[rgb(var(--token-danger)/0.10)]"
           >
             <Trash2 className="h-4 w-4" />
           </button>

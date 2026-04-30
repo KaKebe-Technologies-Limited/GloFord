@@ -3,8 +3,8 @@
  * implements.
  *
  * Two UX shapes:
- *   • REDIRECT  — Stripe, Pesapal, Flutterwave: browser navigates to a
- *                 hosted checkout URL, returns to our success page.
+ *   • REDIRECT  — Pesapal: browser navigates to a hosted checkout URL,
+ *                 returns to our success page.
  *   • AWAIT_PHONE — MTN MoMo, Airtel Money: the donor authorizes on
  *                 their phone; we poll /api/donations/[id]/status until
  *                 the webhook flips it to SUCCEEDED or FAILED.

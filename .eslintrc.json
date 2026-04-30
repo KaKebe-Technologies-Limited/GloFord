@@ -32,7 +32,7 @@
         "default": "disallow",
         "rules": [
           { "from": "ui", "allow": ["ui", "actions", "services", "shared", "validators", "rbac", "auth", "blocks", "theme", "mail", "data", "tenant", "featureFlags", "observability", "ratelimit"] },
-          { "from": "apiRoute", "allow": ["services", "actions", "shared", "validators", "rbac", "auth", "inngest", "blocks", "theme", "mail", "data", "tenant", "featureFlags", "observability", "ratelimit"] },
+          { "from": "apiRoute", "allow": ["services", "actions", "shared", "validators", "rbac", "auth", "inngest", "blocks", "theme", "mail", "data", "tenant", "featureFlags", "observability", "ratelimit", "storage", "crypto"] },
           { "from": "actions", "allow": ["services", "shared", "validators", "rbac", "auth", "data", "ratelimit", "featureFlags"] },
           { "from": "services", "allow": ["services", "data", "shared", "validators", "rbac", "tenant", "inngest", "auth", "mail", "crypto", "storage", "blocks", "theme", "observability", "featureFlags"] },
           { "from": "inngest", "allow": ["services", "data", "shared", "validators", "tenant", "auth", "mail", "blocks", "inngest", "observability"] },

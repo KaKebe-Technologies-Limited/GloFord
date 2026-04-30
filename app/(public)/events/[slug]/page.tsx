@@ -2,7 +2,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, MapPin, ArrowLeft } from "lucide-react";
+import { db } from "@/lib/db";
 import { getPublicEvent } from "@/lib/services/events/public";
+
+export async function generateStaticParams() {
+  try {
+    const items = await db.event.findMany({
+      where: { isPublic: true },
+      select: { slug: true },
+    });
+    return items.map((item) => ({ slug: item.slug }));
+  } catch {
+    return [];
+  }
+}
+
+export const revalidate = 3600; // ISR: revalidate every hour
 
 export async function generateMetadata({
   params,
@@ -32,14 +47,14 @@ export default async function EventDetailPage({
     <article className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
       <Link
         href="/events"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-[--color-muted-fg] hover:text-[--color-fg]"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]"
       >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> All events
       </Link>
 
       <header className="space-y-4">
         <h1 className="text-4xl font-semibold tracking-tight">{e.title}</h1>
-        <div className="flex flex-wrap items-center gap-4 text-sm text-[--color-muted-fg]">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--color-muted-fg)]">
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="h-4 w-4" aria-hidden="true" />
             <time dateTime={e.startsAt.toISOString()}>
@@ -67,7 +82,7 @@ export default async function EventDetailPage({
       </header>
 
       {cover ? (
-        <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-[--radius-lg] bg-[--color-muted]">
+        <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-[var(--radius-lg)] bg-[var(--color-muted)]">
           <Image
             src={cover.url}
             alt={cover.alt ?? e.title}
@@ -79,7 +94,7 @@ export default async function EventDetailPage({
         </div>
       ) : null}
 
-      <div className="prose prose-neutral mt-8 max-w-none whitespace-pre-line text-[--color-fg]">
+      <div className="prose prose-neutral mt-8 max-w-none whitespace-pre-line text-[var(--color-fg)]">
         {e.description}
       </div>
     </article>

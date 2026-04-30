@@ -8,6 +8,8 @@ import {
 } from "@/lib/actions/campaigns";
 import { Button } from "@/components/ui/Button";
 
+type ProgramOption = { id: string; title: string };
+
 type Initial = {
   id?: string;
   slug?: string;
@@ -21,7 +23,7 @@ type Initial = {
   isActive?: boolean;
 };
 
-export function CampaignForm({ initial }: { initial?: Initial }) {
+export function CampaignForm({ initial, programs = [] }: { initial?: Initial; programs?: ProgramOption[] }) {
   const isEdit = !!initial?.id;
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -74,7 +76,7 @@ export function CampaignForm({ initial }: { initial?: Initial }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-      <section className="space-y-4 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
+      <section className="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
         <Field label="Title">
           <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
         </Field>
@@ -100,8 +102,13 @@ export function CampaignForm({ initial }: { initial?: Initial }) {
             <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} className={inputCls} />
           </Field>
         </div>
-        <Field label="Linked program id (optional)">
-          <input value={programId} onChange={(e) => setProgramId(e.target.value)} className={inputCls} />
+        <Field label="Linked program (optional)">
+          <select value={programId} onChange={(e) => setProgramId(e.target.value)} className={inputCls}>
+            <option value="">— No program —</option>
+            {programs.map((p) => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
         </Field>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
@@ -110,9 +117,9 @@ export function CampaignForm({ initial }: { initial?: Initial }) {
       </section>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 space-y-3">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 space-y-3">
           {error ? (
-            <p role="alert" className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]">
+            <p role="alert" className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]">
               {error}
             </p>
           ) : null}
@@ -131,7 +138,7 @@ export function CampaignForm({ initial }: { initial?: Initial }) {
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

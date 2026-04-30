@@ -2,10 +2,10 @@ import type { DonationStatus } from "@prisma/client";
 import { cn } from "@/lib/utils/cn";
 
 const STYLES: Record<DonationStatus, string> = {
-  PENDING: "bg-[--color-muted] text-[--color-muted-fg]",
-  SUCCEEDED: "bg-[--color-success]/20 text-[--color-success]",
-  FAILED: "bg-[--color-danger]/10 text-[--color-danger]",
-  REFUNDED: "bg-[--color-accent]/20 text-[--color-accent-fg]",
+  PENDING: "bg-[var(--color-muted)] text-[var(--color-muted-fg)]",
+  SUCCEEDED: "bg-[rgb(var(--token-success)/0.20)] text-[var(--color-success)]",
+  FAILED: "bg-[rgb(var(--token-danger)/0.10)] text-[var(--color-danger)]",
+  REFUNDED: "bg-[rgb(var(--token-accent)/0.20)] text-[var(--color-accent-fg)]",
 };
 
 export function DonationStatusBadge({ status }: { status: DonationStatus }) {

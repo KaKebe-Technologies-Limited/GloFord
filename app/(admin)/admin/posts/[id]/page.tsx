@@ -16,7 +16,7 @@ export default async function EditPost({ params }: { params: Promise<{ id: strin
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{post.title}</h1>
-          <p className="text-sm text-[--color-muted-fg]">/blog/{post.slug}</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">/blog/{post.slug}</p>
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={post.status} />

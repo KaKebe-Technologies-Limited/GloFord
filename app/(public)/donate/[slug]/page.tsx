@@ -10,7 +10,9 @@ export default async function CampaignDonatePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { providers } = await getPublicDonationContext();
+  const { providers, donationsEnabled, campaignsEnabled } = await getPublicDonationContext();
+
+  if (!donationsEnabled || !campaignsEnabled) notFound();
 
   let campaign;
   try {
@@ -28,7 +30,7 @@ export default async function CampaignDonatePage({
       <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
         <section>
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{campaign.title}</h1>
-          <p className="mt-4 whitespace-pre-wrap text-[--color-muted-fg]">{campaign.description}</p>
+          <p className="mt-4 whitespace-pre-wrap text-[var(--color-muted-fg)]">{campaign.description}</p>
 
           {campaign.goalCents ? (
             <div className="mt-8 space-y-2">
@@ -36,17 +38,17 @@ export default async function CampaignDonatePage({
                 <span className="font-semibold">
                   {formatMoney(campaign.raisedCents, campaign.currency)}
                 </span>
-                <span className="text-[--color-muted-fg]">
+                <span className="text-[var(--color-muted-fg)]">
                   of {formatMoney(campaign.goalCents, campaign.currency)}
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[--color-muted]">
+              <div className="h-2 overflow-hidden rounded-full bg-[var(--color-muted)]">
                 <div
-                  className="h-full rounded-full bg-[--color-primary] transition-all"
+                  className="h-full rounded-full bg-[var(--color-primary)] transition-all"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-xs text-[--color-muted-fg]">
+              <p className="text-xs text-[var(--color-muted-fg)]">
                 {campaign.donationCount} donation{campaign.donationCount === 1 ? "" : "s"} so far.
               </p>
             </div>

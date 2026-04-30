@@ -25,7 +25,12 @@ export function NotificationList({
   eventId: string;
   notifications: Notif[];
 }) {
-  const editHref = (id: string) => `/admin/events/${eventId}/notifications/${id}`;
+  // Sanitize eventId to prevent path traversal in URL construction (CWE-22)
+  const safeEventId = eventId.replace(/[^a-zA-Z0-9_-]/g, "");
+  const editHref = (id: string) => {
+    const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "");
+    return `/admin/events/${safeEventId}/notifications/${safeId}`;
+  };
   const [draft, setDraft] = useState({
     type: "ANNOUNCEMENT" as "ANNOUNCEMENT" | "REMINDER",
     subject: "",
@@ -77,30 +82,30 @@ export function NotificationList({
   return (
     <section className="space-y-4">
       <header className="flex items-center gap-2">
-        <Bell className="h-5 w-5 text-[--color-muted-fg]" aria-hidden="true" />
+        <Bell className="h-5 w-5 text-[var(--color-muted-fg)]" aria-hidden="true" />
         <h2 className="text-lg font-semibold">Notifications</h2>
       </header>
 
-      <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         {notifications.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-[--color-muted-fg]">
+          <p className="px-4 py-6 text-sm text-[var(--color-muted-fg)]">
             No notifications yet. Add an announcement or reminder below.
           </p>
         ) : (
-          <ul className="divide-y divide-[--color-border]">
+          <ul className="divide-y divide-[var(--color-border)]">
             {notifications.map((n) => (
               <li key={n.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <span className="inline-flex items-center rounded-full bg-[--color-muted] px-2 py-0.5 text-xs text-[--color-muted-fg]">
+                <span className="inline-flex items-center rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs text-[var(--color-muted-fg)]">
                   {n.type}
                 </span>
                 <Link href={editHref(n.id)} className="flex-1 font-medium hover:underline">
                   {n.subject}
                 </Link>
-                <span className="flex items-center gap-1 text-xs text-[--color-muted-fg]">
+                <span className="flex items-center gap-1 text-xs text-[var(--color-muted-fg)]">
                   <Clock className="h-3 w-3" aria-hidden="true" />
                   {new Date(n.sendAt).toLocaleString()}
                 </span>
-                <span className="text-xs uppercase tracking-wide text-[--color-muted-fg]">
+                <span className="text-xs uppercase tracking-wide text-[var(--color-muted-fg)]">
                   {n.status}
                 </span>
                 <Button asChild size="sm" variant="outline">
@@ -134,7 +139,7 @@ export function NotificationList({
         )}
       </div>
 
-      <div className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-4">
+      <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-4">
         <h3 className="text-sm font-semibold">Add a notification</h3>
         <div className="grid gap-3 md:grid-cols-[140px_1fr_220px_auto]">
           <select
@@ -168,7 +173,7 @@ export function NotificationList({
         {error ? (
           <p
             role="alert"
-            className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]"
+            className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]"
           >
             {error}
           </p>
@@ -179,4 +184,4 @@ export function NotificationList({
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";

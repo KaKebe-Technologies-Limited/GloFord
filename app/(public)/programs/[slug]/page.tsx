@@ -1,7 +1,22 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { db } from "@/lib/db";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { getPublishedProgramBySlug } from "@/lib/services/programs";
+
+export async function generateStaticParams() {
+  try {
+    const items = await db.program.findMany({
+      where: { status: "PUBLISHED" },
+      select: { slug: true },
+    });
+    return items.map((item) => ({ slug: item.slug }));
+  } catch {
+    return [];
+  }
+}
+
+export const revalidate = 3600; // ISR: revalidate every hour
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> },
@@ -28,7 +43,7 @@ export default async function ProgramDetail({ params }: { params: Promise<{ slug
     <article>
       <section className="mx-auto max-w-4xl px-4 py-10">
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{program.title}</h1>
-        <p className="mt-4 text-lg text-[--color-muted-fg]">{program.summary}</p>
+        <p className="mt-4 text-lg text-[var(--color-muted-fg)]">{program.summary}</p>
       </section>
       <BlockRenderer blocks={program.body} />
     </article>

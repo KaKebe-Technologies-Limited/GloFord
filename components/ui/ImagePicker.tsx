@@ -51,7 +51,7 @@ export function ImagePicker({
   return (
     <div className="space-y-2">
       {value ? (
-        <div className="relative overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-muted]">
+        <div className="relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-muted)]">
           <div className="relative w-full" style={{ aspectRatio: aspect }}>
             {/* Use native img so external URLs work without next/image domain allowlist */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -79,7 +79,7 @@ export function ImagePicker({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex w-full flex-col items-center justify-center gap-2 rounded-[--radius-lg] border-2 border-dashed border-[--color-border] bg-[--color-muted]/30 p-8 text-sm text-[--color-muted-fg] transition hover:border-[--color-primary] hover:bg-[--color-muted]/50"
+          className="flex w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.30)] p-8 text-sm text-[var(--color-muted-fg)] transition hover:border-[var(--color-primary)] hover:bg-[rgb(var(--token-muted)/0.50)]"
           style={{ aspectRatio: aspect }}
         >
           <Upload className="h-6 w-6" />
@@ -133,13 +133,13 @@ function ImagePickerDialog({
     >
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
       <div
-        className="flex h-[80dvh] w-full max-w-4xl flex-col overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]"
+        className="flex h-[80dvh] w-full max-w-4xl flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         tabIndex={-1}
       >
-        <header className="flex items-center justify-between border-b border-[--color-border] px-5 py-3">
+        <header className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">
           <div className="flex gap-1 text-sm">
             {allowLibrary && (
               <TabButton active={mode === "library"} onClick={() => setMode("library")}>
@@ -160,7 +160,7 @@ function ImagePickerDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1.5 text-[--color-muted-fg] hover:bg-[--color-muted]"
+            className="rounded p-1.5 text-[var(--color-muted-fg)] hover:bg-[var(--color-muted)]"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -191,10 +191,10 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={
-        "inline-flex items-center gap-1.5 rounded-[--radius-md] px-3 py-1.5 text-sm " +
+        "inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-1.5 text-sm " +
         (active
-          ? "bg-[--color-primary] text-[--color-primary-fg]"
-          : "text-[--color-muted-fg] hover:bg-[--color-muted]")
+          ? "bg-[var(--color-primary)] text-[var(--color-primary-fg)]"
+          : "text-[var(--color-muted-fg)] hover:bg-[var(--color-muted)]")
       }
     >
       {children}
@@ -214,7 +214,7 @@ function LibraryTab({ onPick }: { onPick: (url: string) => void }) {
 
   if (rows === null) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-[--color-muted-fg]">
+      <div className="flex h-full items-center justify-center text-sm text-[var(--color-muted-fg)]">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
       </div>
     );
@@ -227,17 +227,17 @@ function LibraryTab({ onPick }: { onPick: (url: string) => void }) {
   return (
     <div className="space-y-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[--color-muted-fg]" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-fg)]" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by alt text or URL…"
-          className="w-full rounded-[--radius-md] border border-[--color-border] bg-[--color-bg] py-2 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-primary]"
+          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] py-2 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <p className="py-16 text-center text-sm text-[--color-muted-fg]">
+        <p className="py-16 text-center text-sm text-[var(--color-muted-fg)]">
           {rows.length === 0
             ? "No images in the library yet. Upload one or paste a URL."
             : "No images match that search."}
@@ -249,7 +249,7 @@ function LibraryTab({ onPick }: { onPick: (url: string) => void }) {
               key={m.id}
               type="button"
               onClick={() => onPick(m.url)}
-              className="group relative aspect-square overflow-hidden rounded-[--radius-md] border border-[--color-border] bg-[--color-muted] transition hover:ring-2 hover:ring-[--color-primary]"
+              className="group relative aspect-square overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-muted)] transition hover:ring-2 hover:ring-[var(--color-primary)]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={m.url} alt={m.alt} className="h-full w-full object-cover transition group-hover:scale-105" />
@@ -322,20 +322,20 @@ function UploadTab({ onPick }: { onPick: (url: string) => void }) {
     <div className="flex h-full flex-col items-center justify-center">
       <label
         className={
-          "flex w-full max-w-md cursor-pointer flex-col items-center gap-3 rounded-[--radius-lg] border-2 border-dashed border-[--color-border] bg-[--color-muted]/30 p-10 text-center text-sm transition hover:border-[--color-primary] hover:bg-[--color-muted]/50 " +
+          "flex w-full max-w-md cursor-pointer flex-col items-center gap-3 rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.30)] p-10 text-center text-sm transition hover:border-[var(--color-primary)] hover:bg-[rgb(var(--token-muted)/0.50)] " +
           (isPending ? "pointer-events-none opacity-50" : "")
         }
       >
         {isPending ? (
           <>
-            <Loader2 className="h-8 w-8 animate-spin text-[--color-primary]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
             <span>Uploading…</span>
           </>
         ) : (
           <>
-            <Upload className="h-8 w-8 text-[--color-muted-fg]" />
+            <Upload className="h-8 w-8 text-[var(--color-muted-fg)]" />
             <span className="font-medium">Click to select a file</span>
-            <span className="text-xs text-[--color-muted-fg]">
+            <span className="text-xs text-[var(--color-muted-fg)]">
               PNG, JPG, WebP, SVG — up to 10 MB.
             </span>
           </>
@@ -353,7 +353,7 @@ function UploadTab({ onPick }: { onPick: (url: string) => void }) {
       </label>
 
       {error ? (
-        <p className="mt-3 text-sm text-[--color-danger]">
+        <p className="mt-3 text-sm text-[var(--color-danger)]">
           Upload failed: {error}. You can still paste a URL instead.
         </p>
       ) : null}
@@ -398,24 +398,24 @@ function UrlTab({ onPick }: { onPick: (url: string) => void }) {
             if (e.key === "Enter") submit();
           }}
           placeholder="https://example.com/image.jpg"
-          className="w-full rounded-[--radius-md] border border-[--color-border] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-primary]"
+          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         />
         {url && ok ? (
-          <div className="overflow-hidden rounded-[--radius-md] border border-[--color-border] bg-[--color-muted]">
+          <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-muted)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt="" className="h-48 w-full object-cover" />
           </div>
         ) : null}
-        {error ? <p className="text-sm text-[--color-danger]">{error}</p> : null}
+        {error ? <p className="text-sm text-[var(--color-danger)]">{error}</p> : null}
         <button
           type="button"
           onClick={submit}
           disabled={!ok}
-          className="w-full rounded-[--radius-md] bg-[--color-primary] px-4 py-2 text-sm font-medium text-[--color-primary-fg] disabled:opacity-50"
+          className="w-full rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-[var(--color-primary-fg)] disabled:opacity-50"
         >
           Use this image
         </button>
-        <p className="text-xs text-[--color-muted-fg]">
+        <p className="text-xs text-[var(--color-muted-fg)]">
           External URLs are stored as-is. If the source goes down, the image breaks.
           Prefer Upload for permanence.
         </p>

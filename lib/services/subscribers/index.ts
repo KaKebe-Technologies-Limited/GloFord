@@ -149,14 +149,19 @@ export const assignSubscriberSegments = createService({
   },
 });
 
-export function listSubscribers(take = 200) {
-  return db.subscriber.findMany({
-    orderBy: { createdAt: "desc" },
-    take,
-    include: {
-      segments: { include: { segment: { select: { slug: true, name: true } } } },
-    },
-  });
+export async function listSubscribers({ page = 1, perPage = 50 }: { page?: number; perPage?: number } = {}) {
+  const [rows, total] = await Promise.all([
+    db.subscriber.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * perPage,
+      take: perPage,
+      include: {
+        segments: { include: { segment: { select: { slug: true, name: true } } } },
+      },
+    }),
+    db.subscriber.count(),
+  ]);
+  return { rows, total, page, perPage, totalPages: Math.ceil(total / perPage) };
 }
 
 export function countActiveSubscribers() {

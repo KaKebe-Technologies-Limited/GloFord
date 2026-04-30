@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { getEmailCampaignForEdit } from "@/lib/services/emailCampaigns";
+import { listSegments } from "@/lib/services/segments";
 import { CampaignForm } from "../CampaignForm";
 import { StepList } from "./StepList";
 
@@ -13,20 +14,24 @@ export default async function EditEmailCampaignPage({
 }) {
   const { id } = await params;
   await requireActorFromSession();
-  const row = await getEmailCampaignForEdit(id);
+  const [row, allSegments] = await Promise.all([
+    getEmailCampaignForEdit(id),
+    listSegments(),
+  ]);
   if (!row) notFound();
 
   return (
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{row.name}</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           {row.isActive ? "Active" : "Paused"} · {row._count.enrollments} enrollment
           {row._count.enrollments === 1 ? "" : "s"}
         </p>
       </header>
 
       <CampaignForm
+        segments={allSegments.map((s) => ({ id: s.id, name: s.name }))}
         initial={{
           id: row.id,
           name: row.name,

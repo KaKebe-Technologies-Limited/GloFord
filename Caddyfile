@@ -1,0 +1,28 @@
+# Caddy automatically obtains and renews Let's Encrypt certificates.
+# Ensure ports 80 and 443 are open and DNS A/AAAA records for
+# gloford.org and www.gloford.org point to this server before starting.
+
+www.gloford.org {
+  redir https://gloford.org{uri} permanent
+}
+
+gloford.org {
+  reverse_proxy app:3000
+
+  # Security headers
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options    "nosniff"
+    X-Frame-Options           "SAMEORIGIN"
+    Referrer-Policy           "strict-origin-when-cross-origin"
+    Permissions-Policy        "geolocation=(), microphone=(), camera=()"
+    -Server
+  }
+
+  encode gzip
+
+  log {
+    output stdout
+    format json
+  }
+}

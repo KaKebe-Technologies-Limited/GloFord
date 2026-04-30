@@ -22,7 +22,7 @@ export default async function EditCampaignEmailStepPage({
     <div className="space-y-6">
       <Link
         href={`/admin/email-campaigns/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-[--color-muted-fg] hover:text-[--color-fg]"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]"
       >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Back to {row.campaign.name}
       </Link>
@@ -31,7 +31,7 @@ export default async function EditCampaignEmailStepPage({
         <h1 className="text-2xl font-semibold tracking-tight">
           Step {row.stepOrder + 1}: {row.subject}
         </h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           {row.delayMinutes === 0
             ? "Sends immediately after enrollment (or after the previous step)."
             : `Sends ${row.delayMinutes} minute${row.delayMinutes === 1 ? "" : "s"} after the previous step.`}

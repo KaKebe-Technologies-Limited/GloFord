@@ -1,21 +1,26 @@
 import { notFound } from "next/navigation";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { getCampaignForEdit } from "@/lib/services/campaigns";
+import { listPrograms } from "@/lib/services/programs";
 import { CampaignForm } from "../CampaignForm";
 
 export default async function EditCampaign({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   await requireActorFromSession();
-  const campaign = await getCampaignForEdit(id);
+  const [campaign, programs] = await Promise.all([
+    getCampaignForEdit(id),
+    listPrograms(),
+  ]);
   if (!campaign) notFound();
 
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{campaign.title}</h1>
-        <p className="text-sm text-[--color-muted-fg]">/donate/{campaign.slug}</p>
+        <p className="text-sm text-[var(--color-muted-fg)]">/donate/{campaign.slug}</p>
       </header>
       <CampaignForm
+        programs={programs.map((p) => ({ id: p.id, title: p.title }))}
         initial={{
           id: campaign.id,
           slug: campaign.slug,

@@ -11,10 +11,10 @@ const config: NextConfig = {
     serverActions: { bodySizeLimit: "2mb" },
   },
   images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
-      { protocol: "https", hostname: "*.r2.dev" },
-      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+    remotePatterns: [],
+    localPatterns: [
+      { pathname: '/api/media/file/**' },
+      { pathname: '/seed-images/**' },
     ],
     formats: ["image/avif", "image/webp"],
   },
@@ -27,6 +27,7 @@ const config: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // CSP is now set per-request in middleware.ts with nonces
         ],
       },
     ];

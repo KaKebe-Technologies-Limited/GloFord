@@ -3,7 +3,12 @@
 import { useState, useTransition } from "react";
 import { Save } from "lucide-react";
 import { updateCampaignEmailAction } from "@/lib/actions/emailCampaigns";
-import { BlockEditor } from "@/components/blocks/BlockEditor";
+import dynamic from "next/dynamic";
+
+const BlockEditor = dynamic(
+  () => import("@/components/blocks/BlockEditor").then((m) => ({ default: m.BlockEditor })),
+  { ssr: false },
+);
 import { Button } from "@/components/ui/Button";
 import type { Block } from "@/lib/blocks/types";
 
@@ -44,7 +49,7 @@ export function StepEditor({ initial }: { initial: Initial }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
       <section className="space-y-4">
-        <div className="grid gap-4 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 md:grid-cols-2">
+        <div className="grid gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 md:grid-cols-2">
           <label className="block space-y-1.5 md:col-span-2">
             <span className="text-sm font-medium">Subject</span>
             <input
@@ -74,7 +79,7 @@ export function StepEditor({ initial }: { initial: Initial }) {
         </div>
 
         <div>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
             Email body
           </h2>
           <BlockEditor value={content} onChange={setContent} />
@@ -82,11 +87,11 @@ export function StepEditor({ initial }: { initial: Initial }) {
       </section>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <div className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
+        <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           {error ? (
             <p
               role="alert"
-              className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]"
+              className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]"
             >
               {error}
             </p>
@@ -101,4 +106,4 @@ export function StepEditor({ initial }: { initial: Initial }) {
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";

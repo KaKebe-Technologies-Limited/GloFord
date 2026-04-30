@@ -1,0 +1,12 @@
+# ── config/postfix-main.cf ───────────────────────────────────
+# docker-mailserver merges this into /etc/postfix/main.cf at startup.
+#
+# Configures a 'discard' transport so any mail sent TO
+# no-reply@gloford.org is silently dropped — no bounce, no storage.
+# ─────────────────────────────────────────────────────────────
+
+# Point Postfix at the transport map
+transport_maps = hash:/etc/postfix/transport
+
+# Reject mail for unknown local users (prevents backscatter)
+local_recipient_maps = proxy:unix:passwd.byname $alias_maps

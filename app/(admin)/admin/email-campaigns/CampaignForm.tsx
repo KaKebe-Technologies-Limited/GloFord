@@ -9,6 +9,8 @@ import {
 } from "@/lib/actions/emailCampaigns";
 import { Button } from "@/components/ui/Button";
 
+type SegmentOption = { id: string; name: string };
+
 type Initial = {
   id?: string;
   name?: string;
@@ -18,15 +20,15 @@ type Initial = {
   segmentIds?: string[];
 };
 
-export function CampaignForm({ initial }: { initial?: Initial }) {
+export function CampaignForm({ initial, segments = [] }: { initial?: Initial; segments?: SegmentOption[] }) {
   const isEdit = !!initial?.id;
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [trigger, setTrigger] = useState<Initial["trigger"]>(
     initial?.trigger ?? "ON_SIGNUP",
   );
-  const [segmentIds, setSegmentIds] = useState<string>(
-    (initial?.segmentIds ?? []).join(","),
+  const [selectedSegments, setSelectedSegments] = useState<string[]>(
+    initial?.segmentIds ?? [],
   );
   const isActive = initial?.isActive ?? false;
   const [error, setError] = useState<string | null>(null);
@@ -40,10 +42,7 @@ export function CampaignForm({ initial }: { initial?: Initial }) {
           name,
           description: description || undefined,
           trigger,
-          segmentIds: segmentIds
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean),
+          segmentIds: selectedSegments,
           isActive,
         };
         if (isEdit) await updateEmailCampaignAction({ id: initial!.id!, ...payload });
@@ -79,7 +78,7 @@ export function CampaignForm({ initial }: { initial?: Initial }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-      <section className="space-y-4 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
+      <section className="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
         <Field label="Name">
           <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
         </Field>
@@ -103,22 +102,39 @@ export function CampaignForm({ initial }: { initial?: Initial }) {
             <option value="MANUAL">Manual enrollment only</option>
           </select>
         </Field>
-        <Field label="Segment ids (comma-separated, optional)">
-          <input
-            value={segmentIds}
-            onChange={(e) => setSegmentIds(e.target.value)}
-            placeholder="Leave blank to target all active subscribers"
-            className={inputCls}
-          />
+        <Field label="Target segments">
+          {segments.length === 0 ? (
+            <p className="text-xs text-[var(--color-muted-fg)]">No segments yet. All active subscribers will be targeted.</p>
+          ) : (
+            <div className="space-y-1">
+              {segments.map((s) => (
+                <label key={s.id} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selectedSegments.includes(s.id)}
+                    onChange={() =>
+                      setSelectedSegments((prev) =>
+                        prev.includes(s.id) ? prev.filter((x) => x !== s.id) : [...prev, s.id],
+                      )
+                    }
+                  />
+                  {s.name}
+                </label>
+              ))}
+              <p className="text-xs text-[var(--color-muted-fg)]">
+                {selectedSegments.length === 0 ? "All active subscribers" : `${selectedSegments.length} segment${selectedSegments.length === 1 ? "" : "s"} selected`}
+              </p>
+            </div>
+          )}
         </Field>
       </section>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <div className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
+        <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           {error ? (
             <p
               role="alert"
-              className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]"
+              className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]"
             >
               {error}
             </p>
@@ -143,7 +159,7 @@ export function CampaignForm({ initial }: { initial?: Initial }) {
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

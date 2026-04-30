@@ -54,25 +54,25 @@ export function FeatureFlagManager({ flags }: { flags: Flag[] }) {
       {error ? (
         <p
           role="alert"
-          className="rounded-[--radius-sm] bg-[--color-danger]/10 p-3 text-sm text-[--color-danger]"
+          className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-3 text-sm text-[var(--color-danger)]"
         >
           {error}
         </p>
       ) : null}
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
           Tenant flags
         </h2>
-        <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
           {orgFlags.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-[--color-muted-fg]">No tenant-level flags yet.</p>
+            <p className="px-4 py-6 text-sm text-[var(--color-muted-fg)]">No tenant-level flags yet.</p>
           ) : (
-            <ul className="divide-y divide-[--color-border]">
+            <ul className="divide-y divide-[var(--color-border)]">
               {orgFlags.map((f) => (
                 <li key={f.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                  <code className="rounded bg-[--color-muted] px-2 py-0.5 text-xs">{f.key}</code>
-                  <span className="flex-1 text-sm text-[--color-muted-fg]">{f.description || "—"}</span>
+                  <code className="rounded bg-[var(--color-muted)] px-2 py-0.5 text-xs">{f.key}</code>
+                  <span className="flex-1 text-sm text-[var(--color-muted-fg)]">{f.description || "—"}</span>
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
@@ -91,7 +91,7 @@ export function FeatureFlagManager({ flags }: { flags: Flag[] }) {
           )}
         </div>
 
-        <div className="grid gap-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-4 md:grid-cols-[1fr_1fr_auto_auto]">
+        <div className="grid gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-4 md:grid-cols-[1fr_1fr_auto_auto]">
           <input
             value={draft.key}
             onChange={(e) => setDraft((d) => ({ ...d, key: e.target.value }))}
@@ -120,22 +120,22 @@ export function FeatureFlagManager({ flags }: { flags: Flag[] }) {
 
       {globalFlags.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
             Global flags (read-only)
           </h2>
-          <ul className="divide-y divide-[--color-border] rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+          <ul className="divide-y divide-[var(--color-border)] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
             {globalFlags.map((f) => (
               <li key={f.id} className="flex items-center gap-3 px-4 py-3">
-                <code className="rounded bg-[--color-muted] px-2 py-0.5 text-xs">{f.key}</code>
-                <span className="flex-1 text-sm text-[--color-muted-fg]">
+                <code className="rounded bg-[var(--color-muted)] px-2 py-0.5 text-xs">{f.key}</code>
+                <span className="flex-1 text-sm text-[var(--color-muted-fg)]">
                   {f.description || "—"}
                 </span>
                 <span
                   className={
                     "rounded-full px-2 py-0.5 text-xs " +
                     (f.isEnabled
-                      ? "bg-[--color-success]/10 text-[--color-success]"
-                      : "bg-[--color-muted] text-[--color-muted-fg]")
+                      ? "bg-[rgb(var(--token-success)/0.10)] text-[var(--color-success)]"
+                      : "bg-[var(--color-muted)] text-[var(--color-muted-fg)]")
                   }
                 >
                   {f.isEnabled ? "On" : "Off"}
@@ -150,4 +150,4 @@ export function FeatureFlagManager({ flags }: { flags: Flag[] }) {
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";

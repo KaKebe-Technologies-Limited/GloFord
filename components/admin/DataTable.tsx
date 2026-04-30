@@ -91,7 +91,7 @@ export function DataTable<T extends { id: string }>({
     <div className="space-y-4">
       {searchKey && (
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[--color-muted-fg]" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-fg)]" />
           <Input
             placeholder={searchPlaceholder}
             value={search}
@@ -101,17 +101,17 @@ export function DataTable<T extends { id: string }>({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
+            <thead className="border-b border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] text-left text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
               <tr>
                 {columns.map((column) => (
                   <th
                     key={column.key as string}
                     className={cn(
                       "px-4 py-3 font-semibold",
-                      column.sortable && "cursor-pointer hover:text-[--color-fg]",
+                      column.sortable && "cursor-pointer hover:text-[var(--color-fg)]",
                       column.className
                     )}
                     onClick={() => column.sortable && toggleSort(column.key as string)}
@@ -126,12 +126,12 @@ export function DataTable<T extends { id: string }>({
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[--color-border]">
+            <tbody className="divide-y divide-[var(--color-border)]">
               {filteredData.length === 0 ? (
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-4 py-10 text-center text-[--color-muted-fg]"
+                    className="px-4 py-10 text-center text-[var(--color-muted-fg)]"
                   >
                     No results found.
                   </td>
@@ -141,7 +141,7 @@ export function DataTable<T extends { id: string }>({
                   <tr
                     key={row.id}
                     className={cn(
-                      "group transition-colors hover:bg-[--color-muted]/50",
+                      "group transition-colors hover:bg-[rgb(var(--token-muted)/0.50)]",
                       onRowClick && "cursor-pointer"
                     )}
                     onClick={() => onRowClick?.(row)}
@@ -184,16 +184,16 @@ export function EmptyState({
   icon?: React.ElementType;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-[--radius-lg] border border-dashed border-[--color-border] bg-[--color-card] p-12 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[--color-muted]">
+    <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-card)] p-12 text-center">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--color-muted)]">
         {Icon ? (
-          <Icon className="h-10 w-10 text-[--color-muted-fg]" />
+          <Icon className="h-10 w-10 text-[var(--color-muted-fg)]" />
         ) : (
-          <Plus className="h-10 w-10 text-[--color-muted-fg]" />
+          <Plus className="h-10 w-10 text-[var(--color-muted-fg)]" />
         )}
       </div>
       <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-[--color-muted-fg] max-w-sm">
+      <p className="mt-2 text-sm text-[var(--color-muted-fg)] max-w-sm">
         {description}
       </p>
       {actionLabel && actionHref && (

@@ -240,7 +240,7 @@ model Post {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  cover  Media?    @relation(fields: [coverMediaId], references: [id])
+  cover  Media?    @relation("PostCover", fields: [coverMediaId], references: [id])
   author User      @relation("PostAuthor", fields: [authorId], references: [id])
   tags   PostTag[]
 
@@ -280,7 +280,7 @@ model Media {
   createdAt    DateTime @default(now())
 
   programs Program[]
-  posts    Post[]
+  posts    Post[]    @relation("PostCover")
   events   Event[]   @relation("EventCover")
 
   @@index([createdAt])
@@ -291,10 +291,7 @@ model Media {
 // ════════════════════════════════════════════════════════════
 
 enum PaymentProvider {
-  STRIPE
-  PAYPAL
   PESAPAL
-  FLUTTERWAVE
   MTN_MOMO
   AIRTEL_MONEY
 }
@@ -343,24 +340,24 @@ model Donor {
 }
 
 model Donation {
-  id             String          @id @default(cuid())
-  donorId        String?
-  campaignId     String?
-  amountCents    Int
-  currency       String          @default("USD")
-  provider       PaymentProvider
-  providerRef    String          @unique
-  status         DonationStatus  @default(PENDING)
-  type           DonationType    @default(ONE_TIME)
-  subscriptionId String?
-  receiptUrl     String?
-  refundedAt     DateTime?
-  refundedById   String?
-  refundReason   String?
+  id               String          @id @default(cuid())
+  donorId          String?
+  campaignId       String?
+  amountCents      Int
+  currency         String          @default("USD")
+  provider         PaymentProvider
+  providerRef      String          @unique
+  status           DonationStatus  @default(PENDING)
+  type             DonationType    @default(ONE_TIME)
+  subscriptionId   String?
+  receiptUrl       String?
+  refundedAt       DateTime?
+  refundedById     String?
+  refundReason     String?
   providerRefundId String?
-  metadata       Json?
-  createdAt      DateTime        @default(now())
-  completedAt    DateTime?
+  metadata         Json?
+  createdAt        DateTime        @default(now())
+  completedAt      DateTime?
 
   donor    Donor?    @relation(fields: [donorId], references: [id])
   campaign Campaign? @relation(fields: [campaignId], references: [id])
@@ -399,14 +396,16 @@ model PaymentConfiguration {
 // ════════════════════════════════════════════════════════════
 
 model SiteSettings {
-  id          String   @id @default("singleton")
-  siteName    String
-  logoUrl     String?
-  loginBgUrl  String?
-  contact     Json     @default("{}")
-  socials     Json     @default("{}")
-  seo         Json     @default("{}")
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default("singleton")
+  siteName         String
+  logoUrl          String?
+  loginBgUrl       String?
+  contact          Json     @default("{}")
+  socials          Json     @default("{}")
+  seo              Json     @default("{}")
+  donationsEnabled Boolean  @default(true)
+  campaignsEnabled Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
 }
 
 model Theme {
@@ -801,4 +800,303 @@ model WebhookEvent {
 
   @@unique([provider, providerEventId])
   @@index([provider, createdAt])
+}
+
+// ════════════════════════════════════════════════════════════
+// HERO SLIDES (homepage carousel)
+// ════════════════════════════════════════════════════════════
+
+model HeroSlide {
+  id         String   @id @default(cuid())
+  title      String
+  subtitle   String?
+  ctaLabel   String?
+  ctaHref    String?
+  imageUrl   String
+  imageAlt   String?
+  order      Int      @default(0)
+  durationMs Int      @default(3000)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+// ════════════════════════════════════════════════════════════
+// TESTIMONIALS
+// ════════════════════════════════════════════════════════════
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  quote      String
+  authorName String
+  authorRole String?
+  authorOrg  String?
+  avatarUrl  String?
+  rating     Int?     @default(5)
+  isActive   Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+// ════════════════════════════════════════════════════════════
+// LEADER MESSAGES (CEO, Board Chairman, etc.)
+// ════════════════════════════════════════════════════════════
+
+model LeaderMessage {
+  id         String   @id @default(cuid())
+  leaderName String
+  title      String
+  role       String
+  photoUrl   String?
+  message    String   @db.Text
+  signature  String?
+  isActive   Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+// ════════════════════════════════════════════════════════════
+// TEAM MEMBERS (Leadership page)
+// ════════════════════════════════════════════════════════════
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  name        String
+  role        String
+  bio         String?  @db.Text
+  photoUrl    String?
+  email       String?
+  phone       String?
+  department  String?
+  socialLinks Json     @default("{}")
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, order])
+  @@index([department])
+}
+
+// ════════════════════════════════════════════════════════════
+// SITE STATISTICS (animated counters)
+// ════════════════════════════════════════════════════════════
+
+model SiteStatistic {
+  id        String   @id @default(cuid())
+  label     String
+  value     String
+  icon      String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+// ════════════════════════════════════════════════════════════
+// CAREERS
+// ════════════════════════════════════════════════════════════
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  VOLUNTEER
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  REVIEWING
+  SHORTLISTED
+  INTERVIEW
+  OFFERED
+  REJECTED
+  WITHDRAWN
+}
+
+model Career {
+  id                  String    @id @default(cuid())
+  title               String
+  slug                String    @unique
+  department          String
+  location            String
+  type                JobType   @default(FULL_TIME)
+  description         String    @db.Text
+  requirements        Json      @default("[]")
+  responsibilities    Json      @default("[]")
+  qualifications      Json      @default("[]")
+  benefits            Json      @default("[]")
+  salaryRange         String?
+  applicationDeadline DateTime?
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  applications CareerApplication[]
+
+  @@index([isActive])
+  @@index([department])
+  @@index([type])
+}
+
+model CareerApplication {
+  id            String            @id @default(cuid())
+  careerId      String
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  coverLetter   String?           @db.Text
+  resumeUrl     String?
+  linkedinUrl   String?
+  education     Json              @default("[]")
+  experience    Json              @default("[]")
+  customAnswers Json              @default("{}")
+  status        ApplicationStatus @default(SUBMITTED)
+  notes         String?           @db.Text
+  reviewedById  String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+
+  @@index([careerId, status])
+  @@index([email])
+  @@index([status])
+}
+
+// ════════════════════════════════════════════════════════════
+// PARTNER APPLICATIONS
+// ════════════════════════════════════════════════════════════
+
+enum PartnerAppStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PartnerApplication {
+  id               String           @id @default(cuid())
+  organizationName String
+  contactName      String
+  email            String
+  phone            String?
+  website          String?
+  description      String           @db.Text
+  partnershipType  String
+  message          String?          @db.Text
+  status           PartnerAppStatus @default(PENDING)
+  reviewedById     String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([status])
+  @@index([email])
+}
+
+// ════════════════════════════════════════════════════════════
+// FAQs
+// ════════════════════════════════════════════════════════════
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String   @db.Text
+  category  String   @default("general")
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, isActive, order])
+}
+
+// ════════════════════════════════════════════════════════════
+// SHARED CONTENT SECTIONS (reusable across pages)
+// ════════════════════════════════════════════════════════════
+
+model SharedSection {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  title     String
+  content   Json     @default("{}")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ════════════════════════════════════════════════════════════
+// VOLUNTEER OPPORTUNITIES
+// ════════════════════════════════════════════════════════════
+
+model VolunteerOpportunity {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  department   String
+  location     String
+  commitment   String
+  description  String   @db.Text
+  requirements Json     @default("[]")
+  benefits     Json     @default("[]")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications VolunteerApplication[]
+
+  @@index([isActive])
+}
+
+enum VolunteerAppStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model VolunteerApplication {
+  id            String             @id @default(cuid())
+  opportunityId String
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  motivation    String?            @db.Text
+  availability  String?
+  skills        Json               @default("[]")
+  status        VolunteerAppStatus @default(SUBMITTED)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  opportunity VolunteerOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@index([opportunityId, status])
+  @@index([email])
+}
+
+// ════════════════════════════════════════════════════════════
+// CONTACT MESSAGES
+// ════════════════════════════════════════════════════════════
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([isRead, createdAt])
 }

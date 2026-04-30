@@ -11,7 +11,7 @@ export function ProgramStatusControl({ id, status }: { id: string; status: Conte
       disabled={pending}
       value={status}
       onChange={(e) => start(() => setProgramStatusAction({ id, status: e.target.value as ContentStatus }))}
-      className="rounded-[--radius-md] border border-[--color-border] bg-[--color-bg] px-3 py-1.5 text-sm"
+      className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm"
       aria-label="Program status"
     >
       <option value="DRAFT">Draft</option>

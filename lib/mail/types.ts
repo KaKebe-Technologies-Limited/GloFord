@@ -21,6 +21,6 @@ export type SendEmailResult = {
 };
 
 export interface MailProvider {
-  readonly id: "resend" | "log";
+  readonly id: "resend" | "smtp" | "log";
   send(params: SendEmailParams): Promise<SendEmailResult>;
 }

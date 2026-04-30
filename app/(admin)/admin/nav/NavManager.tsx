@@ -117,7 +117,7 @@ export function NavManager({ items }: { items: Item[] }) {
   return (
     <div className="space-y-8">
       {error ? (
-        <p role="alert" className="rounded-[--radius-sm] bg-[--color-danger]/10 p-3 text-sm text-[--color-danger]">
+        <p role="alert" className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-3 text-sm text-[var(--color-danger)]">
           {error}
         </p>
       ) : null}
@@ -128,12 +128,12 @@ export function NavManager({ items }: { items: Item[] }) {
 
         return (
           <section key={key} className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">{label}</h2>
-            <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">{label}</h2>
+            <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
               {list.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-[--color-muted-fg]">No items yet.</p>
+                <p className="px-4 py-6 text-sm text-[var(--color-muted-fg)]">No items yet.</p>
               ) : (
-                <ul className="divide-y divide-[--color-border]">
+                <ul className="divide-y divide-[var(--color-border)]">
                   {topLevel.map((parent) => (
                     <NavRow
                       key={parent.id}
@@ -154,7 +154,7 @@ export function NavManager({ items }: { items: Item[] }) {
         );
       })}
 
-      <section className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-4">
+      <section className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-4">
         <h3 className="text-sm font-semibold">Add a link</h3>
         <div className="grid gap-3 md:grid-cols-[170px_200px_1fr_1fr_auto]">
           <select
@@ -204,7 +204,7 @@ export function NavManager({ items }: { items: Item[] }) {
             <Plus className="h-4 w-4" /> Add
           </Button>
         </div>
-        <p className="text-xs text-[--color-muted-fg]">
+        <p className="text-xs text-[var(--color-muted-fg)]">
           Create dropdown items by choosing a top-level parent before adding the link.
         </p>
       </section>
@@ -234,7 +234,7 @@ function NavRow({
       <div className="flex items-center gap-3">
         <div className="min-w-0">
           <p className="font-medium">{item.label}</p>
-          <code className="rounded bg-[--color-muted] px-2 py-0.5 text-xs text-[--color-muted-fg]">{item.href || "-"}</code>
+          <code className="rounded bg-[var(--color-muted)] px-2 py-0.5 text-xs text-[var(--color-muted-fg)]">{item.href || "-"}</code>
         </div>
         <span className="ml-auto flex items-center gap-2">
           <label className="flex items-center gap-1.5 text-xs">
@@ -276,14 +276,14 @@ function NavRow({
         </span>
       </div>
       {children.length > 0 ? (
-        <ul className="mt-3 space-y-2 border-l border-[--color-border] pl-4">
+        <ul className="mt-3 space-y-2 border-l border-[var(--color-border)] pl-4">
           {children
             .sort((a, b) => a.order - b.order)
             .map((child) => (
-              <li key={child.id} className="flex items-center gap-3 rounded-[--radius-md] bg-[--color-secondary]/60 px-3 py-2">
+              <li key={child.id} className="flex items-center gap-3 rounded-[var(--radius-md)] bg-[rgb(var(--token-secondary)/0.60)] px-3 py-2">
                 <div className="min-w-0">
                   <p className="font-medium">{child.label}</p>
-                  <code className="rounded bg-white px-2 py-0.5 text-xs text-[--color-muted-fg]">{child.href || "-"}</code>
+                  <code className="rounded bg-white px-2 py-0.5 text-xs text-[var(--color-muted-fg)]">{child.href || "-"}</code>
                 </div>
                 <span className="ml-auto flex items-center gap-2">
                   <label className="flex items-center gap-1.5 text-xs">
@@ -332,4 +332,4 @@ function NavRow({
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";

@@ -21,11 +21,13 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
 const URL_SAFE = /^(https?:|mailto:|tel:|\/)/i;
 
 export function sanitizeHtml(input: string): string {
-  // Drop script/style blocks entirely
-  let out = input.replace(/<\/?(script|style|iframe|object|embed|form|input)[^>]*>/gi, "");
-  out = out.replace(/ on[a-z]+="[^"]*"/gi, "");
-  out = out.replace(/ on[a-z]+='[^']*'/gi, "");
+  // Drop script/style/dangerous blocks entirely
+  // Note: regex patterns below are HTML sanitization, not shell commands (not CWE-78)
+  let out = input.replace(/<\/?(script|style|iframe|object|embed|form|input|base|meta|link)[^>]*>/gi, "");
+  out = out.replace(/ on[a-z]+\s*=\s*"[^"]*"/gi, "");
+  out = out.replace(/ on[a-z]+\s*=\s*'[^']*'/gi, "");
   out = out.replace(/javascript:/gi, "");
+  out = out.replace(/data:/gi, ""); // strip data: URIs which can carry XSS
 
   // Strip disallowed tags (keep inner text)
   out = out.replace(/<\/?([a-z][a-z0-9]*)\b([^>]*)>/gi, (match, tag: string, attrs: string) => {

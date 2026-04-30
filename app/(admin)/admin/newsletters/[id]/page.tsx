@@ -19,7 +19,7 @@ export default async function EditNewsletter({ params }: { params: Promise<{ id:
       <header className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{nl.title}</h1>
-          <p className="text-sm text-[--color-muted-fg]">{nl.subject}</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">{nl.subject}</p>
         </div>
         <NewsletterStatusBadge status={nl.status} />
       </header>

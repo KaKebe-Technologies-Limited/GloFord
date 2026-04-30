@@ -1,0 +1,93 @@
+name: gloford-mail
+
+services:
+  # ── Mail server ─────────────────────────────────────────────
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: mailserver
+    hostname: mail
+    domainname: gloford.org
+    restart: unless-stopped
+    stop_grace_period: 1m
+
+    ports:
+      - "25:25"     # SMTP inbound (MX delivery)
+      - "465:465"   # SMTPS implicit TLS
+      - "587:587"   # Submission STARTTLS
+
+    volumes:
+      - ./docker-data/dms/mail-data/:/var/mail/
+      - ./docker-data/dms/mail-state/:/var/mail-state/
+      - ./docker-data/dms/mail-logs/:/var/log/mail/
+      - ./docker-data/dms/config/:/tmp/docker-mailserver/
+      # Certbot writes certs here; Nginx and mailserver both read them
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+
+    environment:
+      HOSTNAME: mail
+      DOMAINNAME: gloford.org
+      OVERRIDE_HOSTNAME: mail.gloford.org
+
+      # ── TLS — uses cert obtained by certbot on the host ───
+      SSL_TYPE: manual
+      SSL_CERT_PATH: /etc/letsencrypt/live/mail.gloford.org/fullchain.pem
+      SSL_KEY_PATH:  /etc/letsencrypt/live/mail.gloford.org/privkey.pem
+
+      # ── Security ─────────────────────────────────────────
+      SPOOF_PROTECTION: "1"
+      ENABLE_FAIL2BAN: "1"
+      ENABLE_SPAMASSASSIN: "1"
+      SPAMASSASSIN_SPAM_TO_JUNK: "1"
+      ENABLE_CLAMAV: "0"
+
+      # ── Postfix ──────────────────────────────────────────
+      POSTFIX_INET_PROTOCOLS: ipv4
+      POSTFIX_MESSAGE_SIZE_LIMIT: "26214400"
+
+      # ── DKIM ─────────────────────────────────────────────
+      ENABLE_OPENDKIM: "1"
+
+      # ── Outbound relay (uncomment if port 25 is blocked) ─
+      # RELAY_HOST: smtp.sendgrid.net
+      # RELAY_PORT: "587"
+      # RELAY_USER: apikey
+      # RELAY_PASSWORD: ${RELAY_PASSWORD}
+
+      LOG_LEVEL: warn
+
+    cap_add:
+      - NET_ADMIN
+
+    healthcheck:
+      test: ["CMD-SHELL", "ss -lntp | grep ':25'"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ── Nginx reverse proxy (webmail UI + certbot ACME) ─────────
+  nginx:
+    image: nginx:alpine
+    container_name: mail-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-proxy/mail.gloford.org.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - mailserver
+
+  # ── Certbot (runs once to issue/renew cert, then exits) ─────
+  certbot:
+    image: certbot/certbot:latest
+    container_name: mail-certbot
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    # Run manually: docker compose run --rm certbot certonly ...
+    # See SETUP.md step 3 for the exact command.
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do sleep 12h; certbot renew --quiet; done"
+    restart: unless-stopped

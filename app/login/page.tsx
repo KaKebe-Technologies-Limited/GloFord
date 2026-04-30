@@ -20,7 +20,6 @@ export default async function LoginPage({
   const t = await getTranslations("auth");
   const brand = getBrand();
 
-  // Resolve the login bg: SiteSettings override → env fallback → null.
   let loginBgUrl: string | null = null;
   let siteName = brand.name;
   let logoUrl: string | null = brand.logoUrl ?? null;
@@ -33,13 +32,13 @@ export default async function LoginPage({
     if (settings?.siteName) siteName = settings.siteName;
     if (settings?.logoUrl) logoUrl = settings.logoUrl;
   } catch {
-    /* DB not ready — use env defaults */
+    /* DB not ready */
   }
   if (!loginBgUrl) loginBgUrl = process.env.LOGIN_BG_IMAGE_URL ?? null;
 
   return (
-    <main className="grid min-h-[100dvh] lg:grid-cols-2">
-      {/* Left / bg column — hero image with brand overlay */}
+    <main className="grid min-h-[100dvh] lg:grid-cols-[1fr_1.1fr]">
+      {/* Left — hero image with brand overlay */}
       <aside
         className="relative hidden lg:block"
         style={
@@ -49,57 +48,51 @@ export default async function LoginPage({
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }
-            : { background: `linear-gradient(135deg, ${brand.primaryColor} 0%, #1e293b 100%)` }
+            : { background: "linear-gradient(135deg, #1a3c34 0%, #0f1f1a 100%)" }
         }
       >
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-black/30 to-transparent" />
-        <div className="relative flex h-full flex-col justify-between p-10 text-white">
-          <Link href="/" className="flex items-center gap-3">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={siteName} className="h-8 w-auto" />
-            ) : null}
-            <span className="text-lg font-semibold tracking-tight">{siteName}</span>
-          </Link>
-          <div className="space-y-2">
-            <h2 className="text-3xl font-semibold leading-tight">
-              Welcome back.
+        <div className="absolute inset-0 bg-gradient-to-t from-[rgb(26_40_35/0.9)] via-[rgb(26_40_35/0.5)] to-[rgb(26_40_35/0.3)]" />
+        <div className="relative flex h-full flex-col justify-end p-12">
+          <div className="space-y-3">
+            <h2 className="text-4xl font-bold leading-tight text-white">
+              {siteName}
             </h2>
-            <p className="text-sm text-white/80">
-              Sign in to manage programs, campaigns, and community impact.
+            <p className="text-sm text-white/60">
+              Community-led impact &middot; {siteName}
             </p>
           </div>
         </div>
       </aside>
 
-      {/* Right column — form */}
-      <section className="flex min-h-[100dvh] items-center justify-center bg-[--color-bg] p-6 lg:p-10">
+      {/* Right — form */}
+      <section className="flex min-h-[100dvh] items-center justify-center bg-[var(--color-bg)] p-6 lg:p-12">
         <div className="w-full max-w-sm space-y-8">
-          {/* Mobile-only brand header (left column is hidden on small screens) */}
-          <div className="lg:hidden">
-            <Link href="/" className="flex items-center gap-2">
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt={siteName} className="h-7 w-auto" />
-              ) : null}
-              <span className="text-base font-semibold tracking-tight">{siteName}</span>
-            </Link>
-          </div>
-
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {t("signInTitle")}
-            </h1>
-            <p className="text-sm text-[--color-muted-fg]">
-              Use your email and password below.
+          {/* Logo + Brand */}
+          <div className="flex flex-col items-center text-center">
+            {logoUrl ? (
+              <Link href="/">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoUrl} alt={siteName} className="mb-4 h-16 w-auto" />
+              </Link>
+            ) : (
+              <Link
+                href="/"
+                className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary)] text-2xl font-bold text-white"
+              >
+                {siteName.charAt(0)}
+              </Link>
+            )}
+            <h1 className="text-2xl font-bold tracking-tight">{t("signInTitle")}</h1>
+            <p className="mt-1 text-sm text-[var(--color-muted-fg)]">
+              {t("signInToAdmin")}
             </p>
           </div>
 
           <LoginForm next={sp.next} error={sp.error} />
 
-          <div className="text-center text-xs text-[--color-muted-fg]">
-            <Link href="/" className="hover:underline">
-              ← Back to {siteName}
+          <div className="text-center text-xs text-[var(--color-muted-fg)]">
+            <Link href="/" className="hover:text-[var(--color-primary)] hover:underline">
+              {t("backTo", { name: siteName })}
             </Link>
           </div>
         </div>

@@ -9,7 +9,12 @@ import {
   sendNewsletterAction,
   deleteNewsletterAction,
 } from "@/lib/actions/newsletters";
-import { BlockEditor } from "@/components/blocks/BlockEditor";
+import dynamic from "next/dynamic";
+
+const BlockEditor = dynamic(
+  () => import("@/components/blocks/BlockEditor").then((m) => ({ default: m.BlockEditor })),
+  { ssr: false },
+);
 import { Button } from "@/components/ui/Button";
 import type { Block } from "@/lib/blocks/types";
 import type { NewsletterStatus } from "@prisma/client";
@@ -72,7 +77,7 @@ export function NewsletterForm({
     start(async () => {
       try {
         await scheduleNewsletterAction({
-          id: initial.id,
+          id: initial.id!,
           scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
         });
       } catch (e) {
@@ -86,7 +91,7 @@ export function NewsletterForm({
     if (!confirm("Send this newsletter to the selected audience now?")) return;
     start(async () => {
       try {
-        await sendNewsletterAction({ id: initial.id });
+        await sendNewsletterAction({ id: initial.id! });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to send");
       }
@@ -98,7 +103,7 @@ export function NewsletterForm({
     if (!confirm("Delete this draft newsletter?")) return;
     start(async () => {
       try {
-        await deleteNewsletterAction({ id: initial.id });
+        await deleteNewsletterAction({ id: initial.id! });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to delete");
       }
@@ -108,8 +113,8 @@ export function NewsletterForm({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="space-y-6">
-        <section className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">Details</h2>
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">Details</h2>
           <Field label="Internal title" hint="Not shown to recipients">
             <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={readOnly} className={inputCls} />
           </Field>
@@ -121,10 +126,10 @@ export function NewsletterForm({
           </Field>
         </section>
 
-        <section className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">Content</h2>
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">Content</h2>
           {readOnly ? (
-            <p className="text-sm text-[--color-muted-fg]">This newsletter has already been sent.</p>
+            <p className="text-sm text-[var(--color-muted-fg)]">This newsletter has already been sent.</p>
           ) : (
             <BlockEditor value={content} onChange={setContent} />
           )}
@@ -132,10 +137,10 @@ export function NewsletterForm({
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">Audience</h2>
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">Audience</h2>
           {segments.length === 0 ? (
-            <p className="text-xs text-[--color-muted-fg]">No segments yet. The newsletter will go to all active subscribers.</p>
+            <p className="text-xs text-[var(--color-muted-fg)]">No segments yet. The newsletter will go to all active subscribers.</p>
           ) : (
             <ul className="space-y-1">
               {segments.map((s) => (
@@ -153,16 +158,16 @@ export function NewsletterForm({
               ))}
             </ul>
           )}
-          <p className="text-xs text-[--color-muted-fg]">
+          <p className="text-xs text-[var(--color-muted-fg)]">
             {selectedSegments.length === 0
               ? "All active subscribers"
               : `${selectedSegments.length} segment${selectedSegments.length === 1 ? "" : "s"} selected`}
           </p>
         </div>
 
-        <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 space-y-3">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 space-y-3">
           {error ? (
-            <p role="alert" className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]">
+            <p role="alert" className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]">
               {error}
             </p>
           ) : null}
@@ -199,7 +204,7 @@ export function NewsletterForm({
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring] disabled:opacity-60";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-60";
 
 function Field({
   label,
@@ -213,7 +218,7 @@ function Field({
   return (
     <label className="block space-y-1.5">
       <span className="text-sm font-medium">{label}</span>
-      {hint ? <span className="block text-xs text-[--color-muted-fg]">{hint}</span> : null}
+      {hint ? <span className="block text-xs text-[var(--color-muted-fg)]">{hint}</span> : null}
       {children}
     </label>
   );

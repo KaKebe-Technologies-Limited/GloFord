@@ -6,7 +6,12 @@ import {
   updateEventNotificationAction,
   sendEventNotificationAction,
 } from "@/lib/actions/events";
-import { BlockEditor } from "@/components/blocks/BlockEditor";
+import dynamic from "next/dynamic";
+
+const BlockEditor = dynamic(
+  () => import("@/components/blocks/BlockEditor").then((m) => ({ default: m.BlockEditor })),
+  { ssr: false },
+);
 import { Button } from "@/components/ui/Button";
 import type { Block } from "@/lib/blocks/types";
 
@@ -65,7 +70,7 @@ export function NotificationEditor({ initial }: { initial: Initial }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
       <section className="space-y-4">
-        <div className="grid gap-4 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 md:grid-cols-[160px_1fr_220px]">
+        <div className="grid gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 md:grid-cols-[160px_1fr_220px]">
           <label className="block space-y-1.5">
             <span className="text-sm font-medium">Kind</span>
             <select
@@ -100,11 +105,11 @@ export function NotificationEditor({ initial }: { initial: Initial }) {
         </div>
 
         <div>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
             Content
           </h2>
           {readOnly ? (
-            <p className="rounded-[--radius-md] border border-[--color-border] bg-[--color-muted] p-4 text-sm text-[--color-muted-fg]">
+            <p className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-sm text-[var(--color-muted-fg)]">
               This notification has been sent and can no longer be edited.
             </p>
           ) : (
@@ -114,11 +119,11 @@ export function NotificationEditor({ initial }: { initial: Initial }) {
       </section>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <div className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
+        <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           {error ? (
             <p
               role="alert"
-              className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]"
+              className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]"
             >
               {error}
             </p>
@@ -143,4 +148,4 @@ export function NotificationEditor({ initial }: { initial: Initial }) {
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring] disabled:opacity-60";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] disabled:opacity-60";

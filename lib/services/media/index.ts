@@ -1,23 +1,10 @@
 import { createService } from "@/lib/services/_shared";
 import {
-  mediaPresignSchema,
   mediaFinalizeSchema,
   mediaDeleteSchema,
 } from "@/lib/validators/media";
-import { buildMediaKey, deleteObject, presignUpload, publicUrlFor } from "@/lib/storage/r2";
+import { deleteObject, publicUrlFor } from "@/lib/storage/r2";
 import { db } from "@/lib/db";
-
-export const presignMediaUpload = createService({
-  module: "media",
-  action: "upload",
-  schema: mediaPresignSchema,
-  permission: () => ({ type: "Media" }),
-  exec: async ({ input }) => {
-    const key = buildMediaKey(input.name);
-    const uploadUrl = await presignUpload({ key, mime: input.mime });
-    return { key, uploadUrl, publicUrl: publicUrlFor(key) };
-  },
-});
 
 export const finalizeMediaUpload = createService({
   module: "media",

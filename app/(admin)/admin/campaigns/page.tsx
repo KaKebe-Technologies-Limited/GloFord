@@ -16,7 +16,7 @@ export default async function CampaignsPage() {
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Fundraising campaigns</h1>
-          <p className="text-sm text-[--color-muted-fg]">Targeted donation drives.</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">Targeted donation drives.</p>
         </div>
         <Button asChild size="sm">
           <Link href="/admin/campaigns/new">
@@ -25,10 +25,10 @@ export default async function CampaignsPage() {
         </Button>
       </header>
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
+            <thead className="border-b border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] text-left text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
               <tr>
                 <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Slug</th>
@@ -40,29 +40,29 @@ export default async function CampaignsPage() {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-[--color-muted-fg]">
+                  <td colSpan={5} className="px-4 py-10 text-center text-[var(--color-muted-fg)]">
                     No campaigns yet.
                   </td>
                 </tr>
               ) : (
                 rows.map((r) => (
-                  <tr key={r.id} className="border-b border-[--color-border] last:border-0">
+                  <tr key={r.id} className="border-b border-[var(--color-border)] last:border-0">
                     <td className="px-4 py-3">
                       <Link href={`/admin/campaigns/${r.id}`} className="font-medium hover:underline">
                         {r.title}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[--color-muted-fg]">/donate/{r.slug}</td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">
+                    <td className="px-4 py-3 font-mono text-xs text-[var(--color-muted-fg)]">/donate/{r.slug}</td>
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">
                       {r.goalCents ? formatMoney(r.goalCents, r.currency) : "\u2014"}
                     </td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">{r._count.donations}</td>
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">{r._count.donations}</td>
                     <td className="px-4 py-3">
                       <span
                         className={
                           r.isActive
-                            ? "inline-flex items-center rounded-full bg-[--color-success]/20 px-2.5 py-0.5 text-xs font-medium text-[--color-success]"
-                            : "inline-flex items-center rounded-full bg-[--color-muted] px-2.5 py-0.5 text-xs font-medium text-[--color-muted-fg]"
+                            ? "inline-flex items-center rounded-full bg-[rgb(var(--token-success)/0.20)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-success)]"
+                            : "inline-flex items-center rounded-full bg-[var(--color-muted)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-muted-fg)]"
                         }
                       >
                         {r.isActive ? "Active" : "Inactive"}

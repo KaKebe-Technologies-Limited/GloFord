@@ -12,7 +12,7 @@ export default async function FeatureFlagsPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Feature flags</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           Toggles for optional features.
         </p>
       </header>

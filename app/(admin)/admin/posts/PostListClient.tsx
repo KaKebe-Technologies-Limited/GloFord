@@ -26,7 +26,7 @@ const columns: Column<PostRow>[] = [
     header: "Slug",
     sortable: true,
     render: (row) => (
-      <code className="rounded bg-[--color-muted] px-2 py-0.5 text-xs text-[--color-muted-fg]">
+      <code className="rounded bg-[var(--color-muted)] px-2 py-0.5 text-xs text-[var(--color-muted-fg)]">
         /blog/{row.slug}
       </code>
     ),
@@ -35,7 +35,7 @@ const columns: Column<PostRow>[] = [
     key: "author",
     header: "Author",
     render: (row) => (
-      <span className="text-[--color-muted-fg]">
+      <span className="text-[var(--color-muted-fg)]">
         {row.author?.name ?? row.author?.email ?? "\u2014"}
       </span>
     ),
@@ -51,7 +51,7 @@ const columns: Column<PostRow>[] = [
     header: "Updated",
     sortable: true,
     render: (row) => (
-      <span className="text-[--color-muted-fg]">
+      <span className="text-[var(--color-muted-fg)]">
         {new Date(row.updatedAt).toLocaleDateString()}
       </span>
     ),

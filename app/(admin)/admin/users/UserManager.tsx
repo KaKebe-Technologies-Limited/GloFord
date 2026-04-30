@@ -76,13 +76,13 @@ export function UserManager({
       {error ? (
         <p
           role="alert"
-          className="rounded-[--radius-sm] bg-[--color-danger]/10 p-3 text-sm text-[--color-danger]"
+          className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-3 text-sm text-[var(--color-danger)]"
         >
           {error}
         </p>
       ) : null}
 
-      <section className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-4">
+      <section className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-4">
         <h2 className="text-sm font-semibold">Invite a member</h2>
         <div className="grid gap-3 md:grid-cols-[1fr_1fr_140px_auto]">
           <input
@@ -113,9 +113,9 @@ export function UserManager({
         </div>
       </section>
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         <table className="w-full text-sm">
-          <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
+          <thead className="border-b border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] text-left text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
             <tr>
               <th className="px-4 py-3">User</th>
               <th className="px-4 py-3">Role</th>
@@ -128,14 +128,14 @@ export function UserManager({
             {members.map((m) => {
               const isSelf = m.userId === currentUserId;
               return (
-                <tr key={m.id} className="border-b border-[--color-border] last:border-0">
+                <tr key={m.id} className="border-b border-[var(--color-border)] last:border-0">
                   <td className="px-4 py-3">
                     <div className="font-medium">{m.name || m.email}</div>
-                    <div className="text-xs text-[--color-muted-fg]">{m.email}</div>
+                    <div className="text-xs text-[var(--color-muted-fg)]">{m.email}</div>
                   </td>
                   <td className="px-4 py-3">
                     {m.role === "SUPER_ADMIN" ? (
-                      <span className="inline-flex items-center rounded-full bg-[--color-primary]/10 px-2 py-0.5 text-xs text-[--color-primary]">
+                      <span className="inline-flex items-center rounded-full bg-[rgb(var(--token-primary)/0.10)] px-2 py-0.5 text-xs text-[var(--color-primary)]">
                         Super admin
                       </span>
                     ) : (
@@ -143,7 +143,7 @@ export function UserManager({
                         defaultValue={m.role}
                         onChange={(e) => changeRole(m.userId, e.target.value as Role)}
                         disabled={pending || isSelf}
-                        className="rounded-[--radius-sm] border border-[--color-input] bg-[--color-bg] px-2 py-1 text-sm"
+                        className="rounded-[var(--radius-sm)] border border-[var(--color-input)] bg-[var(--color-bg)] px-2 py-1 text-sm"
                       >
                         <option value="ADMIN">Admin</option>
                         <option value="EDITOR">Editor</option>
@@ -151,11 +151,11 @@ export function UserManager({
                       </select>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-[--color-muted-fg]">{m.joinedAt}</td>
-                  <td className="px-4 py-3 text-[--color-muted-fg]">{m.lastLoginAt ?? "—"}</td>
+                  <td className="px-4 py-3 text-[var(--color-muted-fg)]">{m.joinedAt}</td>
+                  <td className="px-4 py-3 text-[var(--color-muted-fg)]">{m.lastLoginAt ?? "—"}</td>
                   <td className="px-4 py-3">
                     {isSelf ? (
-                      <span className="text-xs text-[--color-muted-fg]">You</span>
+                      <span className="text-xs text-[var(--color-muted-fg)]">You</span>
                     ) : (
                       <Button
                         size="sm"
@@ -178,4 +178,4 @@ export function UserManager({
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";

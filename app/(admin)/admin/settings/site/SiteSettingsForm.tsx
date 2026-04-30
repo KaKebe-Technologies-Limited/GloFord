@@ -10,6 +10,8 @@ type Initial = {
   siteName: string;
   logoUrl: string;
   loginBgUrl: string;
+  donationsEnabled: boolean;
+  campaignsEnabled: boolean;
   contact: { email: string; phone: string; address: string };
   socials: {
     twitter: string;
@@ -36,6 +38,8 @@ export function SiteSettingsForm({ initial }: { initial: Initial }) {
           siteName: state.siteName,
           logoUrl: state.logoUrl || null,
           loginBgUrl: state.loginBgUrl || null,
+          donationsEnabled: state.donationsEnabled,
+          campaignsEnabled: state.campaignsEnabled,
           contact: state.contact,
           socials: state.socials,
           seo: state.seo,
@@ -137,6 +141,61 @@ export function SiteSettingsForm({ initial }: { initial: Initial }) {
           </div>
         </Card>
 
+        <Card title="Features">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p id="donations-label" className="text-sm font-medium">Donations</p>
+                <p className="text-xs text-[var(--color-muted-fg)]">
+                  Show the public donate page and accept donations
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={state.donationsEnabled}
+                aria-labelledby="donations-label"
+                onClick={() => setState((s) => ({ ...s, donationsEnabled: !s.donationsEnabled }))}
+                className={`inline-flex h-6 w-11 items-center rounded-full transition ${
+                  state.donationsEnabled ? "bg-[var(--color-primary)]" : "bg-[var(--color-muted)]"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-[var(--color-bg)] shadow transition ${
+                    state.donationsEnabled ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p id="campaigns-label" className="text-sm font-medium">Campaigns</p>
+                <p className="text-xs text-[var(--color-muted-fg)]">
+                  Allow creating fundraising campaigns with goals and progress tracking
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={state.campaignsEnabled}
+                aria-labelledby="campaigns-label"
+                onClick={() => setState((s) => ({ ...s, campaignsEnabled: !s.campaignsEnabled }))}
+                className={`inline-flex h-6 w-11 items-center rounded-full transition ${
+                  state.campaignsEnabled ? "bg-[var(--color-primary)]" : "bg-[var(--color-muted)]"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-[var(--color-bg)] shadow transition ${
+                    state.campaignsEnabled ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+          </div>
+        </Card>
+
         <Card title="SEO defaults">
           <Field label="Default title">
             <input
@@ -174,17 +233,17 @@ export function SiteSettingsForm({ initial }: { initial: Initial }) {
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <div className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
+        <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           {error ? (
             <p
               role="alert"
-              className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]"
+              className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]"
             >
               {error}
             </p>
           ) : null}
           {saved ? (
-            <p className="rounded-[--radius-sm] bg-[--color-success]/10 p-2 text-sm text-[--color-success]">
+            <p className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-success)/0.10)] p-2 text-sm text-[var(--color-success)]">
               Settings saved.
             </p>
           ) : null}
@@ -199,8 +258,8 @@ export function SiteSettingsForm({ initial }: { initial: Initial }) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">
+    <section className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
         {title}
       </h2>
       <div className="space-y-3">{children}</div>
@@ -218,4 +277,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";

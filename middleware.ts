@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * Edge middleware does two things:
- *
- *   1. Stamp a correlation ID (`x-correlation-id`) onto every request
- *      and echo it back in the response. Server actions / route handlers
- *      read this header and attach it to AuditLog.correlationId so you
- *      can trace a multi-event transaction end-to-end.
- *
- *   2. Guard /admin by requiring a session cookie. This is presence-only;
- *      real RBAC happens in the admin layout + every service call. Keeps
- *      middleware pure cookie-inspection so it stays at the edge without
- *      dragging Prisma into the edge bundle.
+ * Edge middleware:
+ *   1. Stamp a correlation ID (`x-correlation-id`) for tracing
+ *   2. Generate a CSP nonce per request for XSS protection
+ *   3. Guard /admin by requiring a session cookie
  */
 
 const SESSION_COOKIES = [
@@ -22,28 +15,44 @@ const SESSION_COOKIES = [
 ];
 
 export const CORRELATION_HEADER = "x-correlation-id";
+export const CSP_NONCE_HEADER = "x-csp-nonce";
 
 function newCorrelationId() {
   return (
     globalThis.crypto?.randomUUID?.() ??
-    // Fallback for older Node runtimes where Web Crypto isn't available.
     `cid_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
   );
 }
 
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes));
+}
+
+function buildCsp(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `style-src 'self' 'nonce-${nonce}'`,
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
+
 export function middleware(req: NextRequest) {
-  // Resilience: if anything in this function throws, Next will treat
-  // it as a 500 middleware error and the user sees a black page. Wrap
-  // the whole body in try/catch and fall through to NextResponse.next
-  // on any unexpected failure. The correlation-ID and auth guard
-  // features are best-effort by design.
   try {
     const { pathname } = req.nextUrl;
     const cid = req.headers.get(CORRELATION_HEADER) ?? newCorrelationId();
+    const nonce = generateNonce();
 
-    // Mirror it onto the request so downstream server code reads one value.
     const forwardedHeaders = new Headers(req.headers);
     forwardedHeaders.set(CORRELATION_HEADER, cid);
+    forwardedHeaders.set(CSP_NONCE_HEADER, nonce);
 
     if (pathname.startsWith("/admin")) {
       const hasSession = SESSION_COOKIES.some((name) => req.cookies.get(name));
@@ -58,10 +67,9 @@ export function middleware(req: NextRequest) {
 
     const res = NextResponse.next({ request: { headers: forwardedHeaders } });
     res.headers.set(CORRELATION_HEADER, cid);
+    res.headers.set("Content-Security-Policy", buildCsp(nonce));
     return res;
   } catch {
-    // Never 500 from middleware. Route handlers still have their own
-    // auth checks + runtime errors will be caught downstream.
     return NextResponse.next();
   }
 }

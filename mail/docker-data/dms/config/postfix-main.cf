@@ -1,0 +1,8 @@
+# ── mail/docker-data/dms/config/postfix-main.cf ──────────────
+# docker-mailserver merges this into /etc/postfix/main.cf at startup.
+# Configures a 'discard' transport so any mail sent TO
+# no-reply@gloford.org is silently dropped — no bounce, no storage.
+# ─────────────────────────────────────────────────────────────
+
+transport_maps = hash:/etc/postfix/transport
+local_recipient_maps = proxy:unix:passwd.byname $alias_maps

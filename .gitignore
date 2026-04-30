@@ -62,3 +62,14 @@ logs/
 
 # Scratch area (not part of the repo)
 .tmp/
+
+# Mail server runtime data (never commit actual mail)
+mail/docker-data/dms/mail-data/
+mail/docker-data/dms/mail-state/
+mail/docker-data/dms/mail-logs/
+gloford-mail-dev/docker-data/dms/mail-data/
+gloford-mail-dev/docker-data/dms/mail-state/
+gloford-mail-dev/docker-data/dms/mail-logs/
+
+# Production env
+.env.production

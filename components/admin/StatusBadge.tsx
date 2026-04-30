@@ -2,10 +2,10 @@ import type { ContentStatus } from "@prisma/client";
 import { cn } from "@/lib/utils/cn";
 
 const STYLES: Record<ContentStatus, string> = {
-  DRAFT: "bg-[--color-muted] text-[--color-muted-fg]",
-  REVIEW: "bg-[--color-accent]/20 text-[--color-accent-fg]",
-  PUBLISHED: "bg-[--color-success]/20 text-[--color-success]",
-  ARCHIVED: "bg-[--color-muted] text-[--color-muted-fg] line-through",
+  DRAFT: "bg-[var(--color-muted)] text-[var(--color-muted-fg)]",
+  REVIEW: "bg-[rgb(var(--token-accent)/0.20)] text-[var(--color-accent-fg)]",
+  PUBLISHED: "bg-[rgb(var(--token-success)/0.20)] text-[var(--color-success)]",
+  ARCHIVED: "bg-[var(--color-muted)] text-[var(--color-muted-fg)] line-through",
 };
 
 const LABELS: Record<ContentStatus, string> = {

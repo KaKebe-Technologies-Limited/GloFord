@@ -27,28 +27,28 @@ export function PublicNav({ items }: { items: NavTreeItem[] }) {
           >
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium text-[--color-fg]/80 transition hover:bg-white/70 hover:text-[--color-fg]"
+              className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-[var(--color-fg)] transition hover:text-[var(--color-primary)]"
               aria-expanded={openId === item.id}
             >
               <span>{item.label}</span>
-              <ChevronDown className={`h-4 w-4 transition ${openId === item.id ? "rotate-180" : ""}`} />
+              <ChevronDown className={`h-3.5 w-3.5 transition ${openId === item.id ? "rotate-180" : ""}`} />
             </button>
             <AnimatePresence>
               {openId === item.id ? (
                 <motion.div
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
-                  className="absolute left-0 top-full z-50 mt-3 w-72 overflow-hidden rounded-[calc(var(--radius-lg)+0.1rem)] border border-[--color-border] bg-white/95 p-2 shadow-[0_24px_80px_rgba(15,23,42,0.14)] backdrop-blur"
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  className="absolute left-0 top-full z-50 mt-1 w-60 overflow-hidden rounded-lg border border-gray-100 bg-white py-2 shadow-lg"
                 >
                   {item.children.map((child) => (
                     <Link
                       key={child.id}
                       href={child.href}
-                      className="block rounded-[--radius-md] px-4 py-3 text-sm transition hover:bg-[--color-secondary]"
+                      className="block px-5 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-[var(--color-primary)]"
                     >
-                      <span className="font-medium text-[--color-fg]">{child.label}</span>
+                      {child.label}
                     </Link>
                   ))}
                 </motion.div>
@@ -59,7 +59,7 @@ export function PublicNav({ items }: { items: NavTreeItem[] }) {
           <Link
             key={item.id}
             href={item.href}
-            className="rounded-full px-3 py-2 text-sm font-medium text-[--color-fg]/80 transition hover:bg-white/70 hover:text-[--color-fg]"
+            className="px-4 py-2 text-sm font-medium text-[var(--color-fg)] transition hover:text-[var(--color-primary)]"
           >
             {item.label}
           </Link>

@@ -24,7 +24,7 @@ const columns: Column<ProgramRow>[] = [
     header: "Slug",
     sortable: true,
     render: (row) => (
-      <code className="rounded bg-[--color-muted] px-2 py-0.5 text-xs text-[--color-muted-fg]">
+      <code className="rounded bg-[var(--color-muted)] px-2 py-0.5 text-xs text-[var(--color-muted-fg)]">
         /programs/{row.slug}
       </code>
     ),
@@ -33,7 +33,7 @@ const columns: Column<ProgramRow>[] = [
     key: "order",
     header: "Order",
     sortable: true,
-    className: "text-[--color-muted-fg]",
+    className: "text-[var(--color-muted-fg)]",
   },
   {
     key: "status",
@@ -46,7 +46,7 @@ const columns: Column<ProgramRow>[] = [
     header: "Updated",
     sortable: true,
     render: (row) => (
-      <span className="text-[--color-muted-fg]">
+      <span className="text-[var(--color-muted-fg)]">
         {new Date(row.updatedAt).toLocaleDateString()}
       </span>
     ),

@@ -7,14 +7,6 @@ import { z } from "zod";
 
 const modeSchema = z.enum(["sandbox", "live"]);
 
-export const stripeConfigSchema = z.object({
-  provider: z.literal("STRIPE"),
-  isEnabled: z.boolean(),
-  mode: modeSchema,
-  secretKey: z.string().trim().min(10),
-  publishableKey: z.string().trim().min(10).optional(),
-});
-
 export const pesapalConfigSchema = z.object({
   provider: z.literal("PESAPAL"),
   isEnabled: z.boolean(),
@@ -22,15 +14,6 @@ export const pesapalConfigSchema = z.object({
   consumerKey: z.string().trim().min(5),
   consumerSecret: z.string().trim().min(5),
   ipnId: z.string().trim().optional(),
-  country: z.string().trim().length(2).optional(),
-});
-
-export const flutterwaveConfigSchema = z.object({
-  provider: z.literal("FLUTTERWAVE"),
-  isEnabled: z.boolean(),
-  mode: modeSchema,
-  secretKey: z.string().trim().min(10),
-  publicKey: z.string().trim().min(10),
   country: z.string().trim().length(2).optional(),
 });
 
@@ -57,15 +40,13 @@ export const airtelMoneyConfigSchema = z.object({
 });
 
 export const paymentConfigSchema = z.discriminatedUnion("provider", [
-  stripeConfigSchema,
   pesapalConfigSchema,
-  flutterwaveConfigSchema,
   mtnMomoConfigSchema,
   airtelMoneyConfigSchema,
 ]);
 
 export const toggleConfigSchema = z.object({
-  provider: z.enum(["STRIPE", "PESAPAL", "FLUTTERWAVE", "MTN_MOMO", "AIRTEL_MONEY"]),
+  provider: z.enum(["PESAPAL", "MTN_MOMO", "AIRTEL_MONEY"]),
   isEnabled: z.boolean(),
 });
 

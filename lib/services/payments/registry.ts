@@ -1,18 +1,12 @@
 import type { PaymentProvider as ProviderEnum } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { PaymentProviderAdapter } from "./types";
-import { stripeAdapter } from "./stripe";
-import { paypalAdapter } from "./paypal";
 import { pesapalAdapter } from "./pesapal";
-import { flutterwaveAdapter } from "./flutterwave";
 import { mtnMomoAdapter } from "./mtn-momo";
 import { airtelMoneyAdapter } from "./airtel-money";
 
 const ADAPTERS: Record<ProviderEnum, PaymentProviderAdapter> = {
-  STRIPE: stripeAdapter,
-  PAYPAL: paypalAdapter,
   PESAPAL: pesapalAdapter,
-  FLUTTERWAVE: flutterwaveAdapter,
   MTN_MOMO: mtnMomoAdapter,
   AIRTEL_MONEY: airtelMoneyAdapter,
 };
@@ -43,9 +37,7 @@ export const ALL_PROVIDERS: {
   label: string;
   flow: "REDIRECT" | "AWAIT_PHONE";
 }[] = [
-  { id: "STRIPE", label: stripeAdapter.label, flow: stripeAdapter.flow },
   { id: "PESAPAL", label: pesapalAdapter.label, flow: pesapalAdapter.flow },
-  { id: "FLUTTERWAVE", label: flutterwaveAdapter.label, flow: flutterwaveAdapter.flow },
   { id: "MTN_MOMO", label: mtnMomoAdapter.label, flow: mtnMomoAdapter.flow },
   { id: "AIRTEL_MONEY", label: airtelMoneyAdapter.label, flow: airtelMoneyAdapter.flow },
 ];

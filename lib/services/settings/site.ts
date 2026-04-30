@@ -22,6 +22,8 @@ export const updateSiteSettings = createService({
         contact: input.contact as never,
         socials: input.socials as never,
         seo: input.seo as never,
+        donationsEnabled: input.donationsEnabled,
+        campaignsEnabled: input.campaignsEnabled,
       },
       update: {
         siteName: input.siteName,
@@ -30,6 +32,8 @@ export const updateSiteSettings = createService({
         contact: input.contact as never,
         socials: input.socials as never,
         seo: input.seo as never,
+        donationsEnabled: input.donationsEnabled,
+        campaignsEnabled: input.campaignsEnabled,
       },
     }),
   version: (out) => ({ entityType: "SiteSettings", entityId: out.id }),

@@ -22,11 +22,13 @@ async function readCorrelationId(): Promise<string | undefined> {
 async function readRequestContext() {
   try {
     const h = await headers();
-    const ip =
+    // Sanitize IP — only keep characters valid in IPv4/IPv6 addresses (CWE-117)
+    const rawIp =
       h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
       h.get("x-real-ip") ??
       undefined;
-    const userAgent = h.get("user-agent") ?? undefined;
+    const ip = rawIp?.replace(/[^0-9a-fA-F.:]/g, "").slice(0, 45) ?? undefined;
+    const userAgent = h.get("user-agent")?.replace(/[\r\n]/g, " ").slice(0, 500) ?? undefined;
     return ip || userAgent ? { ip, userAgent } : undefined;
   } catch {
     return undefined;

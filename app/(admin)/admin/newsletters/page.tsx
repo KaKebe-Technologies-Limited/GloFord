@@ -16,7 +16,7 @@ export default async function NewslettersPage() {
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Newsletters</h1>
-          <p className="text-sm text-[--color-muted-fg]">One-off broadcasts to your subscribers.</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">One-off broadcasts to your subscribers.</p>
         </div>
         <Button asChild size="sm">
           <Link href="/admin/newsletters/new">
@@ -25,10 +25,10 @@ export default async function NewslettersPage() {
         </Button>
       </header>
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
+            <thead className="border-b border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] text-left text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
               <tr>
                 <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Subject</th>
@@ -40,30 +40,30 @@ export default async function NewslettersPage() {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-[--color-muted-fg]">
+                  <td colSpan={5} className="px-4 py-10 text-center text-[var(--color-muted-fg)]">
                     No newsletters yet.
                   </td>
                 </tr>
               ) : (
                 rows.map((r) => (
-                  <tr key={r.id} className="border-b border-[--color-border] last:border-0">
+                  <tr key={r.id} className="border-b border-[var(--color-border)] last:border-0">
                     <td className="px-4 py-3">
                       <Link href={`/admin/newsletters/${r.id}`} className="font-medium hover:underline">
                         {r.title}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">{r.subject}</td>
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">{r.subject}</td>
                     <td className="px-4 py-3">
                       <NewsletterStatusBadge status={r.status} />
                     </td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">
                       {r.sentAt
                         ? new Date(r.sentAt).toLocaleString()
                         : r.scheduledAt
                         ? new Date(r.scheduledAt).toLocaleString()
                         : "\u2014"}
                     </td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">
                       {new Date(r.updatedAt).toLocaleDateString()}
                     </td>
                   </tr>

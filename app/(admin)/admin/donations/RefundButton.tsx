@@ -29,7 +29,7 @@ export function RefundButton({ id, amountLabel }: { id: string; amountLabel: str
       <Button size="sm" variant="outline" onClick={refund} disabled={pending}>
         <RotateCcw className="h-3.5 w-3.5" /> Refund
       </Button>
-      {err ? <span className="max-w-[180px] text-xs text-[--color-danger]">{err}</span> : null}
+      {err ? <span className="max-w-[180px] text-xs text-[var(--color-danger)]">{err}</span> : null}
     </div>
   );
 }

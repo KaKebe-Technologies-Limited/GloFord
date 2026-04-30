@@ -43,7 +43,7 @@ export default async function HealthPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">System health</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           Real-time checks of the services this installation depends on.
         </p>
       </header>
@@ -54,12 +54,12 @@ export default async function HealthPage() {
           {database.ok ? (
             <>
               <span className="font-medium">Connected</span>
-              <span className="ml-auto text-xs text-[--color-muted-fg]">{database.ms}ms</span>
+              <span className="ml-auto text-xs text-[var(--color-muted-fg)]">{database.ms}ms</span>
             </>
           ) : (
             <>
-              <span className="font-medium text-[--color-danger]">Unreachable</span>
-              <span className="ml-auto text-xs text-[--color-muted-fg]">
+              <span className="font-medium text-[var(--color-danger)]">Unreachable</span>
+              <span className="ml-auto text-xs text-[var(--color-muted-fg)]">
                 {"error" in database && database.error ? database.error.slice(0, 48) : ""}
               </span>
             </>
@@ -71,7 +71,7 @@ export default async function HealthPage() {
           <span className="font-medium">
             {inngest.baseUrl.startsWith("http") ? "Dev server" : inngest.eventKey.set ? "Cloud" : "Unconfigured"}
           </span>
-          <span className="ml-auto text-xs text-[--color-muted-fg]">{inngest.baseUrl}</span>
+          <span className="ml-auto text-xs text-[var(--color-muted-fg)]">{inngest.baseUrl}</span>
         </Card>
 
         <Card icon={Mail} title="Mail provider">
@@ -79,18 +79,18 @@ export default async function HealthPage() {
           <span className="font-medium">
             {mail.resendKey.set ? "Resend configured" : "Dry-run mode"}
           </span>
-          <span className="ml-auto text-xs text-[--color-muted-fg]">{mail.from}</span>
+          <span className="ml-auto text-xs text-[var(--color-muted-fg)]">{mail.from}</span>
         </Card>
 
         <Card icon={Activity} title="App">
           <Dot ok={app.encryptionKey.set && app.authSecret.set} />
           <span className="font-medium">{app.nodeEnv}</span>
-          <span className="ml-auto text-xs text-[--color-muted-fg]">{app.appUrl}</span>
+          <span className="ml-auto text-xs text-[var(--color-muted-fg)]">{app.appUrl}</span>
         </Card>
       </div>
 
-      <section className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">
+      <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
           Required secrets
         </h2>
         <ul className="space-y-2 text-sm">
@@ -115,8 +115,8 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
-      <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-[--color-muted-fg]">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+      <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
         <Icon className="h-4 w-4" aria-hidden="true" />
         {title}
       </div>
@@ -130,7 +130,7 @@ function Dot({ ok }: { ok: boolean }) {
     <span
       className={
         "inline-block h-2.5 w-2.5 rounded-full " +
-        (ok ? "bg-[--color-success]" : "bg-[--color-danger]")
+        (ok ? "bg-[var(--color-success)]" : "bg-[var(--color-danger)]")
       }
       aria-hidden="true"
     />
@@ -142,7 +142,7 @@ function Secret({ name, ok, optional }: { name: string; ok: boolean; optional?: 
     <li className="flex items-center gap-2">
       <Dot ok={ok} />
       <code className="text-xs">{name}</code>
-      <span className="ml-auto text-xs text-[--color-muted-fg]">
+      <span className="ml-auto text-xs text-[var(--color-muted-fg)]">
         {ok ? "configured" : optional ? "optional — unset" : "MISSING"}
       </span>
     </li>

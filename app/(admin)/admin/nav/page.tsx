@@ -12,7 +12,7 @@ export default async function NavPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Navigation</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           Manage header, footer, and sidebar links.
         </p>
       </header>

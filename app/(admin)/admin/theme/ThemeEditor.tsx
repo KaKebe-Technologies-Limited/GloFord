@@ -84,10 +84,10 @@ export function ThemeEditor({ initial }: { initial: Initial }) {
           return (
             <section
               key={group}
-              className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5"
+              className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
                   {GROUP_LABELS[group]}
                 </h2>
                 <Button size="sm" variant="outline" onClick={() => addToken(group)}>
@@ -95,19 +95,19 @@ export function ThemeEditor({ initial }: { initial: Initial }) {
                 </Button>
               </div>
               {entries.length === 0 ? (
-                <p className="text-sm text-[--color-muted-fg]">No tokens yet.</p>
+                <p className="text-sm text-[var(--color-muted-fg)]">No tokens yet.</p>
               ) : (
                 <ul className="space-y-1.5">
                   {entries.map(([k, v]) => (
                     <li key={k} className="flex items-center gap-2">
-                      <code className="min-w-[9rem] rounded-[--radius-sm] bg-[--color-muted] px-2 py-1 text-xs">
+                      <code className="min-w-[9rem] rounded-[var(--radius-sm)] bg-[var(--color-muted)] px-2 py-1 text-xs">
                         {k}
                       </code>
                       <input
                         aria-label={`${group}.${k} value`}
                         value={v}
                         onChange={(e) => updateToken(group, k, e.target.value)}
-                        className="flex-1 rounded-[--radius-sm] border border-[--color-input] bg-[--color-bg] px-2 py-1 text-sm font-mono"
+                        className="flex-1 rounded-[var(--radius-sm)] border border-[var(--color-input)] bg-[var(--color-bg)] px-2 py-1 text-sm font-mono"
                       />
                       <Button
                         size="sm"
@@ -124,9 +124,9 @@ export function ThemeEditor({ initial }: { initial: Initial }) {
           );
         })}
 
-        <section className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
+        <section className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
               Paste JSON (merge)
             </h2>
             <Button size="sm" variant="outline" onClick={() => setPasteOpen((v) => !v)}>
@@ -140,7 +140,7 @@ export function ThemeEditor({ initial }: { initial: Initial }) {
                 onChange={(e) => setPasteText(e.target.value)}
                 rows={10}
                 placeholder='{"colors": {"primary": "212 92% 38%"}, "radius": {"md": "0.5rem"}}'
-                className="w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] p-3 font-mono text-xs"
+                className="w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] p-3 font-mono text-xs"
               />
               <Button size="sm" onClick={pasteJson} disabled={!pasteText.trim()}>
                 Merge into tokens
@@ -151,24 +151,24 @@ export function ThemeEditor({ initial }: { initial: Initial }) {
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <div className="space-y-3 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
+        <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           {error ? (
             <p
               role="alert"
-              className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]"
+              className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]"
             >
               {error}
             </p>
           ) : null}
           {saved ? (
-            <p className="rounded-[--radius-sm] bg-[--color-success]/10 p-2 text-sm text-[--color-success]">
+            <p className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-success)/0.10)] p-2 text-sm text-[var(--color-success)]">
               Theme saved. Reload the public site to see updates.
             </p>
           ) : null}
           <Button onClick={save} disabled={pending} className="w-full">
             <Save className="h-4 w-4" /> {pending ? "Saving…" : "Save theme"}
           </Button>
-          <p className="text-xs text-[--color-muted-fg]">
+          <p className="text-xs text-[var(--color-muted-fg)]">
             Token names should match your CSS custom-property names (without the{" "}
             <code>--</code> prefix).
           </p>

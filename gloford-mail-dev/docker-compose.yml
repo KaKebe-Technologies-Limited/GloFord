@@ -1,0 +1,63 @@
+name: gloford-mail-dev
+
+services:
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: mailserver-dev
+    hostname: mail
+    domainname: gloford.org
+    restart: unless-stopped
+    stop_grace_period: 1m
+
+    ports:
+      - "25:25"       # SMTP inbound
+      - "587:587"     # Submission (STARTTLS)
+      - "465:465"     # SMTPS (implicit TLS)
+
+    volumes:
+      - ./docker-data/dms/mail-data/:/var/mail/
+      - ./docker-data/dms/mail-state/:/var/mail-state/
+      - ./docker-data/dms/mail-logs/:/var/log/mail/
+      - ./config/:/tmp/docker-mailserver/
+
+    environment:
+      HOSTNAME: mail
+      DOMAINNAME: gloford.org
+      OVERRIDE_HOSTNAME: mail.gloford.org
+
+      # ── TLS: disabled locally — no cert needed for dev ───
+      SSL_TYPE: ""
+      TLS_LEVEL: ""
+
+      # ── Security ─────────────────────────────────────────
+      SPOOF_PROTECTION: "1"
+      ENABLE_FAIL2BAN: "0"        # off locally — no iptables in Docker Desktop
+      ENABLE_SPAMASSASSIN: "0"    # off locally — saves RAM
+      ENABLE_CLAMAV: "0"
+
+      # ── Postfix ──────────────────────────────────────────
+      POSTFIX_INET_PROTOCOLS: ipv4
+      POSTFIX_MESSAGE_SIZE_LIMIT: "26214400"
+
+      # ── DKIM ─────────────────────────────────────────────
+      ENABLE_OPENDKIM: "1"
+
+      # ── Permit local relay without auth (dev only) ───────
+      PERMIT_DOCKER: "connected-networks"
+
+      LOG_LEVEL: debug
+
+    cap_add:
+      - NET_ADMIN
+
+  # ── Nginx reverse proxy (local webmail placeholder) ────────
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: mailproxy-dev
+    restart: unless-stopped
+    ports:
+      - "8025:80"     # access at http://localhost:8025
+    volumes:
+      - ./nginx-proxy/local-mail.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - mailserver

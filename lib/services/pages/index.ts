@@ -9,6 +9,7 @@ import {
 import { NotFoundError } from "@/lib/errors";
 import { tags } from "@/lib/cache";
 import { db } from "@/lib/db";
+import { getCollectionConfig, type PageCollectionKind, toCollectionSlug } from "@/lib/pages/collections";
 
 export const createPage = createService({
   module: "pages",
@@ -99,6 +100,15 @@ export function listPages() {
   });
 }
 
+export function listPagesByCollection(kind: PageCollectionKind) {
+  const config = getCollectionConfig(kind);
+  return db.page.findMany({
+    where: { slug: { startsWith: config.prefix } },
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, slug: true, title: true, status: true, publishedAt: true, updatedAt: true, seoDesc: true },
+  });
+}
+
 export function getPageForEdit(id: string) {
   return db.page.findUnique({ where: { id } });
 }
@@ -115,4 +125,8 @@ export function getPublishedPageBySlug(s: string) {
     [`page-pub`, s],
     { tags: [tags.page(s), tags.pages()], revalidate: 3600 },
   )();
+}
+
+export function getPublishedCollectionPage(kind: PageCollectionKind, leafSlug: string) {
+  return getPublishedPageBySlug(toCollectionSlug(kind, leafSlug));
 }

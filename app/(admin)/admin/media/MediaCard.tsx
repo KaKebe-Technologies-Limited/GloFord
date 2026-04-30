@@ -31,13 +31,13 @@ export function MediaCard({ item }: { item: Item }) {
   };
 
   return (
-    <figure className="group overflow-hidden rounded-[--radius-md] border border-[--color-border] bg-[--color-card]">
-      <div className="aspect-square bg-[--color-muted]">
+    <figure className="group overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card)]">
+      <div className="aspect-square bg-[var(--color-muted)]">
         {item.mime.startsWith("image/") ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.url} alt={item.alt ?? ""} className="h-full w-full object-cover" loading="lazy" />
         ) : (
-          <div className="grid h-full w-full place-items-center text-xs text-[--color-muted-fg]">
+          <div className="grid h-full w-full place-items-center text-xs text-[var(--color-muted-fg)]">
             {item.mime}
           </div>
         )}
@@ -46,7 +46,7 @@ export function MediaCard({ item }: { item: Item }) {
         <button
           onClick={copy}
           aria-label="Copy media id"
-          className="inline-flex items-center gap-1 truncate rounded-[--radius-sm] px-2 py-1 text-xs hover:bg-[--color-muted]"
+          className="inline-flex items-center gap-1 truncate rounded-[var(--radius-sm)] px-2 py-1 text-xs hover:bg-[var(--color-muted)]"
           title={item.id}
         >
           {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -56,7 +56,7 @@ export function MediaCard({ item }: { item: Item }) {
           onClick={del}
           disabled={pending}
           aria-label="Delete media"
-          className="rounded-[--radius-sm] p-1.5 text-[--color-danger] hover:bg-[--color-danger]/10"
+          className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-danger)] hover:bg-[rgb(var(--token-danger)/0.10)]"
         >
           <Trash2 className="h-4 w-4" />
         </button>

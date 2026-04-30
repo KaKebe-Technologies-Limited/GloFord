@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Menu, X, ChevronDown, Heart } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { NavTreeItem } from "./PublicNav";
 
@@ -13,6 +14,7 @@ export function MobileNav({
   items: readonly NavTreeItem[];
   donateLabel: string;
 }) {
+  const t = useTranslations("public.nav");
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -20,12 +22,12 @@ export function MobileNav({
     <div className="lg:hidden">
       <button
         type="button"
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? t("closeMenu") : t("openMenu")}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[--color-border] bg-white/80 shadow-sm"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--color-fg)]"
       >
-        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
       <AnimatePresence>
         {open ? (
@@ -33,20 +35,20 @@ export function MobileNav({
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
-            className="fixed inset-x-0 top-20 z-40 border-b border-[--color-border] bg-white/95 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl"
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="fixed inset-x-0 top-[5rem] z-40 border-b border-gray-100 bg-white p-4 shadow-lg"
           >
-            <nav aria-label="Mobile" className="flex max-h-[calc(100dvh-7rem)] flex-col gap-2 overflow-y-auto">
+            <nav aria-label="Mobile" className="flex max-h-[calc(100dvh-7rem)] flex-col gap-1 overflow-y-auto">
               {items.map((item) =>
                 item.children.length > 0 ? (
-                  <div key={item.id} className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-secondary]/70">
+                  <div key={item.id}>
                     <button
                       type="button"
                       onClick={() => setExpanded((current) => (current === item.id ? null : item.id))}
-                      className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold"
+                      className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-[var(--color-fg)]"
                     >
                       <span>{item.label}</span>
-                      <ChevronDown className={`h-4 w-4 transition ${expanded === item.id ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`h-4 w-4 text-gray-400 transition ${expanded === item.id ? "rotate-180" : ""}`} />
                     </button>
                     <AnimatePresence initial={false}>
                       {expanded === item.id ? (
@@ -57,13 +59,13 @@ export function MobileNav({
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <div className="space-y-1 px-2 pb-2">
+                          <div className="space-y-0.5 border-l-2 border-[rgb(var(--token-primary)/0.20)] ml-4 pl-3 pb-2">
                             {item.children.map((child) => (
                               <Link
                                 key={child.id}
                                 href={child.href}
                                 onClick={() => setOpen(false)}
-                                className="block rounded-[--radius-md] px-3 py-2 text-sm text-[--color-muted-fg] hover:bg-white"
+                                className="block py-2 text-sm text-gray-600 hover:text-[var(--color-primary)]"
                               >
                                 {child.label}
                               </Link>
@@ -78,7 +80,7 @@ export function MobileNav({
                     key={item.id}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="rounded-[--radius-lg] border border-transparent px-4 py-3 text-sm font-semibold hover:border-[--color-border] hover:bg-[--color-secondary]/70"
+                    className="px-4 py-3 text-sm font-semibold text-[var(--color-fg)] hover:text-[var(--color-primary)]"
                   >
                     {item.label}
                   </Link>
@@ -87,8 +89,9 @@ export function MobileNav({
               <Link
                 href="/donate"
                 onClick={() => setOpen(false)}
-                className="mt-3 inline-flex items-center justify-center rounded-full bg-[--color-primary] px-4 py-3 text-sm font-semibold text-[--color-primary-fg]"
+                className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white"
               >
+                <Heart className="h-4 w-4" />
                 {donateLabel}
               </Link>
             </nav>

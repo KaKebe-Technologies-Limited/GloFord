@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { savePaymentConfigAction } from "@/lib/actions/paymentConfig";
 import { Button } from "@/components/ui/Button";
 
-type ProviderId = "STRIPE" | "PESAPAL" | "FLUTTERWAVE" | "MTN_MOMO" | "AIRTEL_MONEY";
+type ProviderId = "PESAPAL" | "MTN_MOMO" | "AIRTEL_MONEY";
 
 type Initial = {
   isEnabled: boolean;
@@ -66,7 +66,7 @@ export function PaymentConfigForm({
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value as "sandbox" | "live")}
-            className="rounded-[--radius-md] border border-[--color-border] bg-[--color-bg] px-2 py-1 text-sm"
+            className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-sm"
           >
             <option value="sandbox">Sandbox</option>
             <option value="live">Live</option>
@@ -77,7 +77,7 @@ export function PaymentConfigForm({
       <div className="space-y-3">{renderFields(provider, fields, setField)}</div>
 
       {error ? (
-        <p role="alert" className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]">
+        <p role="alert" className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]">
           {error}
         </p>
       ) : null}
@@ -97,34 +97,23 @@ function renderFields(
   const common = (label: string, key: string, type: "text" | "password" | "url" = "password", hint?: string) => (
     <label key={key} className="block space-y-1.5">
       <span className="text-sm font-medium">{label}</span>
-      {hint ? <span className="block text-xs text-[--color-muted-fg]">{hint}</span> : null}
+      {hint ? <span className="block text-xs text-[var(--color-muted-fg)]">{hint}</span> : null}
       <input
         type={type}
         value={fields[key] ?? ""}
         onChange={setField(key)}
         autoComplete="off"
-        className="w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[--color-ring]"
+        className="w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]"
       />
     </label>
   );
 
   switch (provider) {
-    case "STRIPE":
-      return [
-        common("Secret key", "secretKey", "password", "Starts with sk_test_ or sk_live_"),
-        common("Publishable key", "publishableKey", "text", "Starts with pk_test_ or pk_live_"),
-      ];
     case "PESAPAL":
       return [
         common("Consumer key", "consumerKey", "text"),
         common("Consumer secret", "consumerSecret", "password"),
         common("Registered IPN id", "ipnId", "text", "From POST /URLSetup/RegisterIPN"),
-        common("Country (ISO-2)", "country", "text"),
-      ];
-    case "FLUTTERWAVE":
-      return [
-        common("Secret key", "secretKey", "password", "FLWSECK-\u2026"),
-        common("Public key", "publicKey", "text", "FLWPUBK-\u2026"),
         common("Country (ISO-2)", "country", "text"),
       ];
     case "MTN_MOMO":

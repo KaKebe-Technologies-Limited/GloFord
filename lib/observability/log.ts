@@ -35,19 +35,18 @@ export async function log(
   message: string,
   fields: Record<string, unknown> = {},
 ) {
-  // Logging is best-effort. Never let a logging failure propagate —
-  // the alternative is a JSON.stringify throw or a closed stdout
-  // bringing down the request. Swallow and try a plain console as
-  // last resort so we still see the event in dev.
   try {
     if (LEVEL_ORDER[level] < threshold) return;
     const cid = await correlationId().catch(() => undefined);
+    // Sanitize message and string fields to prevent log injection
+    const safeMsg = String(message).replace(/[\r\n\t]/g, " ").slice(0, 2000);
+    const safeFields = sanitizeFields(fields);
     const entry = {
       t: new Date().toISOString(),
       level,
-      msg: message,
+      msg: safeMsg,
       cid,
-      ...fields,
+      ...safeFields,
     };
     if (process.env.NODE_ENV === "production") {
       try {
@@ -64,6 +63,22 @@ export async function log(
   } catch {
     /* swallow — logging must never throw */
   }
+}
+
+/**
+ * Sanitize log fields — strip newlines from string values to prevent
+ * log injection (CWE-117).
+ */
+function sanitizeFields(fields: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(fields)) {
+    if (typeof v === "string") {
+      out[k] = v.replace(/[\r\n\t]/g, " ").slice(0, 1000);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
 }
 
 /**

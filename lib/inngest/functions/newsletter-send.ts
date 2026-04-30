@@ -5,6 +5,7 @@ import { getMailProvider } from "@/lib/mail";
 import { buildBrand } from "@/lib/mail/brand";
 import { newsletterEmail } from "@/lib/mail/templates";
 import { blocksToEmailHtml, blocksToPlainText } from "@/lib/blocks/toEmail";
+import { sanitizeHtml } from "@/lib/blocks/sanitize";
 
 export const newsletterSend = inngest.createFunction(
   { id: "newsletter-send", retries: 2, concurrency: { limit: 5 } },
@@ -41,7 +42,7 @@ export const newsletterSend = inngest.createFunction(
       return { sent: 0 };
     }
 
-    const html = blocksToEmailHtml(newsletter.content as unknown);
+    const html = sanitizeHtml(blocksToEmailHtml(newsletter.content as unknown));
     const text = blocksToPlainText(newsletter.content as unknown);
     const provider = getMailProvider();
 

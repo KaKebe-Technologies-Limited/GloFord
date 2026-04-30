@@ -12,7 +12,7 @@ export default async function ThemePage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Theme</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           Color tokens, typography, radii, and shadows. Saved values are
           rendered as CSS custom properties at the document root.
         </p>

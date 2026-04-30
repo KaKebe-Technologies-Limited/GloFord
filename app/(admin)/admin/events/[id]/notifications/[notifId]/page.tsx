@@ -22,14 +22,14 @@ export default async function EditEventNotificationPage({
     <div className="space-y-6">
       <Link
         href={`/admin/events/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-[--color-muted-fg] hover:text-[--color-fg]"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]"
       >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Back to {row.event.title}
       </Link>
 
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Edit notification</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           {row.type === "REMINDER" ? "Reminder" : "Announcement"} · scheduled for{" "}
           {row.sendAt.toLocaleString()} · {row.status}
         </p>

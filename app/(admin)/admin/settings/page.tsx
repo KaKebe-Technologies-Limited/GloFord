@@ -8,7 +8,7 @@ const CARDS = [
   {
     href: "/admin/settings/payments",
     title: "Payments",
-    description: "Enable Stripe, Pesapal, Flutterwave, MTN MoMo, and Airtel Money. Paste keys to go live.",
+    description: "Enable MTN MoMo, Airtel Money, and Pesapal. Paste keys to go live.",
     icon: CreditCard,
   },
   {
@@ -43,7 +43,7 @@ export default async function SettingsHub() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           System-wide configuration. Changes take effect immediately.
         </p>
       </header>
@@ -52,11 +52,11 @@ export default async function SettingsHub() {
           <Link
             key={c.href}
             href={c.href}
-            className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 transition hover:shadow-sm"
+            className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 transition hover:shadow-sm"
           >
-            <c.icon className="h-5 w-5 text-[--color-primary]" aria-hidden="true" />
+            <c.icon className="h-5 w-5 text-[var(--color-primary)]" aria-hidden="true" />
             <h2 className="mt-3 font-semibold">{c.title}</h2>
-            <p className="mt-1 text-sm text-[--color-muted-fg]">{c.description}</p>
+            <p className="mt-1 text-sm text-[var(--color-muted-fg)]">{c.description}</p>
           </Link>
         ))}
       </div>

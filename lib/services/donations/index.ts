@@ -81,8 +81,8 @@ export async function applyDonationEvent(params: {
       select: { email: true, name: true },
     });
     if (donor) {
-      await inngest
-        .send({
+      void Promise.resolve(
+        inngest.send({
           name: "subscriber/donation.succeeded",
           data: {
             donationId: existing.id,
@@ -92,8 +92,8 @@ export async function applyDonationEvent(params: {
             donorEmail: donor.email,
             donorName: donor.name ?? undefined,
           } as never,
-        })
-        .catch(() => {});
+        }),
+      ).catch(() => {});
     }
   }
 
@@ -149,22 +149,33 @@ export const refundDonation = createService({
   version: (out) => ({ entityType: "Donation", entityId: out.id }),
 });
 
-export function listDonations(take = 100) {
-  return db.donation.findMany({
-    orderBy: { createdAt: "desc" },
-    take,
-    include: {
-      donor: { select: { id: true, email: true, name: true } },
-      campaign: { select: { id: true, title: true, slug: true } },
-    },
-  });
+export async function listDonations({ page = 1, perPage = 50 }: { page?: number; perPage?: number } = {}) {
+  const [rows, total] = await Promise.all([
+    db.donation.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * perPage,
+      take: perPage,
+      include: {
+        donor: { select: { id: true, email: true, name: true } },
+        campaign: { select: { id: true, title: true, slug: true } },
+      },
+    }),
+    db.donation.count(),
+  ]);
+  return { rows, total, page, perPage, totalPages: Math.ceil(total / perPage) };
 }
 
-export function listDonors() {
-  return db.donor.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      _count: { select: { donations: { where: { status: "SUCCEEDED" } } } },
-    },
-  });
+export async function listDonors({ page = 1, perPage = 50 }: { page?: number; perPage?: number } = {}) {
+  const [rows, total] = await Promise.all([
+    db.donor.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * perPage,
+      take: perPage,
+      include: {
+        _count: { select: { donations: { where: { status: "SUCCEEDED" } } } },
+      },
+    }),
+    db.donor.count(),
+  ]);
+  return { rows, total, page, perPage, totalPages: Math.ceil(total / perPage) };
 }

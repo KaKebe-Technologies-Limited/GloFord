@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { getEventForEdit } from "@/lib/services/events";
+import { listSegments } from "@/lib/services/segments";
 import { EventForm } from "../EventForm";
 import { NotificationList } from "./NotificationList";
 
@@ -9,19 +10,23 @@ export const metadata = { title: "Edit event" };
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   await requireActorFromSession();
-  const row = await getEventForEdit(id);
+  const [row, allSegments] = await Promise.all([
+    getEventForEdit(id),
+    listSegments(),
+  ]);
   if (!row) notFound();
 
   return (
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{row.title}</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           Starts {row.startsAt.toLocaleString()}
         </p>
       </header>
 
       <EventForm
+        segments={allSegments.map((s) => ({ id: s.id, name: s.name }))}
         initial={{
           id: row.id,
           slug: row.slug,

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { PageCollectionKind } from "@/lib/pages/collections";
 
 /**
  * Typed block registry. Every block that can appear in Page.blocks /
@@ -115,6 +116,15 @@ export const partnerLogosBlockSchema = z.object({
   mediaIds: z.array(z.string()).max(16).default([]),
 });
 
+export const pageCollectionBlockSchema = z.object({
+  heading: z.string().max(200).optional(),
+  intro: z.string().max(500).optional(),
+  collection: z.custom<PageCollectionKind>((value) =>
+    ["impactStory", "team", "report", "partner"].includes(String(value)),
+  ),
+  limit: z.number().int().min(1).max(12).default(6),
+});
+
 // ─── Discriminated union (the block envelope) ─────────────────
 
 export const blockSchema = z.discriminatedUnion("type", [
@@ -130,6 +140,7 @@ export const blockSchema = z.discriminatedUnion("type", [
   z.object({ id: z.string(), type: z.literal("actionCards"), data: actionCardsBlockSchema }),
   z.object({ id: z.string(), type: z.literal("eventList"), data: eventListBlockSchema }),
   z.object({ id: z.string(), type: z.literal("partnerLogos"), data: partnerLogosBlockSchema }),
+  z.object({ id: z.string(), type: z.literal("pageCollection"), data: pageCollectionBlockSchema }),
 ]);
 
 export type Block = z.infer<typeof blockSchema>;
@@ -205,6 +216,11 @@ export const BLOCK_META: Record<
     label: "Partner logos",
     description: "Trusted partners and supporters",
     emptyData: { mediaIds: [] },
+  },
+  pageCollection: {
+    label: "Page collection",
+    description: "Auto-populated cards from impact stories, team, partners, or reports",
+    emptyData: { collection: "impactStory", limit: 6 },
   },
 };
 

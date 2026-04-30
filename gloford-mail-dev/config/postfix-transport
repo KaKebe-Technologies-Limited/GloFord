@@ -1,0 +1,13 @@
+# ── config/postfix-transport ─────────────────────────────────
+# Maps no-reply@gloford.org to the discard transport.
+# docker-mailserver runs `postmap` on this file automatically at startup.
+#
+# To apply changes while the container is running:
+#   docker exec mailserver-dev postmap /etc/postfix/transport
+#   docker exec mailserver-dev postfix reload
+# ─────────────────────────────────────────────────────────────
+
+# Silently discard all inbound mail to no-reply@gloford.org.
+# The 'discard' transport accepts the message then drops it —
+# correct behaviour for a send-only address (no bounce sent).
+no-reply@gloford.org    discard:silently discarded

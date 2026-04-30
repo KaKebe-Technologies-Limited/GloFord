@@ -24,12 +24,12 @@ export default async function DeadLetterPage({
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Dead-letter queue</h1>
-          <p className="text-sm text-[--color-muted-fg]">
+          <p className="text-sm text-[var(--color-muted-fg)]">
             Events that failed after retries. Inspect, retry, or dismiss.
           </p>
         </div>
         {rows.some((r) => r.status === "PENDING") ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[--color-warning]/10 px-3 py-1 text-xs font-medium text-[--color-warning]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgb(239_180_0/0.10)] px-3 py-1 text-xs font-medium text-amber-600">
             <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
             {rows.filter((r) => r.status === "PENDING").length} pending
           </span>
@@ -45,7 +45,7 @@ export default async function DeadLetterPage({
           name="status"
           aria-label="Filter by status"
           defaultValue={normalized ?? ""}
-          className="rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm"
+          className="rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm"
         >
           <option value="">All</option>
           <option value="PENDING">Pending</option>
@@ -55,16 +55,16 @@ export default async function DeadLetterPage({
         </select>
         <button
           type="submit"
-          className="rounded-[--radius-md] border border-[--color-border] bg-[--color-card] px-3 py-2 text-sm hover:bg-[--color-muted]"
+          className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm hover:bg-[var(--color-muted)]"
         >
           Filter
         </button>
       </form>
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
+            <thead className="border-b border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] text-left text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
               <tr>
                 <th className="px-4 py-3">When</th>
                 <th className="px-4 py-3">Source</th>
@@ -78,7 +78,7 @@ export default async function DeadLetterPage({
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-[--color-muted-fg]">
+                  <td colSpan={7} className="px-4 py-10 text-center text-[var(--color-muted-fg)]">
                     Inbox zero — no dead letters.
                   </td>
                 </tr>

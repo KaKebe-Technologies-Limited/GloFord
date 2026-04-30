@@ -17,7 +17,7 @@ export default async function SiteSettingsPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Site settings</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           Brand, contact, social links, and SEO defaults.
         </p>
       </header>
@@ -27,6 +27,8 @@ export default async function SiteSettingsPage() {
           siteName: s?.siteName ?? "Platform",
           logoUrl: s?.logoUrl ?? "",
           loginBgUrl: s?.loginBgUrl ?? "",
+          donationsEnabled: s?.donationsEnabled ?? true,
+          campaignsEnabled: s?.campaignsEnabled ?? true,
           contact: {
             email: contact.email ?? "",
             phone: contact.phone ?? "",

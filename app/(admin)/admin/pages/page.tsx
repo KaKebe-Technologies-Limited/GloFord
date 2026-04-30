@@ -16,7 +16,7 @@ export default async function PagesListPage() {
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Pages</h1>
-          <p className="text-sm text-[--color-muted-fg]">Standalone pages like /about or /contact.</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">Standalone pages like /about or /contact.</p>
         </div>
         <Button asChild size="sm">
           <Link href="/admin/pages/new">
@@ -25,10 +25,10 @@ export default async function PagesListPage() {
         </Button>
       </header>
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
+            <thead className="border-b border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] text-left text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
               <tr>
                 <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Slug</th>
@@ -39,23 +39,23 @@ export default async function PagesListPage() {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-10 text-center text-[--color-muted-fg]">
+                  <td colSpan={4} className="px-4 py-10 text-center text-[var(--color-muted-fg)]">
                     No pages yet. Create your first page to get started.
                   </td>
                 </tr>
               ) : (
                 rows.map((r) => (
-                  <tr key={r.id} className="border-b border-[--color-border] last:border-0">
+                  <tr key={r.id} className="border-b border-[var(--color-border)] last:border-0">
                     <td className="px-4 py-3">
                       <Link href={`/admin/pages/${r.id}`} className="font-medium hover:underline">
                         {r.title}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[--color-muted-fg]">/{r.slug}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-[var(--color-muted-fg)]">/{r.slug}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={r.status} />
                     </td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">
                       {new Date(r.updatedAt).toLocaleDateString()}
                     </td>
                   </tr>

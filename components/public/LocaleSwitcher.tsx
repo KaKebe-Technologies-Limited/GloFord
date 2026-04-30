@@ -10,7 +10,7 @@ export function LocaleSwitcher() {
   const current = useLocale() as Locale;
   const [pending, start] = useTransition();
   return (
-    <label className="inline-flex items-center gap-1.5 text-sm text-[--color-muted-fg]">
+    <label className="inline-flex items-center gap-1.5 text-sm text-[var(--color-muted-fg)]">
       <Globe className="h-4 w-4" aria-hidden="true" />
       <span className="sr-only">Language</span>
       <select
@@ -21,7 +21,7 @@ export function LocaleSwitcher() {
           const next = e.target.value;
           start(() => setLocaleAction(next));
         }}
-        className="rounded-[--radius-sm] border border-[--color-border] bg-transparent px-1 py-0.5 text-sm"
+        className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-transparent px-1 py-0.5 text-sm"
       >
         {locales.map((l) => (
           <option key={l} value={l}>

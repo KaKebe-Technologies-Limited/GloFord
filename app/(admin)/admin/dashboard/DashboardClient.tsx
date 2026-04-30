@@ -72,7 +72,7 @@ export function DashboardClient({
         <motion.h1 variants={item} className="text-2xl font-semibold tracking-tight">
           {t("title")}
         </motion.h1>
-        <motion.p variants={item} className="text-sm text-[--color-muted-fg]">
+        <motion.p variants={item} className="text-sm text-[var(--color-muted-fg)]">
           {t("snapshot")}
         </motion.p>
       </header>
@@ -148,32 +148,32 @@ export function DashboardClient({
       </motion.section>
 
       <section className="grid gap-6 lg:grid-cols-3">
-        <motion.div variants={item} className="lg:col-span-2 rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
-          <header className="flex items-center justify-between border-b border-[--color-border] px-5 py-3">
+        <motion.div variants={item} className="lg:col-span-2 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
+          <header className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">
             <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-[--color-muted-fg]" aria-hidden="true" />
+              <Activity className="h-4 w-4 text-[var(--color-muted-fg)]" aria-hidden="true" />
               <h2 className="text-sm font-semibold">{t("recentActivity.title")}</h2>
             </div>
             <Link
               href="/admin/system/audit"
-              className="inline-flex items-center gap-1 text-xs text-[--color-muted-fg] hover:text-[--color-fg]"
+              className="inline-flex items-center gap-1 text-xs text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]"
             >
               {t("recentActivity.viewAudit")} <ArrowRight className="h-3 w-3" aria-hidden="true" />
             </Link>
           </header>
-          <ul className="divide-y divide-[--color-border]">
+          <ul className="divide-y divide-[var(--color-border)]">
             {recentAudit.length === 0 ? (
-              <li className="px-5 py-6 text-sm text-[--color-muted-fg]">
+              <li className="px-5 py-6 text-sm text-[var(--color-muted-fg)]">
                 {t("recentActivity.empty")}
               </li>
             ) : (
               recentAudit.map((r) => (
                 <li key={r.id} className="flex items-center gap-3 px-5 py-3 text-sm">
                   <span className="font-medium">{r.action}</span>
-                  <span className="text-[--color-muted-fg]">
+                  <span className="text-[var(--color-muted-fg)]">
                     {r.entityType ? t("recentActivity.onEntity", { type: r.entityType }) : ""}
                   </span>
-                  <span className="ml-auto font-mono text-xs text-[--color-muted-fg]">
+                  <span className="ml-auto font-mono text-xs text-[var(--color-muted-fg)]">
                     {new Date(r.createdAt).toLocaleString()}
                   </span>
                 </li>
@@ -183,26 +183,26 @@ export function DashboardClient({
         </motion.div>
 
         <div className="space-y-4">
-          <motion.div variants={item} className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
-            <p className="text-xs uppercase tracking-wider text-[--color-muted-fg]">
+          <motion.div variants={item} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+            <p className="text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
               {t("deadLetter.title")}
             </p>
             <p className="mt-2 text-3xl font-semibold">{fmt.format(stats.dlqPending)}</p>
-            <p className="mt-1 text-xs text-[--color-muted-fg]">
+            <p className="mt-1 text-xs text-[var(--color-muted-fg)]">
               {stats.dlqPending === 0 ? t("deadLetter.zero") : t("deadLetter.pending")}
             </p>
             {stats.dlqPending > 0 ? (
               <Link
                 href="/admin/system/dead-letter"
-                className="mt-3 inline-flex items-center gap-1 text-sm text-[--color-primary] hover:underline"
+                className="mt-3 inline-flex items-center gap-1 text-sm text-[var(--color-primary)] hover:underline"
               >
                 {t("deadLetter.action")} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             ) : null}
           </motion.div>
 
-          <motion.div variants={item} className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
-            <p className="text-xs uppercase tracking-wider text-[--color-muted-fg]">{t("quickLinks.title")}</p>
+          <motion.div variants={item} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+            <p className="text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">{t("quickLinks.title")}</p>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
                 <Link href="/admin/system/health" className="hover:underline">
@@ -246,14 +246,14 @@ function Kpi({
     <motion.div variants={variants}>
       <Link
         href={href}
-        className="group block rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 transition hover:shadow-sm"
+        className="group block rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 transition hover:shadow-sm"
       >
-        <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-[--color-muted-fg]">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
           <Icon className="h-4 w-4" aria-hidden="true" />
           {label}
         </div>
         <p className="mt-2 text-3xl font-semibold">{value}</p>
-        <p className="mt-1 text-xs text-[--color-muted-fg]">{sublabel}</p>
+        <p className="mt-1 text-xs text-[var(--color-muted-fg)]">{sublabel}</p>
       </Link>
     </motion.div>
   );

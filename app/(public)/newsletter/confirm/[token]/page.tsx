@@ -23,19 +23,19 @@ export default async function ConfirmPage({
       {ok ? (
         <>
           <h1 className="text-3xl font-semibold tracking-tight">You\u2019re subscribed</h1>
-          <p className="mt-3 text-[--color-muted-fg]">
+          <p className="mt-3 text-[var(--color-muted-fg)]">
             Thanks for confirming. We\u2019ll be in touch with updates and stories soon.
           </p>
         </>
       ) : (
         <>
           <h1 className="text-3xl font-semibold tracking-tight">Link invalid</h1>
-          <p className="mt-3 text-[--color-muted-fg]">{errMsg ?? "This confirmation link is no longer valid."}</p>
+          <p className="mt-3 text-[var(--color-muted-fg)]">{errMsg ?? "This confirmation link is no longer valid."}</p>
         </>
       )}
       <Link
         href="/"
-        className="mt-8 inline-block rounded-[--radius-md] border border-[--color-border] px-4 py-2 text-sm font-medium"
+        className="mt-8 inline-block rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium"
       >
         Back to home
       </Link>

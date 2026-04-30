@@ -13,7 +13,7 @@ export default async function SegmentsPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Segments</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           Audience groups for newsletters and email campaigns. System segments are auto-managed by
           events (e.g. Donors, Youth, Volunteers, Partners).
         </p>
@@ -21,10 +21,10 @@ export default async function SegmentsPage() {
 
       <SegmentCreator />
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
+            <thead className="border-b border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] text-left text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
               <tr>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Slug</th>
@@ -36,7 +36,7 @@ export default async function SegmentsPage() {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-[--color-muted-fg]">
+                  <td colSpan={5} className="px-4 py-10 text-center text-[var(--color-muted-fg)]">
                     No segments yet.
                   </td>
                 </tr>

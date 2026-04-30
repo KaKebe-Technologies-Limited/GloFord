@@ -37,7 +37,7 @@ export function SegmentCreator() {
   }
 
   return (
-    <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
       <h2 className="font-semibold">New segment</h2>
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
         <label className="block space-y-1.5">
@@ -66,7 +66,7 @@ export function SegmentCreator() {
         </label>
       </div>
       {error ? (
-        <p role="alert" className="mt-3 rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]">
+        <p role="alert" className="mt-3 rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]">
           {error}
         </p>
       ) : null}
@@ -83,4 +83,4 @@ export function SegmentCreator() {
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";

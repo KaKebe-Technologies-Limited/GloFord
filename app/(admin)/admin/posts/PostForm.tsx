@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { createPostAction, updatePostAction, deletePostAction } from "@/lib/actions/posts";
-import { BlockEditor } from "@/components/blocks/BlockEditor";
+import dynamic from "next/dynamic";
+
+const BlockEditor = dynamic(
+  () => import("@/components/blocks/BlockEditor").then((m) => ({ default: m.BlockEditor })),
+  { ssr: false },
+);
 import { Button } from "@/components/ui/Button";
 import { MediaPicker } from "@/components/ui/MediaPicker";
 import type { Block } from "@/lib/blocks/types";
@@ -72,8 +77,8 @@ export function PostForm({ initial }: { initial?: Initial }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
       <div className="space-y-6">
-        <section className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">Details</h2>
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">Details</h2>
           <Field label="Title">
             <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
           </Field>
@@ -99,16 +104,16 @@ export function PostForm({ initial }: { initial?: Initial }) {
           </Field>
         </section>
 
-        <section className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-muted-fg]">Content blocks</h2>
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">Content blocks</h2>
           <BlockEditor value={body} onChange={setBody} />
         </section>
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <div className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5 space-y-3">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 space-y-3">
           {error ? (
-            <p role="alert" className="rounded-[--radius-sm] bg-[--color-danger]/10 p-2 text-sm text-[--color-danger]">
+            <p role="alert" className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]">
               {error}
             </p>
           ) : null}
@@ -127,7 +132,7 @@ export function PostForm({ initial }: { initial?: Initial }) {
 }
 
 const inputCls =
-  "w-full rounded-[--radius-md] border border-[--color-input] bg-[--color-bg] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--color-ring]";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]";
 
 function Field({
   label,
@@ -141,7 +146,7 @@ function Field({
   return (
     <label className="block space-y-1.5">
       <span className="text-sm font-medium">{label}</span>
-      {hint ? <span className="block text-xs text-[--color-muted-fg]">{hint}</span> : null}
+      {hint ? <span className="block text-xs text-[var(--color-muted-fg)]">{hint}</span> : null}
       {children}
     </label>
   );

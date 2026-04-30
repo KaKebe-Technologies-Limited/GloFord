@@ -1,15 +1,41 @@
 name: ${COMPOSE_PROJECT_NAME:-platform}
 
 services:
+  # ── Reverse proxy + Let's Encrypt TLS ──────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+  # ── PostgreSQL ──────────────────────────────────────────────
   db:
     image: postgres:16-alpine
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
     environment:
       POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       POSTGRES_DB: app
-    ports:
-      - "5433:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -18,6 +44,7 @@ services:
       timeout: 3s
       retries: 30
 
+  # ── Migrations + seed (runs once, then exits) ───────────────
   migrate:
     image: node:22-alpine
     working_dir: /app
@@ -25,12 +52,12 @@ services:
       - ./:/app
       - migrate-node-modules:/app/node_modules
     environment:
-      DATABASE_URL: postgresql://app:app@db:5432/app?sslmode=disable
-      DIRECT_URL: postgresql://app:app@db:5432/app?sslmode=disable
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-O2PqgJfqZ3eZk0kSzv6gOQ3aV2lT8WrxKEP0iFnPw9k=}
-      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.org}
-      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-change-me-on-first-login}
-      BRAND_NAME: ${BRAND_NAME:-Platform}
+      DATABASE_URL: postgresql://app:${DB_PASSWORD:?}@db:5432/app?sslmode=disable
+      DIRECT_URL: postgresql://app:${DB_PASSWORD:?}@db:5432/app?sslmode=disable
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@gloford.org}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?SEED_ADMIN_PASSWORD is required}
+      BRAND_NAME: ${BRAND_NAME:-Gloford}
       BRAND_LOGO_URL: ${BRAND_LOGO_URL:-}
       BRAND_PRIMARY_COLOR: ${BRAND_PRIMARY_COLOR:-#2563eb}
     depends_on:
@@ -48,49 +75,103 @@ services:
         pnpm prisma migrate deploy &&
         pnpm db:seed
 
+  # ── Next.js app ─────────────────────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 512M
     environment:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-      AUTH_SECRET: ${AUTH_SECRET:-replace-me-with-openssl-rand-base64-32}
-      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
-      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
-      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
-      DATABASE_URL: postgresql://app:app@db:5432/app?sslmode=disable
-      DIRECT_URL: postgresql://app:app@db:5432/app?sslmode=disable
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-O2PqgJfqZ3eZk0kSzv6gOQ3aV2lT8WrxKEP0iFnPw9k=}
-      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-}
-      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
+      NEXT_PUBLIC_APP_URL: https://gloford.org
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
+      AUTH_URL: https://gloford.org
+      DATABASE_URL: postgresql://app:${DB_PASSWORD:?}@db:5432/app?sslmode=disable
+      DIRECT_URL: postgresql://app:${DB_PASSWORD:?}@db:5432/app?sslmode=disable
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?}
+      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:?INNGEST_EVENT_KEY is required}
+      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:?INNGEST_SIGNING_KEY is required}
+      INNGEST_DEV: "1"
       INNGEST_BASE_URL: http://inngest:8288
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      MAIL_FROM: ${MAIL_FROM:-Platform <no-reply@example.org>}
-      BRAND_NAME: ${BRAND_NAME:-Platform}
+      MAIL_FROM: ${MAIL_FROM:-Gloford <no-reply@gloford.org>}
+      BRAND_NAME: ${BRAND_NAME:-Gloford}
       BRAND_LOGO_URL: ${BRAND_LOGO_URL:-}
       BRAND_PRIMARY_COLOR: ${BRAND_PRIMARY_COLOR:-#2563eb}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
-      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
-    ports:
-      - "3000:3000"
+      UPLOAD_DIR: /app/uploads
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENV: production
+    volumes:
+      - uploads-data:/app/uploads
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://0.0.0.0:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       db:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      mailpit:
+        condition: service_started
 
+  # ── Mailpit (self-hosted SMTP + web UI for dev/prod) ────────
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.15"
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"       # Web UI
+    volumes:
+      - mailpit-data:/data
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      # For production with real SMTP relay, set MP_SMTP_RELAY_*
+      # MP_SMTP_RELAY_HOST: smtp.example.com
+      # MP_SMTP_RELAY_PORT: 587
+      # MP_SMTP_RELAY_STARTTLS: "true"
+      # MP_SMTP_RELAY_USERNAME: user
+      # MP_SMTP_RELAY_PASSWORD: pass
+
+  # ── Inngest (self-hosted event bus) ─────────────────────────
   inngest:
     image: inngest/inngest:latest
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+        reservations:
+          memory: 128M
     command: ["inngest", "dev", "-u", "http://app:3000/api/inngest"]
-    ports:
-      - "8288:8288"
     depends_on:
       - app
 
 volumes:
   db-data:
   migrate-node-modules:
+  caddy-data:
+  caddy-config:
+  uploads-data:
+  mailpit-data:

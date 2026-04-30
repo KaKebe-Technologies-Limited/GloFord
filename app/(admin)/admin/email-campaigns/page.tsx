@@ -22,7 +22,7 @@ export default async function EmailCampaignsPage() {
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Email campaigns</h1>
-          <p className="text-sm text-[--color-muted-fg]">
+          <p className="text-sm text-[var(--color-muted-fg)]">
             Automated email sequences triggered by subscriber or donation events.
           </p>
         </div>
@@ -33,10 +33,10 @@ export default async function EmailCampaignsPage() {
         </Button>
       </header>
 
-      <div className="overflow-hidden rounded-[--radius-lg] border border-[--color-border] bg-[--color-card]">
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-[--color-border] bg-[--color-muted]/50 text-left text-xs uppercase tracking-wider text-[--color-muted-fg]">
+            <thead className="border-b border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] text-left text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
               <tr>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Trigger</th>
@@ -48,14 +48,14 @@ export default async function EmailCampaignsPage() {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-[--color-muted-fg]">
+                  <td colSpan={5} className="px-4 py-12 text-center text-[var(--color-muted-fg)]">
                     <Send className="mx-auto mb-2 h-6 w-6 opacity-60" aria-hidden="true" />
                     No campaigns yet.
                   </td>
                 </tr>
               ) : (
                 rows.map((r) => (
-                  <tr key={r.id} className="border-b border-[--color-border] last:border-0">
+                  <tr key={r.id} className="border-b border-[var(--color-border)] last:border-0">
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/email-campaigns/${r.id}`}
@@ -64,18 +64,18 @@ export default async function EmailCampaignsPage() {
                         {r.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">
                       {TRIGGER_LABEL[r.trigger] ?? r.trigger}
                     </td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">{r._count.emails}</td>
-                    <td className="px-4 py-3 text-[--color-muted-fg]">{r._count.enrollments}</td>
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">{r._count.emails}</td>
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">{r._count.enrollments}</td>
                     <td className="px-4 py-3">
                       <span
                         className={
                           "inline-flex items-center rounded-full px-2 py-0.5 text-xs " +
                           (r.isActive
-                            ? "bg-[--color-success]/10 text-[--color-success]"
-                            : "bg-[--color-muted] text-[--color-muted-fg]")
+                            ? "bg-[rgb(var(--token-success)/0.10)] text-[var(--color-success)]"
+                            : "bg-[var(--color-muted)] text-[var(--color-muted-fg)]")
                         }
                       >
                         {r.isActive ? "Active" : "Paused"}

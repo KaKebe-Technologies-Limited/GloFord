@@ -42,7 +42,7 @@ export default async function SsoPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">SSO providers</h1>
-        <p className="text-sm text-[--color-muted-fg]">
+        <p className="text-sm text-[var(--color-muted-fg)]">
           Identity providers wired through Auth.js. Toggle a provider by setting its secrets in the
           runtime environment — changes take effect on next app boot.
         </p>
@@ -52,20 +52,20 @@ export default async function SsoPage() {
         {providers.map((p) => (
           <li
             key={p.id}
-            className="rounded-[--radius-lg] border border-[--color-border] bg-[--color-card] p-5"
+            className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5"
           >
             <div className="flex items-center gap-3">
               <Shield
                 className={
                   p.configured
-                    ? "h-5 w-5 text-[--color-success]"
-                    : "h-5 w-5 text-[--color-muted-fg]"
+                    ? "h-5 w-5 text-[var(--color-success)]"
+                    : "h-5 w-5 text-[var(--color-muted-fg)]"
                 }
                 aria-hidden="true"
               />
               <div className="flex-1">
                 <h2 className="font-semibold">{p.label}</h2>
-                <p className="text-xs text-[--color-muted-fg]">
+                <p className="text-xs text-[var(--color-muted-fg)]">
                   {p.configured
                     ? "Configured and available on the sign-in page."
                     : "Not configured — sign-in option hidden."}
@@ -75,7 +75,7 @@ export default async function SsoPage() {
                 href={p.docsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-[--color-primary] hover:underline"
+                className="text-xs text-[var(--color-primary)] hover:underline"
               >
                 Docs →
               </a>
@@ -86,13 +86,13 @@ export default async function SsoPage() {
                   <KeyRound
                     className={
                       v.set
-                        ? "h-3.5 w-3.5 text-[--color-success]"
-                        : "h-3.5 w-3.5 text-[--color-danger]"
+                        ? "h-3.5 w-3.5 text-[var(--color-success)]"
+                        : "h-3.5 w-3.5 text-[var(--color-danger)]"
                     }
                     aria-hidden="true"
                   />
                   <code>{v.name}</code>
-                  <span className="text-[--color-muted-fg]">
+                  <span className="text-[var(--color-muted-fg)]">
                     {v.set ? "set" : "missing"}
                   </span>
                 </li>
@@ -102,7 +102,7 @@ export default async function SsoPage() {
         ))}
       </ul>
 
-      <p className="rounded-[--radius-md] border border-[--color-border] bg-[--color-muted]/50 p-3 text-xs text-[--color-muted-fg]">
+      <p className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] p-3 text-xs text-[var(--color-muted-fg)]">
         Adding a new provider (GitHub, Microsoft, etc.): add it to <code>lib/auth.ts</code>,
         set the matching <code>AUTH_*</code> env vars, and redeploy. Providers are registered at
         app boot from the environment, not from the database.

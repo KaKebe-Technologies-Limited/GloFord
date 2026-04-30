@@ -17,7 +17,7 @@ export default async function ProgramsListPage() {
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Programs</h1>
-          <p className="text-sm text-[--color-muted-fg]">The initiatives your organization runs.</p>
+          <p className="text-sm text-[var(--color-muted-fg)]">The initiatives your organization runs.</p>
         </div>
         <Button asChild size="sm">
           <Link href="/admin/programs/new">

@@ -25,7 +25,7 @@ export function RestoreButton({ id }: { id: string }) {
       <Button size="sm" variant="outline" onClick={restore} disabled={pending}>
         {pending ? "Restoring…" : "Restore"}
       </Button>
-      {err ? <span className="text-xs text-[--color-danger]">{err}</span> : null}
+      {err ? <span className="text-xs text-[var(--color-danger)]">{err}</span> : null}
     </div>
   );
 }

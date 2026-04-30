@@ -109,7 +109,7 @@ export function listPublishedPrograms() {
       db.program.findMany({
         where: { status: "PUBLISHED" },
         orderBy: [{ order: "asc" }, { updatedAt: "desc" }],
-        select: { id: true, slug: true, title: true, summary: true },
+        select: { id: true, slug: true, title: true, summary: true, coverMediaId: true, cover: { select: { url: true, alt: true } } },
       }),
     ["programs-pub"],
     { tags: [tags.programs()], revalidate: 3600 },

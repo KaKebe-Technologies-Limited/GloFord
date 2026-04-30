@@ -1,32 +1,155 @@
 {
   "common": {
     "signIn": "Connexion",
-    "signOut": "Déconnexion",
-    "loading": "Chargement…",
+    "signOut": "D\u00e9connexion",
+    "loading": "Chargement\u2026",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "confirm": "Confirmer",
-    "error": "Une erreur est survenue"
+    "error": "Une erreur est survenue",
+    "back": "Retour",
+    "next": "Suivant",
+    "close": "Fermer",
+    "submit": "Envoyer",
+    "search": "Rechercher",
+    "edit": "Modifier",
+    "view": "Voir",
+    "required": "Obligatoire",
+    "optional": "facultatif",
+    "learnMore": "En savoir plus",
+    "readMore": "Lire la suite",
+    "viewAll": "Voir tout",
+    "backTo": "Retour \u00e0 {name}"
   },
   "public": {
     "nav": {
       "home": "Accueil",
-      "about": "À propos",
+      "about": "\u00c0 propos",
+      "whoWeAre": "Qui sommes-nous",
+      "leadership": "Direction",
+      "ourHistory": "Notre histoire",
+      "partners": "Partenaires",
+      "ourWork": "Notre travail",
+      "ourApproach": "Notre approche",
+      "impactStories": "Histoires d\u2019impact",
+      "reports": "Rapports",
       "programs": "Programmes",
       "blog": "Blog",
-      "events": "Événements",
+      "getInvolved": "S\u2019impliquer",
+      "volunteer": "B\u00e9n\u00e9volat",
+      "careers": "Carri\u00e8res",
+      "internships": "Stages",
+      "partnerWithUs": "Devenir partenaire",
       "donate": "Faire un don",
-      "contact": "Contact"
+      "media": "M\u00e9dias",
+      "events": "\u00c9v\u00e9nements",
+      "pressMedia": "Presse et m\u00e9dias",
+      "gallery": "Galerie",
+      "contact": "Contact",
+      "openMenu": "Ouvrir le menu",
+      "closeMenu": "Fermer le menu",
+      "home_aria": "Accueil {name}"
     },
     "hero": {
-      "heading": "Transformer des vies par l'action communautaire",
-      "subheading": "Gloford s'associe aux communautés pour faire progresser la santé, l'éducation et la résilience.",
-      "cta": "Soutenir notre travail"
+      "heading": "Transformer des vies par l\u2019action communautaire",
+      "subheading": "Gloford s\u2019associe aux communaut\u00e9s pour faire progresser la sant\u00e9, l\u2019\u00e9ducation et la r\u00e9silience.",
+      "cta": "Soutenir notre travail",
+      "previousSlide": "Diapositive pr\u00e9c\u00e9dente",
+      "nextSlide": "Diapositive suivante",
+      "slideN": "Diapositive {n}"
     },
     "footer": {
-      "rights": "Tous droits réservés.",
-      "newsletter": "Abonnez-vous à notre newsletter"
+      "rights": "Tous droits r\u00e9serv\u00e9s.",
+      "newsletter": "Abonnez-vous \u00e0 notre newsletter",
+      "quickLinks": "Liens rapides",
+      "getInTouch": "Nous contacter",
+      "stayConnected": "Rester connect\u00e9",
+      "newsletterDesc": "Abonnez-vous \u00e0 notre newsletter pour les derni\u00e8res mises \u00e0 jour, histoires d\u2019impact et fa\u00e7ons de s\u2019impliquer.",
+      "privacyNote": "Nous respectons votre vie priv\u00e9e. D\u00e9sabonnez-vous \u00e0 tout moment.",
+      "privacyPolicy": "Politique de confidentialit\u00e9",
+      "termsOfService": "Conditions d\u2019utilisation",
+      "tagline": "Une organisation communautaire d\u00e9di\u00e9e \u00e0 la construction de communaut\u00e9s r\u00e9silientes gr\u00e2ce \u00e0 des programmes int\u00e9gr\u00e9s en \u00e9ducation, sant\u00e9, moyens de subsistance, \u00e9galit\u00e9 des sexes et durabilit\u00e9 environnementale.",
+      "defaultAddress": "Kampala, Ouganda",
+      "defaultPhone": "+256 700 000000",
+      "defaultEmail": "info@gloford.org",
+      "social": {
+        "facebook": "Facebook",
+        "twitter": "Twitter",
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn",
+        "youtube": "YouTube"
+      }
+    },
+    "newsletter": {
+      "namePlaceholder": "Votre nom (facultatif)",
+      "emailPlaceholder": "Adresse e-mail",
+      "nameLabel": "Nom",
+      "emailLabel": "E-mail",
+      "subscribe": "S\u2019abonner",
+      "subscribing": "Abonnement\u2026",
+      "successMessage": "V\u00e9rifiez votre bo\u00eete de r\u00e9ception \u2014 nous avons envoy\u00e9 un lien de confirmation \u00e0 {email}.",
+      "alreadySubscribed": "Vous \u00eates d\u00e9j\u00e0 abonn\u00e9."
+    },
+    "testimonials": {
+      "defaultHeading": "Ce que disent les gens",
+      "previousTestimonial": "T\u00e9moignage pr\u00e9c\u00e9dent",
+      "nextTestimonial": "T\u00e9moignage suivant",
+      "testimonialN": "T\u00e9moignage {n}"
+    },
+    "faq": {
+      "defaultHeading": "Questions fr\u00e9quemment pos\u00e9es"
+    },
+    "donate": {
+      "title": "Faire un don",
+      "supporting": "Soutenir {campaign}",
+      "notAvailableTitle": "Dons non disponibles",
+      "notAvailableDesc": "Les fournisseurs de paiement sont en cours de configuration. Veuillez r\u00e9essayer plus tard.",
+      "steps": {
+        "amount": "Montant",
+        "details": "D\u00e9tails",
+        "payment": "Paiement",
+        "confirm": "Confirmer"
+      },
+      "selectAmount": "S\u00e9lectionner le montant",
+      "customAmount": "Montant personnalis\u00e9",
+      "yourInformation": "Vos informations",
+      "emailLabel": "E-mail *",
+      "emailPlaceholder": "votre@email.com",
+      "nameLabel": "Nom (facultatif)",
+      "namePlaceholder": "Votre nom",
+      "choosePayment": "Choisir le mode de paiement",
+      "mobileMoneyDesc": "Approuver sur votre t\u00e9l\u00e9phone",
+      "onlinePaymentDesc": "Paiement en ligne s\u00e9curis\u00e9",
+      "mobileNumberLabel": "Num\u00e9ro de mobile *",
+      "mobileNumberPlaceholder": "+256 7XX XXXXXX",
+      "mobileNumberHint": "Incluez l\u2019indicatif du pays. Vous recevrez une invite d\u2019approbation.",
+      "confirmTitle": "Confirmer votre don",
+      "amountLabel": "Montant",
+      "emailConfirmLabel": "E-mail",
+      "nameConfirmLabel": "Nom",
+      "paymentLabel": "Paiement",
+      "phoneLabel": "T\u00e9l\u00e9phone",
+      "campaignLabel": "Campagne",
+      "back": "Retour",
+      "next": "Suivant",
+      "donate": "Donner {amount}",
+      "processing": "Traitement en cours...",
+      "secureNote": "\uD83D\uDD12 Paiement s\u00e9curis\u00e9 \u00b7 Vos donn\u00e9es sont chiffr\u00e9es",
+      "errorEmail": "L\u2019e-mail est obligatoire",
+      "errorProvider": "S\u00e9lectionnez un mode de paiement",
+      "errorPhone": "Le num\u00e9ro de t\u00e9l\u00e9phone est requis pour le mobile money",
+      "errorGeneric": "Impossible de d\u00e9marrer le don",
+      "modal": {
+        "checkPhone": "V\u00e9rifiez votre t\u00e9l\u00e9phone",
+        "checkPhoneDesc": "Nous avons envoy\u00e9 une demande de paiement \u00e0 {phone}. Entrez votre code PIN pour confirmer.",
+        "successTitle": "Merci\u00a0!",
+        "successDesc": "Votre don a \u00e9t\u00e9 re\u00e7u avec succ\u00e8s. Un re\u00e7u est en route.",
+        "failedTitle": "Paiement non compl\u00e9t\u00e9",
+        "failedDesc": "La demande a expir\u00e9 ou votre fournisseur a signal\u00e9 un \u00e9chec. Aucun montant n\u2019a \u00e9t\u00e9 d\u00e9bit\u00e9.",
+        "close": "Fermer",
+        "tryAgain": "R\u00e9essayer"
+      }
     }
   },
   "admin": {
@@ -34,6 +157,11 @@
     "nav": {
       "content": "Contenu",
       "pages": "Pages",
+      "impactStories": "Histoires d\u2019impact",
+      "team": "\u00c9quipe",
+      "reports": "Rapports",
+      "partners": "Partenaires",
+      "press": "Presse et m\u00e9dias",
       "programs": "Programmes",
       "posts": "Blog",
       "media": "M\u00e9dia",
@@ -45,8 +173,19 @@
       "subscribers": "Abonn\u00e9s",
       "segments": "Segments",
       "newsletters": "Bulletins",
-      "emailCampaigns": "Campagnes d'e-mail",
+      "emailCampaigns": "Campagnes e-mail",
       "events": "\u00c9v\u00e9nements",
+      "people": "Personnes",
+      "testimonials": "T\u00e9moignages",
+      "leaderMessages": "Messages des dirigeants",
+      "engage": "Engagement",
+      "careers": "Carri\u00e8res",
+      "volunteer": "B\u00e9n\u00e9volat",
+      "partnerApplications": "Candidatures partenaires",
+      "contactMessages": "Messages de contact",
+      "faqs": "FAQ",
+      "heroSlides": "Diapositives hero",
+      "siteStats": "Statistiques du site",
       "users": "Utilisateurs",
       "roles": "R\u00f4les",
       "settings": "Param\u00e8tres",
@@ -54,7 +193,7 @@
       "nav": "Navigation",
       "payments": "Paiements",
       "system": "Syst\u00e8me",
-      "audit": "Journal d'audit",
+      "audit": "Journal d\u2019audit",
       "versions": "Versions",
       "deadLetter": "Lettre morte",
       "featureFlags": "Fonctionnalit\u00e9s",
@@ -77,20 +216,20 @@
         "donationsTotal": "Dons \u2014 total",
         "donationsTotalSub": "R\u00e9ussis uniquement",
         "events": "\u00c9v\u00e9nements \u00e0 venir",
-        "eventsSub": "\u00c0 partir d'aujourd'hui",
+        "eventsSub": "\u00c0 partir d\u2019aujourd\u2019hui",
         "newsletters": "Bulletins",
         "newslettersSub": "{count} en brouillon"
       },
       "recentActivity": {
         "title": "Activit\u00e9 r\u00e9cente",
-        "viewAudit": "Journal d'audit",
-        "empty": "Aucune activit\u00e9 pour le moment. Votre premi\u00e8re action appara\u00eetra ici.",
+        "viewAudit": "Journal d\u2019audit",
+        "empty": "Aucune activit\u00e9 pour le moment. Votre premi\u00e8re action appara\u00eetre ici.",
         "onEntity": "sur {type}"
       },
       "deadLetter": {
-        "title": "File d'attente",
+        "title": "File d\u2019attente",
         "zero": "Bo\u00eete de r\u00e9ception vide",
-        "pending": "\u00e9v\u00e9nements en attente d'examen",
+        "pending": "\u00e9v\u00e9nements en attente d\u2019examen",
         "action": "Examiner maintenant"
       },
       "quickLinks": {
@@ -100,12 +239,18 @@
         "users": "Inviter des utilisateurs"
       }
     }
-    },
+  },
   "auth": {
-    "signInTitle": "Connexion à Gloford",
-    "email": "E-mail",
+    "signInTitle": "Connexion \u00e0 Gloford",
+    "email": "Adresse e-mail",
     "password": "Mot de passe",
-    "continueWithGoogle": "Continuer avec Google",
-    "invalidCredentials": "E-mail ou mot de passe invalide"
+    "rememberMe": "Se souvenir de moi",
+    "forgotPassword": "Mot de passe oubli\u00e9\u00a0?",
+    "signingIn": "Connexion\u2026",
+    "invalidCredentials": "E-mail ou mot de passe invalide",
+    "emailPlaceholder": "vous@exemple.com",
+    "passwordPlaceholder": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    "signInToAdmin": "Connectez-vous \u00e0 votre compte administrateur",
+    "backTo": "\u2190 Retour \u00e0 {name}"
   }
 }

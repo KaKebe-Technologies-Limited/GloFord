@@ -4,6 +4,7 @@ import { getMailProvider } from "@/lib/mail";
 import { buildBrand } from "@/lib/mail/brand";
 import { newsletterEmail } from "@/lib/mail/templates";
 import { blocksToEmailHtml, blocksToPlainText } from "@/lib/blocks/toEmail";
+import { sanitizeHtml } from "@/lib/blocks/sanitize";
 
 /**
  * Walks ACTIVE CampaignEnrollments whose nextSendAt is due, dispatches
@@ -54,7 +55,7 @@ export const campaignStepRunner = inngest.createFunction(
 
         const brand = await buildBrand();
         const unsubUrl = `${brand.siteUrl}/newsletter/unsubscribe/${e.subscriber.unsubToken}`;
-        const html = blocksToEmailHtml(emailStep.content as unknown);
+        const html = sanitizeHtml(blocksToEmailHtml(emailStep.content as unknown));
         const text = blocksToPlainText(emailStep.content as unknown);
         const mail = newsletterEmail({
           brand,
