@@ -24,6 +24,8 @@ export const createProgram = createService({
         body: input.body as never,
         coverMediaId: input.coverMediaId ?? undefined,
         order: input.order,
+        seoTitle: input.seoTitle ?? null,
+        seoDesc: input.seoDesc ?? null,
       },
     });
     revalidateTag(tags.programs());
@@ -49,6 +51,8 @@ export const updateProgram = createService({
         ...(rest.body !== undefined && { body: rest.body as never }),
         ...(rest.coverMediaId !== undefined && { coverMediaId: rest.coverMediaId }),
         ...(rest.order !== undefined && { order: rest.order }),
+        ...("seoTitle" in rest && { seoTitle: rest.seoTitle ?? null }),
+        ...("seoDesc" in rest && { seoDesc: rest.seoDesc ?? null }),
       },
     });
     revalidateTag(tags.programs());

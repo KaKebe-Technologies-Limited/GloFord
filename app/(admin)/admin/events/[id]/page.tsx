@@ -52,6 +52,8 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
           coverUrl: row.cover?.url ?? null,
           isPublic: row.isPublic,
           segmentIds: row.segments.map((s) => s.id),
+          seoTitle: row.seoTitle ?? null,
+          seoDesc: row.seoDesc ?? null,
         }}
       />
 

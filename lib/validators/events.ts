@@ -13,6 +13,8 @@ export const eventCreateSchema = z
     coverMediaId: cuid.nullable().optional(),
     isPublic: z.boolean().default(true),
     segmentIds: z.array(cuid).default([]),
+    seoTitle: z.string().trim().max(200).optional().nullable(),
+    seoDesc: z.string().trim().max(400).optional().nullable(),
   })
   .refine(
     (v) => !v.endsAt || v.endsAt >= v.startsAt,
@@ -30,6 +32,8 @@ export const eventUpdateSchema = z.object({
   coverMediaId: cuid.nullable().optional(),
   isPublic: z.boolean().optional(),
   segmentIds: z.array(cuid).optional(),
+  seoTitle: z.string().trim().max(200).optional().nullable(),
+  seoDesc: z.string().trim().max(400).optional().nullable(),
 });
 
 export const eventDeleteSchema = z.object({ id: cuid });

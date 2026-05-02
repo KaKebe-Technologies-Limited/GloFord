@@ -25,6 +25,8 @@ type Initial = {
   coverMediaId?: string;
   coverUrl?: string | null;
   order?: number;
+  seoTitle?: string | null;
+  seoDesc?: string | null;
 };
 
 export function ProgramForm({ initial }: { initial?: Initial }) {
@@ -36,6 +38,8 @@ export function ProgramForm({ initial }: { initial?: Initial }) {
   const [coverUrl, setCoverUrl] = useState<string | null>(initial?.coverUrl ?? null);
   const [order, setOrder] = useState(initial?.order ?? 0);
   const [body, setBody] = useState<Block[]>(initial?.body ?? []);
+  const [seoTitle, setSeoTitle] = useState(initial?.seoTitle ?? "");
+  const [seoDesc, setSeoDesc] = useState(initial?.seoDesc ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -50,6 +54,8 @@ export function ProgramForm({ initial }: { initial?: Initial }) {
           body,
           coverMediaId: coverMediaId || null,
           order: Number(order),
+          seoTitle: seoTitle || null,
+          seoDesc: seoDesc || null,
         };
         if (isEdit) {
           await updateProgramAction({ id: initial!.id!, ...payload });
@@ -103,6 +109,19 @@ export function ProgramForm({ initial }: { initial?: Initial }) {
             <Field label="Order" hint="Lower number = shown first">
               <input type="number" value={order} onChange={(e) => setOrder(Number(e.target.value))} className={inputCls} />
             </Field>
+          </div>
+        </section>
+
+        {/* SEO */}
+        <section className="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted-fg)]">SEO & Social</h2>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">SEO title <span className="text-[var(--color-muted-fg)] font-normal">(overrides program title in search results)</span></label>
+            <input type="text" value={seoTitle} onChange={e => setSeoTitle(e.target.value)} placeholder={title} maxLength={200} className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Meta description <span className="text-[var(--color-muted-fg)] font-normal">(overrides summary for OG/search)</span></label>
+            <textarea value={seoDesc} onChange={e => setSeoDesc(e.target.value)} rows={3} maxLength={400} className={inputCls} />
           </div>
         </section>
 

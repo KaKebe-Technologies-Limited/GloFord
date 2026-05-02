@@ -44,6 +44,8 @@ export const createPost = createService({
         body: input.body as never,
         coverMediaId: input.coverMediaId ?? undefined,
         authorId: actor.userId,
+        seoTitle: input.seoTitle ?? null,
+        seoDesc: input.seoDesc ?? null,
         tags: { create: tagIds.map((tagId) => ({ tagId })) },
       },
     });
@@ -70,6 +72,8 @@ export const updatePost = createService({
         ...(rest.excerpt !== undefined && { excerpt: rest.excerpt }),
         ...(rest.body !== undefined && { body: rest.body as never }),
         ...(rest.coverMediaId !== undefined && { coverMediaId: rest.coverMediaId }),
+        ...("seoTitle" in rest && { seoTitle: rest.seoTitle ?? null }),
+        ...("seoDesc" in rest && { seoDesc: rest.seoDesc ?? null }),
       },
     });
 

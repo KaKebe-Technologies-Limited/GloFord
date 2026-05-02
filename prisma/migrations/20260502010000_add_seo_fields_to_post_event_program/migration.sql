@@ -1,0 +1,6 @@
+ALTER TABLE "Post" ADD COLUMN "seoTitle" TEXT;
+ALTER TABLE "Post" ADD COLUMN "seoDesc" TEXT;
+ALTER TABLE "Event" ADD COLUMN "seoTitle" TEXT;
+ALTER TABLE "Event" ADD COLUMN "seoDesc" TEXT;
+ALTER TABLE "Program" ADD COLUMN "seoTitle" TEXT;
+ALTER TABLE "Program" ADD COLUMN "seoDesc" TEXT;

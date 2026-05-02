@@ -28,11 +28,11 @@ export async function generateMetadata(
   try {
     const p = await getPublishedProgramBySlug(slug);
     return {
-      title: p.title,
-      description: p.summary,
+      title: p.seoTitle ?? p.title,
+      description: p.seoDesc ?? p.summary,
       openGraph: {
-        title: p.title,
-        description: p.summary,
+        title: p.seoTitle ?? p.title,
+        description: p.seoDesc ?? p.summary ?? "",
         type: "article",
         url: `${APP_URL}/programs/${slug}`,
         images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],

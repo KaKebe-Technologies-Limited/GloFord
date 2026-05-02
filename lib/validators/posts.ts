@@ -9,6 +9,8 @@ export const postCreateSchema = z.object({
   body: blocksSchema.optional().default([]),
   coverMediaId: z.string().optional().nullable(),
   tagSlugs: z.array(slug).max(12).default([]),
+  seoTitle: z.string().trim().max(200).optional().nullable(),
+  seoDesc: z.string().trim().max(400).optional().nullable(),
 });
 
 export const postUpdateSchema = postCreateSchema.partial().extend({ id: cuid });

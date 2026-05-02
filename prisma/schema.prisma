@@ -217,6 +217,8 @@ model Program {
   coverMediaId String?
   status       ContentStatus @default(DRAFT)
   order        Int           @default(0)
+  seoTitle     String?
+  seoDesc      String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -239,6 +241,9 @@ model Post {
   publishedAt  DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+
+  seoTitle String?
+  seoDesc  String?
 
   cover  Media?    @relation("PostCover", fields: [coverMediaId], references: [id])
   author User      @relation("PostAuthor", fields: [authorId], references: [id])
@@ -641,6 +646,8 @@ model Event {
   coverMediaId String?
   isPublic     Boolean   @default(true)
   capacity     Int?
+  seoTitle     String?
+  seoDesc      String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

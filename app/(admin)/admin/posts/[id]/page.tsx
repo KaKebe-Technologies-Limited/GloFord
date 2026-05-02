@@ -33,6 +33,8 @@ export default async function EditPost({ params }: { params: Promise<{ id: strin
           coverMediaId: post.coverMediaId ?? undefined,
           coverUrl: post.cover?.url ?? null,
           tagSlugs: post.tags.map((pt) => pt.tag.slug),
+          seoTitle: post.seoTitle ?? null,
+          seoDesc: post.seoDesc ?? null,
         }}
       />
     </div>

@@ -9,6 +9,8 @@ export const programCreateSchema = z.object({
   body: blocksSchema.optional().default([]),
   coverMediaId: z.string().optional().nullable(),
   order: z.number().int().min(0).max(9999).default(0),
+  seoTitle: z.string().trim().max(200).optional().nullable(),
+  seoDesc: z.string().trim().max(400).optional().nullable(),
 });
 
 export const programUpdateSchema = programCreateSchema.partial().extend({ id: cuid });

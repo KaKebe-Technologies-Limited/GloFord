@@ -33,6 +33,8 @@ export default async function EditProgram({ params }: { params: Promise<{ id: st
           coverMediaId: program.coverMediaId ?? undefined,
           coverUrl: program.cover?.url ?? null,
           order: program.order,
+          seoTitle: program.seoTitle ?? null,
+          seoDesc: program.seoDesc ?? null,
         }}
       />
     </div>

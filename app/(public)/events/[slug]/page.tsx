@@ -32,12 +32,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const e = await getPublicEvent(slug);
   if (!e) return { title: "Event" };
-  const desc = e.description.slice(0, 160);
+  const title = e.seoTitle ?? e.title;
+  const desc = e.seoDesc ?? e.description.slice(0, 160);
   return {
-    title: e.title,
+    title,
     description: desc,
     openGraph: {
-      title: e.title,
+      title,
       description: desc,
       type: "article",
       url: `${APP_URL}/events/${slug}`,

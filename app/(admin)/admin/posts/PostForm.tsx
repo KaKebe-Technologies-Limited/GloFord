@@ -21,6 +21,8 @@ type Initial = {
   coverMediaId?: string;
   coverUrl?: string | null;
   tagSlugs?: string[];
+  seoTitle?: string | null;
+  seoDesc?: string | null;
 };
 
 export function PostForm({ initial }: { initial?: Initial }) {
@@ -32,6 +34,8 @@ export function PostForm({ initial }: { initial?: Initial }) {
   const [coverUrl, setCoverUrl] = useState<string | null>(initial?.coverUrl ?? null);
   const [tagInput, setTagInput] = useState((initial?.tagSlugs ?? []).join(", "));
   const [body, setBody] = useState<Block[]>(initial?.body ?? []);
+  const [seoTitle, setSeoTitle] = useState(initial?.seoTitle ?? "");
+  const [seoDesc, setSeoDesc] = useState(initial?.seoDesc ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -50,6 +54,8 @@ export function PostForm({ initial }: { initial?: Initial }) {
           body,
           coverMediaId: coverMediaId || null,
           tagSlugs,
+          seoTitle: seoTitle || null,
+          seoDesc: seoDesc || null,
         };
         if (isEdit) {
           await updatePostAction({ id: initial!.id!, ...payload });
@@ -102,6 +108,19 @@ export function PostForm({ initial }: { initial?: Initial }) {
           <Field label="Tags" hint="Comma-separated, lowercase slugs. New tags are created automatically.">
             <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} className={inputCls} />
           </Field>
+        </section>
+
+        {/* SEO */}
+        <section className="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted-fg)]">SEO & Social</h2>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">SEO title <span className="text-[var(--color-muted-fg)] font-normal">(overrides post title in search results)</span></label>
+            <input type="text" value={seoTitle} onChange={e => setSeoTitle(e.target.value)} placeholder={title} maxLength={200} className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Meta description <span className="text-[var(--color-muted-fg)] font-normal">(overrides excerpt for OG/search)</span></label>
+            <textarea value={seoDesc} onChange={e => setSeoDesc(e.target.value)} rows={3} maxLength={400} className={inputCls} />
+          </div>
         </section>
 
         <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 space-y-4">

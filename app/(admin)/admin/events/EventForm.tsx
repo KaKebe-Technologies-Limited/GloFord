@@ -23,6 +23,8 @@ type Initial = {
   coverUrl?: string | null;
   isPublic?: boolean;
   segmentIds?: string[];
+  seoTitle?: string | null;
+  seoDesc?: string | null;
 };
 
 function toLocalInput(iso?: string | null): string {
@@ -44,6 +46,8 @@ export function EventForm({ initial, segments = [] }: { initial?: Initial; segme
   const [coverUrl, setCoverUrl] = useState(initial?.coverUrl ?? "");
   const [isPublic, setIsPublic] = useState(initial?.isPublic ?? true);
   const [selectedSegments, setSelectedSegments] = useState<string[]>(initial?.segmentIds ?? []);
+  const [seoTitle, setSeoTitle] = useState(initial?.seoTitle ?? "");
+  const [seoDesc, setSeoDesc] = useState(initial?.seoDesc ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -61,6 +65,8 @@ export function EventForm({ initial, segments = [] }: { initial?: Initial; segme
           coverMediaId: coverMediaId || null,
           isPublic,
           segmentIds: selectedSegments,
+          seoTitle: seoTitle || null,
+          seoDesc: seoDesc || null,
         };
         if (isEdit) await updateEventAction({ id: initial!.id!, ...payload });
         else await createEventAction(payload);
@@ -164,6 +170,19 @@ export function EventForm({ initial, segments = [] }: { initial?: Initial; segme
           />
           Public (show on the website)
         </label>
+      </section>
+
+      {/* SEO */}
+      <section className="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted-fg)]">SEO & Social</h2>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium">SEO title <span className="text-[var(--color-muted-fg)] font-normal">(overrides event title in search results)</span></label>
+          <input type="text" value={seoTitle} onChange={e => setSeoTitle(e.target.value)} placeholder={title} maxLength={200} className={inputCls} />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium">Meta description <span className="text-[var(--color-muted-fg)] font-normal">(overrides description for OG/search)</span></label>
+          <textarea value={seoDesc} onChange={e => setSeoDesc(e.target.value)} rows={3} maxLength={400} className={inputCls} />
+        </div>
       </section>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">

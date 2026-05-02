@@ -28,11 +28,11 @@ export async function generateMetadata(
   try {
     const p = await getPublishedPostBySlug(slug);
     return {
-      title: p.title,
-      description: p.excerpt ?? undefined,
+      title: p.seoTitle ?? p.title,
+      description: p.seoDesc ?? p.excerpt ?? undefined,
       openGraph: {
-        title: p.title,
-        description: p.excerpt ?? undefined,
+        title: p.seoTitle ?? p.title,
+        description: p.seoDesc ?? p.excerpt ?? "",
         type: "article",
         url: `${APP_URL}/blog/${slug}`,
         images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
