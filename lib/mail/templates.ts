@@ -12,7 +12,7 @@ type BrandContext = {
   logoUrl?: string;
 };
 
-function shell(brand: BrandContext, preheader: string, body: string, unsubUrl?: string) {
+function shell(brand: BrandContext, preheader: string, body: string, unsubUrl?: string, prefsUrl?: string) {
   const year = new Date().getFullYear();
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -29,7 +29,7 @@ function shell(brand: BrandContext, preheader: string, body: string, unsubUrl?: 
       <tr><td style="padding:24px 32px 8px;line-height:1.55">${body}</td></tr>
       <tr><td style="padding:16px 32px 32px;border-top:1px solid #eef0f3;font-size:12px;color:#6b7280;line-height:1.5">
         <p style="margin:0 0 8px">You're receiving this email from ${escape(brand.orgName)}.</p>
-        ${unsubUrl ? `<p style="margin:0"><a href="${escape(unsubUrl)}" style="color:#2563eb;text-decoration:underline">Unsubscribe</a> from these emails.</p>` : ""}
+        ${unsubUrl ? `<p style="margin:0"><a href="${escape(unsubUrl)}" style="color:#2563eb;text-decoration:underline">Unsubscribe</a>${prefsUrl ? ` &middot; <a href="${escape(prefsUrl)}" style="color:#2563eb;text-decoration:underline">Manage preferences</a>` : ""}</p>` : ""}
         <p style="margin:8px 0 0">&copy; ${year} ${escape(brand.orgName)}. All rights reserved.</p>
       </td></tr>
     </table>
@@ -90,6 +90,7 @@ export function newsletterEmail({
   bodyHtml,
   bodyText,
   unsubUrl,
+  prefsUrl,
 }: {
   brand: BrandContext;
   subject: string;
@@ -97,11 +98,12 @@ export function newsletterEmail({
   bodyHtml: string;
   bodyText: string;
   unsubUrl: string;
+  prefsUrl?: string;
 }) {
   return {
     subject,
-    html: shell(brand, preheader, bodyHtml, unsubUrl),
-    text: `${bodyText}\n\n---\nUnsubscribe: ${unsubUrl}`,
+    html: shell(brand, preheader, bodyHtml, unsubUrl, prefsUrl),
+    text: `${bodyText}\n\n---\nUnsubscribe: ${unsubUrl}${prefsUrl ? `\nManage preferences: ${prefsUrl}` : ""}`,
   };
 }
 

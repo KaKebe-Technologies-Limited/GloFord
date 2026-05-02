@@ -457,6 +457,7 @@ model Subscriber {
   source      String?
   confirmedAt DateTime?
   unsubToken  String           @unique
+  preferences Json             @default("{\"newsletters\":true,\"campaigns\":true,\"events\":true}")
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 

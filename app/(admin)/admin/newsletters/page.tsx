@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, BarChart3 } from "lucide-react";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { listNewsletters } from "@/lib/services/newsletters";
 import { Button } from "@/components/ui/Button";
@@ -18,11 +18,18 @@ export default async function NewslettersPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Newsletters</h1>
           <p className="text-sm text-[var(--color-muted-fg)]">One-off broadcasts to your subscribers.</p>
         </div>
-        <Button asChild size="sm">
-          <Link href="/admin/newsletters/new">
-            <Plus className="h-4 w-4" /> New newsletter
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link href="/admin/newsletters/analytics">
+              <BarChart3 className="h-4 w-4" /> Analytics
+            </Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link href="/admin/newsletters/new">
+              <Plus className="h-4 w-4" /> New newsletter
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">

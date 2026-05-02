@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Send, Calendar, Trash2 } from "lucide-react";
+import { Send, Calendar, Trash2, FlaskConical } from "lucide-react";
 import {
   createNewsletterAction,
   updateNewsletterAction,
@@ -9,6 +9,7 @@ import {
   sendNewsletterAction,
   deleteNewsletterAction,
 } from "@/lib/actions/newsletters";
+import { sendTestEmailAction } from "@/lib/actions/newsletterTest";
 import dynamic from "next/dynamic";
 
 const BlockEditor = dynamic(
@@ -47,6 +48,8 @@ export function NewsletterForm({
   const [content, setContent] = useState<Block[]>(initial?.content ?? []);
   const [selectedSegments, setSelectedSegments] = useState<string[]>(initial?.segmentIds ?? []);
   const [scheduledAt, setScheduledAt] = useState(initial?.scheduledAt ?? "");
+  const [testEmail, setTestEmail] = useState("");
+  const [testSent, setTestSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -94,6 +97,19 @@ export function NewsletterForm({
         await sendNewsletterAction({ id: initial.id! });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to send");
+      }
+    });
+  };
+
+  const sendTest = () => {
+    if (!initial?.id || !testEmail) return;
+    start(async () => {
+      try {
+        await sendTestEmailAction({ newsletterId: initial.id!, recipientEmail: testEmail });
+        setTestSent(true);
+        setTimeout(() => setTestSent(false), 3000);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to send test");
       }
     });
   };
@@ -178,6 +194,26 @@ export function NewsletterForm({
 
           {isEdit && !readOnly ? (
             <>
+              {/* Test email */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-[var(--color-muted-fg)]">Send test email</p>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    className={`flex-1 ${inputCls}`}
+                  />
+                  <Button onClick={sendTest} disabled={pending || !testEmail} variant="outline" size="md">
+                    <FlaskConical className="h-4 w-4" />
+                  </Button>
+                </div>
+                {testSent && (
+                  <p className="text-xs text-[var(--color-success)]">Test sent!</p>
+                )}
+              </div>
+
               <div className="flex gap-2">
                 <input
                   type="datetime-local"

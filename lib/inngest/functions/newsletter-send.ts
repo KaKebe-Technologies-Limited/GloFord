@@ -28,11 +28,17 @@ export const newsletterSend = inngest.createFunction(
       }
       return db.subscriber.findMany({
         where,
-        select: { id: true, email: true, unsubToken: true },
+        select: { id: true, email: true, unsubToken: true, preferences: true },
       });
     });
 
-    if (audience.length === 0) {
+    // Filter out subscribers who opted out of newsletters
+    const eligible = audience.filter((s) => {
+      const prefs = s.preferences as Record<string, unknown> | null;
+      return !prefs || prefs.newsletters !== false;
+    });
+
+    if (eligible.length === 0) {
       await step.run("mark-empty", () =>
         db.newsletter.update({
           where: { id: newsletter.id },
@@ -48,11 +54,12 @@ export const newsletterSend = inngest.createFunction(
 
     const CHUNK = 50;
     let sent = 0;
-    for (let i = 0; i < audience.length; i += CHUNK) {
-      const chunk = audience.slice(i, i + CHUNK);
+    for (let i = 0; i < eligible.length; i += CHUNK) {
+      const chunk = eligible.slice(i, i + CHUNK);
       await step.run(`send-${i}`, async () => {
         for (const s of chunk) {
           const unsubUrl = `${brand.siteUrl}/newsletter/unsubscribe/${s.unsubToken}`;
+          const prefsUrl = `${brand.siteUrl}/newsletter/preferences/${s.unsubToken}`;
           const mail = newsletterEmail({
             brand,
             subject: newsletter.subject,
@@ -60,6 +67,7 @@ export const newsletterSend = inngest.createFunction(
             bodyHtml: html,
             bodyText: text,
             unsubUrl,
+            prefsUrl,
           });
           try {
             const res = await provider.send({
@@ -113,6 +121,6 @@ export const newsletterSend = inngest.createFunction(
       }),
     );
 
-    return { sent, total: audience.length };
+    return { sent, total: eligible.length, skippedByPrefs: audience.length - eligible.length };
   },
 );
