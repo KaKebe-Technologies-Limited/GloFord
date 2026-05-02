@@ -13,10 +13,22 @@ import { getActiveVolunteerOpportunities } from "@/lib/services/volunteer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Volunteer",
   description:
     "Give your time and talent. Join our volunteer network and help build stronger communities across Uganda.",
+  openGraph: {
+    title: "Volunteer",
+    description:
+      "Give your time and talent. Join our volunteer network and help build stronger communities across Uganda.",
+    type: "website",
+    url: `${APP_URL}/volunteer`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Volunteer" },
 };
 
 export default async function VolunteerPage() {

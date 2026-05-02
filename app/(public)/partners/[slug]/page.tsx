@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { getPublishedCollectionPage } from "@/lib/services/pages";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export async function generateMetadata({
   params,
 }: {
@@ -11,9 +14,19 @@ export async function generateMetadata({
   const { slug } = await params;
   try {
     const page = await getPublishedCollectionPage("partner", slug);
+    const title = page.seoTitle ?? page.title;
+    const description = page.seoDesc ?? undefined;
     return {
-      title: page.seoTitle ?? page.title,
-      description: page.seoDesc ?? undefined,
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "article",
+        url: `${APP_URL}/partners/${slug}`,
+        images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+      },
+      twitter: { card: "summary_large_image" },
     };
   } catch {
     return {};

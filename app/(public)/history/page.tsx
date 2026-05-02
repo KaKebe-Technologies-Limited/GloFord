@@ -6,9 +6,20 @@ import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { ArrowRight, Calendar } from "lucide-react";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Our History",
   description: "The story of our growth from a small community initiative to a regional force for change.",
+  openGraph: {
+    title: "Our History",
+    description: "The story of our growth from a small community initiative to a regional force for change.",
+    type: "website",
+    url: `${APP_URL}/history`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Our History" },
 };
 
 const IMAGES = [

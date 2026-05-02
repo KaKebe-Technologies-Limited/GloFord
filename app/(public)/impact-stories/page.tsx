@@ -5,9 +5,20 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { blocksSchema } from "@/lib/blocks/types";
 import { getCollectionConfig, toCollectionPath } from "@/lib/pages/collections";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Impact Stories",
   description: "Success stories and community impact from our programs.",
+  openGraph: {
+    title: "Impact Stories",
+    description: "Success stories and community impact from our programs.",
+    type: "website",
+    url: `${APP_URL}/impact-stories`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Impact Stories" },
 };
 
 function findPreviewImageId(blocks: unknown): string | null {

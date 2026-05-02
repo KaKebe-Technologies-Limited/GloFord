@@ -3,10 +3,22 @@ import { getTeamMembersByDepartment } from "@/lib/services/teamMembers";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Facebook, Twitter, Linkedin, Instagram, Globe } from "lucide-react";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Our Leadership",
   description:
     "Meet the dedicated team guiding our mission, strategy, and programs across communities.",
+  openGraph: {
+    title: "Our Leadership",
+    description:
+      "Meet the dedicated team guiding our mission, strategy, and programs across communities.",
+    type: "website",
+    url: `${APP_URL}/leadership`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Our Leadership" },
 };
 
 const SOCIAL_ICONS: Record<string, typeof Facebook> = {

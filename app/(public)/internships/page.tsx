@@ -5,9 +5,20 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Briefcase, MapPin, Clock, ArrowRight, GraduationCap } from "lucide-react";
 import Image from "next/image";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Internships",
   description: "Gain real-world experience in community development. Explore our internship opportunities.",
+  openGraph: {
+    title: "Internships",
+    description: "Gain real-world experience in community development. Explore our internship opportunities.",
+    type: "website",
+    url: `${APP_URL}/internships`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Internships" },
 };
 
 export default async function InternshipsPage() {

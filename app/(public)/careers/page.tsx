@@ -6,9 +6,20 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { Briefcase, MapPin, Clock, ArrowRight } from "lucide-react";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Careers",
   description: "Join our team and make a lasting impact. Explore open positions.",
+  openGraph: {
+    title: "Careers",
+    description: "Join our team and make a lasting impact. Explore open positions.",
+    type: "website",
+    url: `${APP_URL}/careers`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Careers" },
 };
 
 const TYPE_LABELS: Record<string, string> = {

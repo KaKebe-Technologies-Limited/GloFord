@@ -5,9 +5,20 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { ContactForm } from "./ContactForm";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const STAFF_OG = `${APP_URL}/seed-images/gloford/hero-staff.jpg`;
+
 export const metadata: Metadata = {
   title: "Contact Us",
   description: "Get in touch with us. We'd love to hear from you.",
+  openGraph: {
+    title: "Contact Us",
+    description: "Get in touch with us. We'd love to hear from you.",
+    type: "website",
+    url: `${APP_URL}/contact`,
+    images: [{ url: STAFF_OG, width: 1200, height: 630, alt: "Gloford Foundation team" }],
+  },
+  twitter: { card: "summary_large_image", title: "Contact Us" },
 };
 
 export default async function ContactPage() {

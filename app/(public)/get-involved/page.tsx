@@ -6,10 +6,22 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { Heart, Users, Briefcase } from "lucide-react";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Get Involved",
   description:
     "Make an impact. Donate, volunteer, or join our team to support lasting community change.",
+  openGraph: {
+    title: "Get Involved",
+    description:
+      "Make an impact. Donate, volunteer, or join our team to support lasting community change.",
+    type: "website",
+    url: `${APP_URL}/get-involved`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Get Involved" },
 };
 
 const CARDS = [

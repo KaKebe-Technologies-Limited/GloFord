@@ -9,9 +9,20 @@ import { FaqSection } from "@/components/public/FaqSection";
 import { PartnerInquiryForm } from "./PartnerInquiryForm";
 import { Handshake, Building2, Globe, Heart, ArrowRight } from "lucide-react";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Partner With Us",
   description: "Collaborate with us to multiply community impact. Submit a partnership inquiry.",
+  openGraph: {
+    title: "Partner With Us",
+    description: "Collaborate with us to multiply community impact. Submit a partnership inquiry.",
+    type: "website",
+    url: `${APP_URL}/partner-with-us`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Partner With Us" },
 };
 
 export default async function PartnerWithUsPage() {

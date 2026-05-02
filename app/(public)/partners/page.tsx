@@ -8,10 +8,22 @@ import { getActiveTestimonials } from "@/lib/services/testimonials";
 import { getActiveFaqs } from "@/lib/services/faqs";
 import { PartnerApplicationForm } from "./PartnerApplicationForm";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Our Partners",
   description:
     "Organizations and institutions collaborating with us to strengthen communities. Apply to become a partner.",
+  openGraph: {
+    title: "Our Partners",
+    description:
+      "Organizations and institutions collaborating with us to strengthen communities. Apply to become a partner.",
+    type: "website",
+    url: `${APP_URL}/partners`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Our Partners" },
 };
 
 function findPreviewImageId(blocks: unknown): string | null {

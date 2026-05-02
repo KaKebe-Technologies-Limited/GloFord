@@ -26,10 +26,22 @@ import {
   Sparkles,
 } from "lucide-react";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Who We Are",
   description:
     "Learn about our story, mission, vision, and the values that drive our work across communities.",
+  openGraph: {
+    title: "Who We Are",
+    description:
+      "Learn about our story, mission, vision, and the values that drive our work across communities.",
+    type: "website",
+    url: `${APP_URL}/who-we-are`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Who We Are" },
 };
 
 export default async function WhoWeArePage() {

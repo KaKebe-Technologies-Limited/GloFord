@@ -4,9 +4,20 @@ import { db } from "@/lib/db";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { getCollectionConfig, toCollectionPath } from "@/lib/pages/collections";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Reports & Accountability",
   description: "Transparency reports, annual summaries, and accountability documents.",
+  openGraph: {
+    title: "Reports & Accountability",
+    description: "Transparency reports, annual summaries, and accountability documents.",
+    type: "website",
+    url: `${APP_URL}/reports`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Reports & Accountability" },
 };
 
 export default async function ReportsPage() {

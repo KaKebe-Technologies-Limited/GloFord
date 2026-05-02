@@ -21,6 +21,9 @@ export async function generateStaticParams() {
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export async function generateMetadata({
   params,
 }: {
@@ -29,9 +32,20 @@ export async function generateMetadata({
   const { slug } = await params;
   const e = await getPublicEvent(slug);
   if (!e) return { title: "Event" };
+  const desc = e.description.slice(0, 160);
   return {
     title: e.title,
-    description: e.description.slice(0, 160),
+    description: desc,
+    openGraph: {
+      title: e.title,
+      description: desc,
+      type: "article",
+      url: `${APP_URL}/events/${slug}`,
+      images: e.cover?.url
+        ? [{ url: e.cover.url, width: 1200, height: 630 }]
+        : [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    },
+    twitter: { card: "summary_large_image" },
   };
 }
 

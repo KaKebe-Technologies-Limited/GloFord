@@ -7,13 +7,25 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 
 type Props = { params: Promise<{ slug: string }> };
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
     const opp = await getVolunteerBySlug(slug);
+    const description = opp.description.slice(0, 160);
     return {
       title: opp.title,
-      description: opp.description.slice(0, 160),
+      description,
+      openGraph: {
+        title: opp.title,
+        description,
+        type: "article",
+        url: `${APP_URL}/volunteer/${slug}`,
+        images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+      },
+      twitter: { card: "summary_large_image" },
     };
   } catch {
     return { title: "Volunteer Opportunity" };

@@ -26,12 +26,22 @@ export const dynamic = "force-dynamic";
 export function generateMetadata(): Metadata {
   const brand = getBrand();
   return {
+    metadataBase: new URL(brand.siteUrl),
     title: {
       default: brand.name,
       template: `%s · ${brand.name}`,
     },
     description: `${brand.name} — community partnerships for impact.`,
     icons: { icon: "/favicon.ico" },
+    openGraph: {
+      siteName: brand.name,
+      type: "website",
+      locale: "en_US",
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@glofordug",
+    },
   };
 }
 

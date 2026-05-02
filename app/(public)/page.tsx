@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
@@ -26,6 +27,24 @@ import {
   Sparkles,
   History,
 } from "lucide-react";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
+export const metadata: Metadata = {
+  title: "Home",
+  description:
+    "Gloford Foundation — strengthening communities through health, youth empowerment, climate resilience, and information access across Uganda.",
+  openGraph: {
+    title: "Gloford Foundation",
+    description:
+      "Strengthening communities through health, youth empowerment, and climate resilience across Uganda.",
+    type: "website",
+    url: APP_URL,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation community" }],
+  },
+  twitter: { card: "summary_large_image", title: "Gloford Foundation" },
+};
 
 export default async function HomePage() {
   const [

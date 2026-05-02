@@ -8,9 +8,20 @@ import { formatMoney } from "@/lib/utils/money";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Heart, Target, ArrowRight } from "lucide-react";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Donate",
   description: "Support community-led programs in health, education, and resilience.",
+  openGraph: {
+    title: "Donate",
+    description: "Support community-led programs in health, education, and resilience.",
+    type: "website",
+    url: `${APP_URL}/donate`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Donate" },
 };
 
 export default async function DonatePage() {

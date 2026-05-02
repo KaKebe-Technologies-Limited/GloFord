@@ -5,9 +5,20 @@ import { CalendarDays, MapPin, ArrowRight, Clock } from "lucide-react";
 import { listPublicEvents } from "@/lib/services/events/public";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export const metadata: Metadata = {
   title: "Events",
   description: "Join us for community events, workshops, and launches.",
+  openGraph: {
+    title: "Events",
+    description: "Join us for community events, workshops, and launches.",
+    type: "website",
+    url: `${APP_URL}/events`,
+    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+  },
+  twitter: { card: "summary_large_image", title: "Events" },
 };
 
 export default async function EventsPage() {

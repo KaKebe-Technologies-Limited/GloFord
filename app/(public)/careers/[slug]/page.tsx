@@ -23,6 +23,9 @@ const TYPE_LABELS: Record<string, string> = {
   VOLUNTEER: "Volunteer",
 };
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 export async function generateMetadata({
   params,
 }: {
@@ -31,9 +34,19 @@ export async function generateMetadata({
   const { slug } = await params;
   try {
     const career = await getCareerBySlug(slug);
+    const title = `${career.title} — Careers`;
+    const description = `${career.title} in ${career.department} at ${career.location}.`;
     return {
-      title: `${career.title} — Careers`,
-      description: `${career.title} in ${career.department} at ${career.location}.`,
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "article",
+        url: `${APP_URL}/careers/${slug}`,
+        images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+      },
+      twitter: { card: "summary_large_image" },
     };
   } catch {
     return {};
