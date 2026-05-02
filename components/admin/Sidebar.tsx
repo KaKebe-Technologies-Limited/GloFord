@@ -31,6 +31,8 @@ import {
   HelpCircle,
   Handshake,
   Newspaper,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -123,66 +125,90 @@ const GROUPS: Group[] = [
 export function Sidebar({
   mobileOpen,
   onMobileClose,
-  userRole,
+  collapsed,
+  onToggleCollapse,
+  user,
 }: {
   mobileOpen: boolean;
   onMobileClose: () => void;
-  userRole: string;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  user: { name: string; role: string; image: string | null };
 }) {
   const t = useTranslations("admin.nav");
   const pathname = usePathname();
+  const expanded = !collapsed;
 
   return (
     <>
-      {/* Mobile drawer backdrop */}
-      {mobileOpen ? (
+      {/* Mobile backdrop */}
+      {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] md:hidden"
           onClick={onMobileClose}
           aria-hidden="true"
         />
-      ) : null}
+      )}
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[rgb(26_40_35)] text-white transition-transform",
-          "md:w-16 md:translate-x-0 lg:w-64",
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/[0.06] bg-[rgb(18_30_26)] text-white transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
+          expanded ? "w-[260px]" : "w-[60px]",
+          mobileOpen
+            ? "w-[260px] translate-x-0"
+            : "-translate-x-full md:translate-x-0",
         )}
         aria-label="Admin navigation"
       >
         {/* Brand header */}
-        <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
-          <Link href="/admin/dashboard" className="flex items-center gap-2 font-bold tracking-tight md:hidden lg:flex">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-sm font-bold">
+        <div className="flex h-[60px] shrink-0 items-center justify-between px-3">
+          <Link
+            href="/admin/dashboard"
+            className="flex items-center gap-2.5 overflow-hidden"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[rgb(37_85_73)] to-[rgb(26_60_52)] text-xs font-bold shadow-[inset_0_1px_0_rgb(255_255_255/0.12)]">
               G
             </div>
-            <span>Gloford</span>
+            <span
+              className={cn(
+                "whitespace-nowrap text-[15px] font-semibold tracking-[-0.01em] transition-all duration-300",
+                expanded ? "w-auto opacity-100" : "w-0 opacity-0",
+              )}
+            >
+              Gloford
+            </span>
           </Link>
-          <Link href="/admin/dashboard" className="hidden md:flex lg:hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-sm font-bold">
-              G
-            </div>
-          </Link>
+          {/* Mobile close */}
           <button
             onClick={onMobileClose}
             aria-label="Close menu"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:text-white md:hidden"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white/40 transition hover:bg-white/[0.06] hover:text-white md:hidden"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {GROUPS.map((group) => (
-            <div key={group.key} className="mb-5">
-              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40 md:hidden lg:block">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3">
+          {GROUPS.map((group, gi) => (
+            <div key={group.key} className={cn(gi > 0 && "mt-5")}>
+              {/* Group label — expanded */}
+              <div
+                className={cn(
+                  "mb-1 overflow-hidden whitespace-nowrap px-2.5 text-[10px] font-medium uppercase tracking-[0.08em] text-white/30 transition-all duration-300",
+                  expanded ? "h-4 opacity-100" : "h-0 opacity-0",
+                )}
+              >
                 {t(group.key)}
-              </p>
-              <ul className="space-y-0.5">
+              </div>
+              {/* Collapsed divider */}
+              {!expanded && gi > 0 && (
+                <div className="mx-auto mb-2 h-px w-5 bg-white/[0.08]" />
+              )}
+              <ul className="space-y-px">
                 {group.items.map(({ href, key, icon: Icon }) => {
-                  const active = pathname === href || pathname.startsWith(href + "/");
+                  const active =
+                    pathname === href || pathname.startsWith(href + "/");
                   return (
                     <li key={href}>
                       <Tooltip delayDuration={0}>
@@ -191,19 +217,42 @@ export function Sidebar({
                             href={href}
                             onClick={onMobileClose}
                             className={cn(
-                              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                              "group relative flex items-center rounded-md transition-colors duration-150",
+                              expanded ? "gap-2.5 px-2.5 py-[7px]" : "justify-center px-0 py-[7px]",
                               active
-                                ? "bg-white/15 font-medium text-white"
-                                : "text-white/60 hover:bg-white/8 hover:text-white/90",
+                                ? "bg-white/[0.10] font-medium text-white"
+                                : "text-white/50 hover:bg-white/[0.06] hover:text-white/80",
                             )}
                           >
-                            <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-                            <span className="md:hidden lg:inline">{t(key)}</span>
+                            {/* Active accent bar */}
+                            {active && (
+                              <div className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-[rgb(45_170_100)]" />
+                            )}
+                            <Icon
+                              className={cn(
+                                "h-[16px] w-[16px] shrink-0 transition-colors",
+                                active
+                                  ? "text-white"
+                                  : "text-white/40 group-hover:text-white/60",
+                              )}
+                              aria-hidden="true"
+                              strokeWidth={1.75}
+                            />
+                            <span
+                              className={cn(
+                                "truncate whitespace-nowrap text-[13px] transition-all duration-300",
+                                expanded ? "w-auto opacity-100" : "w-0 opacity-0",
+                              )}
+                            >
+                              {t(key)}
+                            </span>
                           </Link>
                         </TooltipTrigger>
-                        <TooltipContent side="right" className="md:block lg:hidden">
-                          {t(key)}
-                        </TooltipContent>
+                        {!expanded && (
+                          <TooltipContent side="right" sideOffset={8}>
+                            {t(key)}
+                          </TooltipContent>
+                        )}
                       </Tooltip>
                     </li>
                   );
@@ -213,11 +262,58 @@ export function Sidebar({
           ))}
         </nav>
 
-        {/* User role badge */}
-        <div className="border-t border-white/10 p-4 md:hidden lg:block">
-          <div className="flex items-center gap-2 text-xs text-white/50">
-            <div className="h-2 w-2 rounded-full bg-green-400" />
-            Signed in as <span className="font-medium text-white/80">{userRole}</span>
+        {/* Collapse toggle — desktop */}
+        <div className="hidden shrink-0 border-t border-white/[0.06] md:block">
+          <button
+            onClick={onToggleCollapse}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={cn(
+              "flex w-full items-center py-2.5 text-[11px] text-white/25 transition hover:text-white/50",
+              expanded ? "gap-2.5 px-[18px]" : "justify-center px-0",
+            )}
+          >
+            {collapsed ? (
+              <PanelLeft className="h-[15px] w-[15px] shrink-0" />
+            ) : (
+              <>
+                <PanelLeftClose className="h-[15px] w-[15px] shrink-0" />
+                <span>Collapse</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* User */}
+        <div className="shrink-0 border-t border-white/[0.06] p-2.5">
+          <div
+            className={cn(
+              "flex items-center overflow-hidden rounded-md p-1.5 transition-colors hover:bg-white/[0.04]",
+              expanded ? "gap-2.5" : "justify-center",
+            )}
+          >
+            {user.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.image}
+                alt=""
+                className="h-7 w-7 shrink-0 rounded-full object-cover ring-1 ring-white/10"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[11px] font-semibold text-white/70">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            {expanded && (
+              <div className="min-w-0">
+                <p className="truncate text-[12px] font-medium leading-tight text-white/80">
+                  {user.name}
+                </p>
+                <p className="truncate text-[10px] leading-tight text-white/30">
+                  {user.role}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </aside>

@@ -1,10 +1,12 @@
 name: ${COMPOSE_PROJECT_NAME:-platform}
 
 services:
-  # ── Reverse proxy + Let's Encrypt TLS ──────────────────────
+  # ── Reverse proxy + Let's Encrypt TLS (production only) ─────
+  # Start with: docker compose --profile production up caddy -d
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    profiles: ["production"]
     deploy:
       resources:
         limits:
@@ -81,6 +83,8 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
     deploy:
       resources:
         limits:

@@ -14,7 +14,7 @@ export default async function MediaLibraryPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Media library</h1>
         <p className="text-sm text-[var(--color-muted-fg)]">
-          Uploads are stored on Cloudflare R2 and referenced by id in content blocks.
+          Uploads are stored on the server and referenced by id in content blocks.
         </p>
       </header>
 

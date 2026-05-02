@@ -29,6 +29,7 @@ export default async function HealthPage() {
     baseUrl: process.env.INNGEST_BASE_URL ?? "unset",
   };
   const mail = {
+    smtpHost: process.env.SMTP_HOST ?? "",
     resendKey: envFlag("RESEND_API_KEY"),
     from: process.env.MAIL_FROM ?? "unset",
   };
@@ -75,9 +76,9 @@ export default async function HealthPage() {
         </Card>
 
         <Card icon={Mail} title="Mail provider">
-          <Dot ok={mail.resendKey.set} />
+          <Dot ok={!!mail.smtpHost || mail.resendKey.set} />
           <span className="font-medium">
-            {mail.resendKey.set ? "Resend configured" : "Dry-run mode"}
+            {mail.smtpHost ? `SMTP (${mail.smtpHost})` : mail.resendKey.set ? "Resend" : "Dry-run mode"}
           </span>
           <span className="ml-auto text-xs text-[var(--color-muted-fg)]">{mail.from}</span>
         </Card>

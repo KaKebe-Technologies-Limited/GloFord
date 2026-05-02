@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { getActiveThemeTokens } from "@/lib/theme/service";
 import { getBrand } from "@/config/brand";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 import "./globals.css";
@@ -62,11 +63,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <body>
         <ThemeProvider>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            <TooltipProvider>
-              {children}
-            </TooltipProvider>
-          </NextIntlClientProvider>
+          <NuqsAdapter>
+            <NextIntlClientProvider locale={locale} messages={messages}>
+              <TooltipProvider>
+                {children}
+              </TooltipProvider>
+            </NextIntlClientProvider>
+          </NuqsAdapter>
         </ThemeProvider>
       </body>
     </html>

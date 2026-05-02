@@ -155,6 +155,7 @@
   "admin": {
     "dashboard": "Dashboard",
     "nav": {
+      "dashboard": "Dashboard",
       "content": "Content",
       "pages": "Pages",
       "impactStories": "Impact Stories",

@@ -12,32 +12,41 @@ export function Topbar({
   onMenuClick: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-100 bg-white px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-[52px] items-center justify-between border-b border-[var(--color-border)] bg-[rgb(var(--token-bg)/0.80)] px-4 backdrop-blur-xl sm:px-6">
+      {/* Mobile menu trigger */}
       <button
         onClick={onMenuClick}
         aria-label="Open menu"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 md:hidden"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-muted-fg)] transition hover:bg-[var(--color-muted)] hover:text-[var(--color-fg)] md:hidden"
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-[18px] w-[18px]" />
       </button>
 
-      <div className="flex flex-1 items-center justify-end gap-3">
-        <div className="text-right">
-          <p className="text-sm font-medium leading-none text-gray-900">{user.name}</p>
-          <p className="text-xs text-gray-500">{user.email}</p>
+      {/* Spacer on desktop */}
+      <div className="hidden md:block" />
+
+      {/* Right actions */}
+      <div className="flex items-center gap-2">
+        <div className="mr-1 text-right">
+          <p className="text-[13px] font-medium leading-none text-[var(--color-fg)]">
+            {user.name}
+          </p>
+          <p className="mt-0.5 text-[11px] text-[var(--color-muted-fg)]">
+            {user.email}
+          </p>
         </div>
         {user.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={user.image}
             alt=""
-            className="h-9 w-9 rounded-full object-cover ring-2 ring-gray-100"
+            className="h-8 w-8 rounded-full object-cover ring-1 ring-[var(--color-border)]"
             referrerPolicy="no-referrer"
           />
         ) : (
           <div
             aria-hidden="true"
-            className="grid h-9 w-9 place-items-center rounded-full bg-[var(--color-primary)] text-sm font-bold text-white"
+            className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-primary)] text-[11px] font-bold text-white"
           >
             {user.name.slice(0, 1).toUpperCase()}
           </div>
@@ -46,9 +55,9 @@ export function Topbar({
           <button
             type="submit"
             aria-label="Sign out"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-50 hover:text-gray-600"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-muted-fg)] transition hover:bg-[var(--color-muted)] hover:text-[var(--color-fg)]"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-[15px] w-[15px]" />
           </button>
         </form>
       </div>

@@ -1,4 +1,5 @@
-import { requireActorFromSession } from "@/lib/auth-context";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/observability/log";
 import { DashboardClient } from "./DashboardClient";
@@ -15,7 +16,9 @@ interface TotalAggResult {
 }
 
 export default async function DashboardPage() {
-  await requireActorFromSession();
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  const userName = session.user.name ?? session.user.email ?? "Admin";
 
   const since = new Date();
   since.setDate(since.getDate() - 30);
@@ -123,5 +126,5 @@ export default async function DashboardPage() {
     createdAt: r.createdAt.toISOString(),
   }));
 
-  return <DashboardClient stats={stats} recentAudit={serializedAudit} />;
+  return <DashboardClient stats={stats} recentAudit={serializedAudit} userName={userName} />;
 }
