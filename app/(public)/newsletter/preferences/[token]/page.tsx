@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getSubscriberByToken, parsePreferences } from "@/lib/services/subscribers/preferences";
 import { PreferencesForm } from "./PreferencesForm";
 
@@ -9,6 +10,7 @@ export default async function PreferencesPage({
 }: {
   params: Promise<{ token: string }>;
 }) {
+  const t = await getTranslations("public.newsletterPreferences");
   const { token } = await params;
   const sub = await getSubscriberByToken(token);
   if (!sub || sub.status === "UNSUBSCRIBED") notFound();
@@ -18,10 +20,10 @@ export default async function PreferencesPage({
   return (
     <main className="mx-auto max-w-lg px-4 py-24">
       <h1 className="text-2xl font-semibold tracking-tight text-center">
-        Email Preferences
+        {t("heading")}
       </h1>
       <p className="mt-2 text-center text-sm text-[var(--color-muted-fg)]">
-        Choose which emails you&apos;d like to receive from us, {sub.name || sub.email}.
+        {t("subheading", { recipient: sub.name || sub.email })}
       </p>
       <PreferencesForm token={token} initial={prefs} />
     </main>

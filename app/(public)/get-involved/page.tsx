@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getActiveTestimonials } from "@/lib/services/testimonials";
 import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
@@ -24,41 +25,39 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "Get Involved" },
 };
 
-const CARDS = [
-  {
-    icon: Heart,
-    title: "Donate",
-    description:
-      "Your financial contribution directly supports programs in education, healthcare, and community development. Every gift, big or small, creates lasting impact.",
-    cta: "Make a Donation",
-    href: "/donate",
-    accent: "from-rose-500 to-pink-600",
-  },
-  {
-    icon: Users,
-    title: "Volunteer",
-    description:
-      "Join our volunteer network and contribute your skills, time, and passion. We offer both on-site and remote volunteering opportunities across our programs.",
-    cta: "Explore Volunteering",
-    href: "/volunteer",
-    accent: "from-emerald-500 to-teal-600",
-  },
-  {
-    icon: Briefcase,
-    title: "Careers",
-    description:
-      "Build a career with purpose. We are always looking for talented individuals who are passionate about social impact and community development.",
-    cta: "View Open Positions",
-    href: "/careers",
-    accent: "from-amber-500 to-orange-600",
-  },
-];
-
 export default async function GetInvolvedPage() {
+  const t = await getTranslations("public.getInvolved");
   const [testimonials, stats] = await Promise.all([
     getActiveTestimonials(),
     getActiveSiteStats(),
   ]);
+
+  const CARDS = [
+    {
+      icon: Heart,
+      title: t("cardDonateTitle"),
+      description: t("cardDonateDesc"),
+      cta: t("cardDonateCta"),
+      href: "/donate",
+      accent: "from-rose-500 to-pink-600",
+    },
+    {
+      icon: Users,
+      title: t("cardVolunteerTitle"),
+      description: t("cardVolunteerDesc"),
+      cta: t("cardVolunteerCta"),
+      href: "/volunteer",
+      accent: "from-emerald-500 to-teal-600",
+    },
+    {
+      icon: Briefcase,
+      title: t("cardCareersTitle"),
+      description: t("cardCareersDesc"),
+      cta: t("cardCareersCta"),
+      href: "/careers",
+      accent: "from-amber-500 to-orange-600",
+    },
+  ];
 
   return (
     <>
@@ -67,15 +66,13 @@ export default async function GetInvolvedPage() {
         <div className="relative mx-auto max-w-7xl text-center">
           <ScrollReveal>
             <p className="text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Make a Difference
+              {t("eyebrow")}
             </p>
             <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-[var(--color-fg)] sm:text-5xl lg:text-6xl">
-              Get Involved
+              {t("heading")}
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-[var(--color-muted-fg)]">
-              There are many ways to support our mission. Whether you give your
-              time, talent, or resources, your contribution helps build stronger
-              communities.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -120,7 +117,7 @@ export default async function GetInvolvedPage() {
           <div className="mx-auto max-w-7xl">
             <ScrollReveal>
               <h2 className="text-center font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                Our Impact in Numbers
+                {t("impactHeading")}
               </h2>
             </ScrollReveal>
             <div className="mt-12 grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -148,12 +145,12 @@ export default async function GetInvolvedPage() {
           <div className="mx-auto max-w-7xl">
             <ScrollReveal>
               <h2 className="text-center font-display text-3xl font-bold tracking-tight text-[var(--color-fg)] sm:text-4xl">
-                Voices of Impact
+                {t("voicesHeading")}
               </h2>
             </ScrollReveal>
             <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {testimonials.slice(0, 3).map((t, i) => (
-                <ScrollReveal key={t.id} delay={i * 0.06}>
+              {testimonials.slice(0, 3).map((testimonial, i) => (
+                <ScrollReveal key={testimonial.id} delay={i * 0.06}>
                   <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-8 shadow-sm">
                     <svg
                       className="h-8 w-8 text-[rgb(var(--token-primary)/0.60)]"
@@ -163,27 +160,27 @@ export default async function GetInvolvedPage() {
                       <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151C7.546 6.068 5.983 8.789 5.983 11h4v10H0z" />
                     </svg>
                     <p className="mt-4 text-sm leading-relaxed text-[var(--color-muted-fg)]">
-                      {t.quote}
+                      {testimonial.quote}
                     </p>
                     <div className="mt-6 flex items-center gap-3">
-                      {t.avatarUrl ? (
+                      {testimonial.avatarUrl ? (
                         <img
-                          src={t.avatarUrl}
-                          alt={t.authorName}
+                          src={testimonial.avatarUrl}
+                          alt={testimonial.authorName}
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(var(--token-primary)/0.10)] text-sm font-bold text-[var(--color-primary)]">
-                          {t.authorName[0]}
+                          {testimonial.authorName[0]}
                         </div>
                       )}
                       <div>
                         <p className="text-sm font-semibold text-[var(--color-fg)]">
-                          {t.authorName}
+                          {testimonial.authorName}
                         </p>
-                        {(t.authorRole || t.authorOrg) && (
+                        {(testimonial.authorRole || testimonial.authorOrg) && (
                           <p className="text-xs text-[var(--color-muted-fg)]">
-                            {[t.authorRole, t.authorOrg]
+                            {[testimonial.authorRole, testimonial.authorOrg]
                               .filter(Boolean)
                               .join(", ")}
                           </p>
@@ -203,17 +200,16 @@ export default async function GetInvolvedPage() {
         <div className="mx-auto max-w-7xl text-center">
           <ScrollReveal>
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Every Action Counts
+              {t("ctaHeading")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[var(--color-muted-fg)]">
-              No matter how you choose to get involved, your support helps
-              create lasting change in communities that need it most.
+              {t("ctaDesc")}
             </p>
             <Link
               href="/donate"
               className="mt-8 inline-flex items-center rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-[rgb(var(--token-primary)/0.90)]"
             >
-              Donate Today
+              {t("ctaButton")}
             </Link>
           </ScrollReveal>
         </div>

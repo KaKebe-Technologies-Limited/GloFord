@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { getBrand } from "@/config/brand";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
@@ -22,6 +23,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
+  const t = await getTranslations("public.contact");
+
   const settings = await db.siteSettings
     .findUnique({
       where: { id: "singleton" },
@@ -39,14 +42,13 @@ export default async function ContactPage() {
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <ScrollReveal>
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Reach Out
+              {t("eyebrow")}
             </p>
             <h1 className="font-display text-4xl font-bold text-[var(--color-fg)] sm:text-5xl">
-              Contact Us
+              {t("heading")}
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-[var(--color-muted-fg)]">
-              Have a question, want to partner, or just want to say hello?
-              We&apos;d love to hear from you.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -60,10 +62,10 @@ export default async function ContactPage() {
             <div className="space-y-6 lg:col-span-2">
               <ScrollReveal>
                 <h2 className="font-display text-2xl font-bold text-[var(--color-fg)]">
-                  Get in Touch
+                  {t("getInTouch")}
                 </h2>
                 <p className="mt-2 text-sm text-[var(--color-muted-fg)]">
-                  We respond to all inquiries within 24 hours during business days.
+                  {t("responseTime")}
                 </p>
               </ScrollReveal>
 
@@ -72,26 +74,26 @@ export default async function ContactPage() {
                   {[
                     {
                       icon: Mail,
-                      label: "Email",
+                      label: t("labelEmail"),
                       value: contact.email ?? brand.supportEmail ?? "info@gloford.org",
                       href: `mailto:${contact.email ?? brand.supportEmail ?? "info@gloford.org"}`,
                     },
                     {
                       icon: Phone,
-                      label: "Phone",
+                      label: t("labelPhone"),
                       value: contact.phone ?? "+256 700 000000",
                       href: `tel:${contact.phone ?? "+256700000000"}`,
                     },
                     {
                       icon: MapPin,
-                      label: "Address",
+                      label: t("labelAddress"),
                       value: contact.address ?? "Kampala, Uganda",
                       href: null,
                     },
                     {
                       icon: Clock,
-                      label: "Office Hours",
-                      value: "Mon–Fri, 8:00 AM – 5:00 PM (EAT)",
+                      label: t("labelOfficeHours"),
+                      value: t("officeHoursValue"),
                       href: null,
                     },
                   ].map((item) => (

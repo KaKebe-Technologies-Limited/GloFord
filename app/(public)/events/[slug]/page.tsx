@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { CalendarDays, MapPin, ArrowLeft, CalendarPlus } from "lucide-react";
 import { db } from "@/lib/db";
 import { getPublicEvent } from "@/lib/services/events/public";
@@ -55,6 +56,7 @@ export default async function EventDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const t = await getTranslations("public.eventDetail");
   const { slug } = await params;
   const e = await getPublicEvent(slug);
   if (!e) notFound();
@@ -67,7 +69,7 @@ export default async function EventDetailPage({
         href="/events"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]"
       >
-        <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> All events
+        <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> {t("allEvents")}
       </Link>
 
       <header className="space-y-4">
@@ -126,22 +128,22 @@ export default async function EventDetailPage({
           currentStatus={null}
         />
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-          <h3 className="text-sm font-semibold">Add to calendar</h3>
+          <h3 className="text-sm font-semibold">{t("addToCalendar")}</h3>
           <p className="mt-1 text-xs text-[var(--color-muted-fg)]">
-            Download an .ics file or subscribe to our event feed.
+            {t("addToCalendarDesc")}
           </p>
           <div className="mt-3 flex flex-col gap-2">
             <a
               href={`/api/events/${slug}/ical`}
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2 text-sm font-medium hover:bg-[var(--color-muted)]"
             >
-              <CalendarPlus className="h-4 w-4" /> Download .ics
+              <CalendarPlus className="h-4 w-4" /> {t("downloadIcs")}
             </a>
             <a
               href="/api/events/feed.ics"
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2 text-sm font-medium hover:bg-[var(--color-muted)]"
             >
-              <CalendarDays className="h-4 w-4" /> Subscribe to feed
+              <CalendarDays className="h-4 w-4" /> {t("subscribeToFeed")}
             </a>
           </div>
         </div>

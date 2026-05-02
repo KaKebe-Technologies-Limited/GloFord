@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getActiveCareers } from "@/lib/services/careers";
 import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
@@ -22,19 +23,20 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "Careers" },
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  FULL_TIME: "Full-time",
-  PART_TIME: "Part-time",
-  CONTRACT: "Contract",
-  INTERNSHIP: "Internship",
-  VOLUNTEER: "Volunteer",
-};
-
 export default async function CareersPage() {
+  const t = await getTranslations("public.careers");
   const [careers, stats] = await Promise.all([
     getActiveCareers(),
     getActiveSiteStats(),
   ]);
+
+  const TYPE_LABELS: Record<string, string> = {
+    FULL_TIME: t("typeFullTime"),
+    PART_TIME: t("typePartTime"),
+    CONTRACT: t("typeContract"),
+    INTERNSHIP: t("typeInternship"),
+    VOLUNTEER: t("typeVolunteer"),
+  };
 
   return (
     <>
@@ -43,14 +45,13 @@ export default async function CareersPage() {
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <ScrollReveal>
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Join Our Team
+              {t("eyebrow")}
             </p>
             <h1 className="font-display text-4xl font-bold text-[var(--color-fg)] sm:text-5xl">
-              Careers
+              {t("heading")}
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-[var(--color-muted-fg)]">
-              We are always looking for passionate individuals who share our
-              commitment to community development and social impact.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -78,16 +79,16 @@ export default async function CareersPage() {
       <section className="bg-[var(--color-bg)] py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <h2 className="font-display text-2xl font-bold text-[var(--color-fg)]">Open Positions</h2>
+            <h2 className="font-display text-2xl font-bold text-[var(--color-fg)]">{t("openPositions")}</h2>
           </ScrollReveal>
 
           {careers.length === 0 ? (
             <ScrollReveal>
               <div className="mt-10 rounded-2xl border border-[var(--color-border)] bg-white p-12 text-center">
                 <Briefcase className="mx-auto h-12 w-12 text-[rgb(var(--token-muted-fg)/0.30)]" />
-                <h3 className="mt-4 text-xl font-bold text-[var(--color-fg)]">No openings right now</h3>
+                <h3 className="mt-4 text-xl font-bold text-[var(--color-fg)]">{t("noOpenings")}</h3>
                 <p className="mt-2 text-[var(--color-muted-fg)]">
-                  Check back soon or reach out to us directly.
+                  {t("noOpeningsDesc")}
                 </p>
               </div>
             </ScrollReveal>
@@ -117,7 +118,7 @@ export default async function CareersPage() {
                         </div>
                       </div>
                       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-primary)] transition group-hover:gap-2.5">
-                        View Details <ArrowRight className="h-4 w-4" />
+                        {t("viewDetails")} <ArrowRight className="h-4 w-4" />
                       </span>
                     </div>
                   </Link>
@@ -133,17 +134,16 @@ export default async function CareersPage() {
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <ScrollReveal>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)]">
-              Don&apos;t See Your Role?
+              {t("ctaHeading")}
             </h2>
             <p className="mt-4 text-[var(--color-muted-fg)]">
-              We&apos;re always looking for talented individuals. Send us your resume and
-              we&apos;ll keep you in mind for future opportunities.
+              {t("ctaDesc")}
             </p>
             <Link
               href="/contact"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white transition hover:shadow-lg"
             >
-              Get in Touch <ArrowRight className="h-4 w-4" />
+              {t("ctaButton")} <ArrowRight className="h-4 w-4" />
             </Link>
           </ScrollReveal>
         </div>

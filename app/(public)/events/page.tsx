@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { CalendarDays, MapPin, ArrowRight, Clock } from "lucide-react";
 import { listPublicEvents } from "@/lib/services/events/public";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 export default async function EventsPage() {
+  const t = await getTranslations("public.events");
   const events = await listPublicEvents();
   const now = Date.now();
   const upcoming = events.filter((e) => e.startsAt.getTime() >= now);
@@ -34,14 +36,13 @@ export default async function EventsPage() {
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <ScrollReveal>
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Community Events
+              {t("eyebrow")}
             </p>
             <h1 className="font-display text-4xl font-bold text-[var(--color-fg)] sm:text-5xl">
-              Events & Gatherings
+              {t("heading")}
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-[var(--color-muted-fg)]">
-              Join us online or in person for community events, workshops, and
-              project launches across our regions.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -52,7 +53,7 @@ export default async function EventsPage() {
           <div className="text-center">
             <Clock className="mx-auto mb-4 h-12 w-12 text-[var(--color-muted-fg)]" />
             <p className="text-lg text-[var(--color-muted-fg)]">
-              Events will appear here once scheduled.
+              {t("empty")}
             </p>
           </div>
         </section>
@@ -63,13 +64,13 @@ export default async function EventsPage() {
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <ScrollReveal>
                   <h2 className="mb-10 font-display text-2xl font-bold text-[var(--color-fg)]">
-                    Upcoming Events
+                    {t("upcoming")}
                   </h2>
                 </ScrollReveal>
                 <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                   {upcoming.map((e, i) => (
                     <ScrollReveal key={e.id} delay={i * 0.1}>
-                      <EventCard event={e} />
+                      <EventCard event={e} atLabel={t("at")} viewDetailsLabel={t("viewDetails")} />
                     </ScrollReveal>
                   ))}
                 </div>
@@ -82,13 +83,13 @@ export default async function EventsPage() {
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <ScrollReveal>
                   <h2 className="mb-10 font-display text-2xl font-bold text-[var(--color-fg)]">
-                    Past Events
+                    {t("past")}
                   </h2>
                 </ScrollReveal>
                 <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                   {past.map((e, i) => (
                     <ScrollReveal key={e.id} delay={i * 0.1}>
-                      <EventCard event={e} muted />
+                      <EventCard event={e} muted atLabel={t("at")} viewDetailsLabel={t("viewDetails")} />
                     </ScrollReveal>
                   ))}
                 </div>
@@ -103,17 +104,16 @@ export default async function EventsPage() {
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <ScrollReveal>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)]">
-              Stay Connected
+              {t("ctaHeading")}
             </h2>
             <p className="mt-4 text-[var(--color-muted-fg)]">
-              Subscribe to our newsletter to get updates about upcoming events and
-              community activities.
+              {t("ctaDesc")}
             </p>
             <Link
               href="/contact"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white transition hover:shadow-lg"
             >
-              Get in Touch <ArrowRight className="h-4 w-4" />
+              {t("ctaButton")} <ArrowRight className="h-4 w-4" />
             </Link>
           </ScrollReveal>
         </div>
@@ -125,9 +125,13 @@ export default async function EventsPage() {
 function EventCard({
   event,
   muted = false,
+  atLabel,
+  viewDetailsLabel,
 }: {
   event: Awaited<ReturnType<typeof listPublicEvents>>[number];
   muted?: boolean;
+  atLabel: string;
+  viewDetailsLabel: string;
 }) {
   const date = new Date(event.startsAt);
   const month = date.toLocaleDateString("en-US", { month: "short" });
@@ -167,7 +171,7 @@ function EventCard({
         <div className="mt-3 space-y-1.5">
           <p className="flex items-center gap-2 text-sm text-[var(--color-muted-fg)]">
             <CalendarDays className="h-4 w-4 flex-shrink-0" />
-            {date.toLocaleDateString("en-US", { dateStyle: "medium" })} at{" "}
+            {date.toLocaleDateString("en-US", { dateStyle: "medium" })} {atLabel}{" "}
             {date.toLocaleTimeString("en-US", { timeStyle: "short" })}
           </p>
           {event.location && (
@@ -181,7 +185,7 @@ function EventCard({
           {event.description}
         </p>
         <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-primary)]">
-          View Details <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+          {viewDetailsLabel} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
         </span>
       </div>
     </Link>

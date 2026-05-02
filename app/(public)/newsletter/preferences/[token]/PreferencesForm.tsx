@@ -1,27 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { updatePreferencesAction } from "@/lib/actions/subscriberPreferences";
 import type { SubscriberPreferences } from "@/lib/services/subscribers/preferences";
 import Link from "next/link";
-
-const PREF_OPTIONS: { key: keyof SubscriberPreferences; label: string; description: string }[] = [
-  {
-    key: "newsletters",
-    label: "Newsletters",
-    description: "Periodic updates, stories, and news from our organization.",
-  },
-  {
-    key: "campaigns",
-    label: "Automated campaigns",
-    description: "Welcome sequences, follow-ups, and milestone emails.",
-  },
-  {
-    key: "events",
-    label: "Event notifications",
-    description: "Announcements and reminders for upcoming events.",
-  },
-];
 
 export function PreferencesForm({
   token,
@@ -30,11 +13,30 @@ export function PreferencesForm({
   token: string;
   initial: SubscriberPreferences;
 }) {
+  const t = useTranslations("public.newsletterPreferences");
   const [prefs, setPrefs] = useState(initial);
   const [saved, setSaved] = useState(false);
   const [unsubscribed, setUnsubscribed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+
+  const PREF_OPTIONS: { key: keyof SubscriberPreferences; label: string; description: string }[] = [
+    {
+      key: "newsletters",
+      label: t("prefNewslettersLabel"),
+      description: t("prefNewslettersDesc"),
+    },
+    {
+      key: "campaigns",
+      label: t("prefCampaignsLabel"),
+      description: t("prefCampaignsDesc"),
+    },
+    {
+      key: "events",
+      label: t("prefEventsLabel"),
+      description: t("prefEventsDesc"),
+    },
+  ];
 
   const toggle = (key: keyof SubscriberPreferences) =>
     setPrefs((p) => ({ ...p, [key]: !p[key] }));
@@ -50,7 +52,7 @@ export function PreferencesForm({
           setTimeout(() => setSaved(false), 3000);
         }
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to update");
+        setError(e instanceof Error ? e.message : t("errorDefault"));
       }
     });
   };
@@ -58,15 +60,15 @@ export function PreferencesForm({
   if (unsubscribed) {
     return (
       <div className="mt-10 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-8 text-center">
-        <h2 className="text-lg font-semibold">You&apos;ve been unsubscribed</h2>
+        <h2 className="text-lg font-semibold">{t("unsubscribedHeading")}</h2>
         <p className="mt-2 text-sm text-[var(--color-muted-fg)]">
-          All email preferences have been turned off. You won&apos;t receive further emails from us.
+          {t("unsubscribedDesc")}
         </p>
         <Link
           href="/"
           className="mt-6 inline-block rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)]"
         >
-          Back to home
+          {t("backToHome")}
         </Link>
       </div>
     );
@@ -106,20 +108,20 @@ export function PreferencesForm({
           disabled={pending}
           className="rounded-[var(--radius-md)] bg-[var(--color-primary)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:opacity-60"
         >
-          {pending ? "Saving\u2026" : "Save preferences"}
+          {pending ? t("saving") : t("saveButton")}
         </button>
         {saved && (
-          <span className="text-sm text-[var(--color-success)]">Preferences saved!</span>
+          <span className="text-sm text-[var(--color-success)]">{t("saved")}</span>
         )}
       </div>
 
       <p className="text-center text-xs text-[var(--color-muted-fg)]">
-        Want to unsubscribe completely?{" "}
+        {t("unsubscribePrompt")}{" "}
         <Link
           href={`/newsletter/unsubscribe/${token}`}
           className="text-[var(--color-primary)] hover:underline"
         >
-          Unsubscribe from all emails
+          {t("unsubscribeLink")}
         </Link>
       </p>
     </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { listPublishedPrograms } from "@/lib/services/programs";
 import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ProgramsPage() {
+  const t = await getTranslations("public.programs");
   const [programs, stats] = await Promise.all([
     listPublishedPrograms(),
     getActiveSiteStats(),
@@ -35,14 +37,13 @@ export default async function ProgramsPage() {
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <ScrollReveal>
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              What We Do
+              {t("eyebrow")}
             </p>
             <h1 className="font-display text-4xl font-bold text-[var(--color-fg)] sm:text-5xl">
-              Our Programs
+              {t("heading")}
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-[var(--color-muted-fg)]">
-              We design and implement community-driven programs that create lasting
-              change in education, healthcare, and sustainable development.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -75,7 +76,7 @@ export default async function ProgramsPage() {
           {programs.length === 0 ? (
             <div className="py-20 text-center">
               <p className="text-lg text-[var(--color-muted-fg)]">
-                Programs will appear here once published.
+                {t("empty")}
               </p>
             </div>
           ) : (
@@ -111,7 +112,7 @@ export default async function ProgramsPage() {
                         {p.summary}
                       </p>
                       <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-primary)]">
-                        Learn More <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                        {t("learnMore")} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                       </span>
                     </div>
                   </Link>
@@ -127,24 +128,23 @@ export default async function ProgramsPage() {
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <ScrollReveal>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)]">
-              Support Our Programs
+              {t("ctaHeading")}
             </h2>
             <p className="mt-4 text-[var(--color-muted-fg)]">
-              Your generosity helps us expand our reach and deepen our impact
-              across communities.
+              {t("ctaDesc")}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link
                 href="/donate"
                 className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white transition hover:shadow-lg"
               >
-                Donate Now
+                {t("ctaDonate")}
               </Link>
               <Link
                 href="/get-involved"
                 className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
               >
-                Get Involved
+                {t("ctaGetInvolved")}
               </Link>
             </div>
           </ScrollReveal>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   MapPin,
   Clock,
@@ -32,6 +33,7 @@ export const metadata: Metadata = {
 };
 
 export default async function VolunteerPage() {
+  const t = await getTranslations("public.volunteer");
   const opportunities = await getActiveVolunteerOpportunities();
 
   return (
@@ -41,15 +43,13 @@ export default async function VolunteerPage() {
         <div className="relative mx-auto max-w-7xl text-center">
           <ScrollReveal>
             <p className="text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Give Your Time
+              {t("eyebrow")}
             </p>
             <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-[var(--color-fg)] sm:text-5xl lg:text-6xl">
-              Volunteer With Us
+              {t("heading")}
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-[var(--color-muted-fg)]">
-              Your time and skills can transform lives. Join our volunteer
-              network and contribute to meaningful community development across
-              Uganda.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -60,10 +60,10 @@ export default async function VolunteerPage() {
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             {[
-              { value: "250+", label: "Active Volunteers", icon: Users },
-              { value: "14", label: "Program Areas", icon: Building2 },
-              { value: "40+", label: "Communities Reached", icon: Globe },
-              { value: "5,000+", label: "Lives Impacted", icon: Heart },
+              { value: "250+", label: t("statActiveVolunteers"), icon: Users },
+              { value: "14", label: t("statProgramAreas"), icon: Building2 },
+              { value: "40+", label: t("statCommunitiesReached"), icon: Globe },
+              { value: "5,000+", label: t("statLivesImpacted"), icon: Heart },
             ].map((stat, i) => (
               <ScrollReveal key={stat.label} delay={i * 0.08}>
                 <div className="text-center">
@@ -89,7 +89,7 @@ export default async function VolunteerPage() {
         <div className="mx-auto max-w-7xl">
           <ScrollReveal>
             <h2 className="text-center font-display text-3xl font-bold tracking-tight text-[var(--color-fg)] sm:text-4xl">
-              Open Opportunities
+              {t("opportunitiesHeading")}
             </h2>
             <div className="mx-auto mt-2 h-1 w-16 rounded-full bg-[var(--color-primary)]" />
           </ScrollReveal>
@@ -101,11 +101,10 @@ export default async function VolunteerPage() {
                   <Heart className="h-10 w-10 text-[var(--color-primary)]" />
                 </div>
                 <h3 className="mt-6 font-display text-xl font-semibold text-[var(--color-fg)]">
-                  No opportunities at the moment
+                  {t("noOpportunities")}
                 </h3>
                 <p className="mx-auto mt-2 max-w-md text-[var(--color-muted-fg)]">
-                  We don&apos;t have any open volunteer positions right now, but
-                  check back soon. New opportunities are added regularly.
+                  {t("noOpportunitiesDesc")}
                 </p>
               </div>
             </ScrollReveal>
@@ -139,7 +138,7 @@ export default async function VolunteerPage() {
                       href={`/volunteer/${opp.slug}/apply`}
                       className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-primary)] transition-colors hover:text-[rgb(var(--token-primary)/0.80)]"
                     >
-                      Apply <ArrowRight className="h-4 w-4" />
+                      {t("apply")} <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>
                 </ScrollReveal>
@@ -154,24 +153,23 @@ export default async function VolunteerPage() {
         <div className="mx-auto max-w-7xl text-center">
           <ScrollReveal>
             <h2 className="font-display text-3xl font-bold tracking-tight text-[var(--color-fg)] sm:text-4xl">
-              Ready to Make a Difference?
+              {t("ctaHeading")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[var(--color-muted-fg)]">
-              Join hundreds of volunteers who are already creating positive
-              change. Your time and talent matter.
+              {t("ctaDesc")}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link
                 href="/donate"
                 className="inline-flex items-center rounded-full border border-[var(--color-border)] px-8 py-3 text-sm font-semibold transition-colors hover:bg-[rgb(var(--token-muted)/0.30)]"
               >
-                Donate Instead
+                {t("donateInstead")}
               </Link>
               <Link
                 href="/careers"
                 className="inline-flex items-center rounded-full border border-[var(--color-border)] px-8 py-3 text-sm font-semibold transition-colors hover:bg-[rgb(var(--token-muted)/0.30)]"
               >
-                View Careers
+                {t("viewCareers")}
               </Link>
             </div>
           </ScrollReveal>

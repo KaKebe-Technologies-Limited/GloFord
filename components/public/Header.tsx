@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getBrand } from "@/config/brand";
 import { MobileNav } from "./MobileNav";
 import { PublicNav, type NavTreeItem } from "./PublicNav";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 import { Phone, Mail, MapPin, Heart } from "lucide-react";
 
 export async function PublicHeader() {
@@ -158,7 +159,8 @@ export async function PublicHeader() {
 
           <PublicNav items={items} />
 
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex lg:items-center lg:gap-3">
+            <LocaleSwitcher />
             <Link
               href="/donate"
               className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:shadow-lg hover:brightness-110"

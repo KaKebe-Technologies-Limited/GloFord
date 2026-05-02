@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Send, CheckCircle2, Loader2 } from "lucide-react";
 import { submitContactAction } from "./actions";
 
@@ -8,6 +9,7 @@ const inputCls =
   "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 text-sm transition focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--token-primary)/0.20)]";
 
 export function ContactForm() {
+  const t = useTranslations("public.contact");
   const [isPending, startTransition] = useTransition();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function ContactForm() {
         await submitContactAction(fd);
         setSent(true);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to send message. Please try again.");
+        setError(err instanceof Error ? err.message : t("formErrorDefault"));
       }
     });
   }
@@ -34,15 +36,15 @@ export function ContactForm() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--token-success)/0.10)]">
             <CheckCircle2 className="h-8 w-8 text-[var(--color-success)]" />
           </div>
-          <h3 className="mt-4 text-xl font-bold text-[var(--color-fg)]">Message Sent!</h3>
+          <h3 className="mt-4 text-xl font-bold text-[var(--color-fg)]">{t("successHeading")}</h3>
           <p className="mt-2 text-sm text-[var(--color-muted-fg)]">
-            Thank you for reaching out. We&apos;ll get back to you within 24 hours.
+            {t("successDesc")}
           </p>
           <button
             onClick={() => setSent(false)}
             className="mt-6 text-sm font-medium text-[var(--color-primary)] hover:underline"
           >
-            Send another message
+            {t("sendAnother")}
           </button>
         </div>
       </div>
@@ -51,7 +53,7 @@ export function ContactForm() {
 
   return (
     <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-8 shadow-sm">
-      <h3 className="mb-6 text-xl font-bold text-[var(--color-fg)]">Send Us a Message</h3>
+      <h3 className="mb-6 text-xl font-bold text-[var(--color-fg)]">{t("formHeading")}</h3>
       {error && (
         <p role="alert" className="mb-4 rounded-lg bg-[rgb(var(--token-danger)/0.10)] px-3 py-2 text-sm text-[var(--color-danger)]">
           {error}
@@ -61,26 +63,26 @@ export function ContactForm() {
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
-              Full Name *
+              {t("formLabelName")}
             </label>
-            <input id="name" name="name" type="text" required className={inputCls} placeholder="Your name" />
+            <input id="name" name="name" type="text" required className={inputCls} placeholder={t("formPlaceholderName")} />
           </div>
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
-              Email *
+              {t("formLabelEmail")}
             </label>
-            <input id="email" name="email" type="email" required className={inputCls} placeholder="your@email.com" />
+            <input id="email" name="email" type="email" required className={inputCls} placeholder={t("formPlaceholderEmail")} />
           </div>
         </div>
         <div>
           <label htmlFor="subject" className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
-            Subject *
+            {t("formLabelSubject")}
           </label>
-          <input id="subject" name="subject" type="text" required className={inputCls} placeholder="What's this about?" />
+          <input id="subject" name="subject" type="text" required className={inputCls} placeholder={t("formPlaceholderSubject")} />
         </div>
         <div>
           <label htmlFor="message" className="mb-1.5 block text-sm font-medium text-[var(--color-fg)]">
-            Message *
+            {t("formLabelMessage")}
           </label>
           <textarea
             id="message"
@@ -88,7 +90,7 @@ export function ContactForm() {
             rows={5}
             required
             className={inputCls}
-            placeholder="Tell us how we can help..."
+            placeholder={t("formPlaceholderMessage")}
           />
         </div>
         <button
@@ -97,7 +99,7 @@ export function ContactForm() {
           className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-3 font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
         >
           {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          {isPending ? "Sending..." : "Send Message"}
+          {isPending ? t("formSending") : t("formSend")}
         </button>
       </form>
     </div>

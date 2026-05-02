@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { getPublishedPostBySlug } from "@/lib/services/posts";
@@ -45,6 +46,7 @@ export async function generateMetadata(
 }
 
 export default async function PostDetail({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await getTranslations("public.blogDetail");
   const { slug } = await params;
 
   let post;
@@ -64,7 +66,7 @@ export default async function PostDetail({ params }: { params: Promise<{ slug: s
         ) : null}
         <h1 className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">{post.title}</h1>
         {post.author?.name ? (
-          <p className="mt-3 text-sm text-[var(--color-muted-fg)]">By {post.author.name}</p>
+          <p className="mt-3 text-sm text-[var(--color-muted-fg)]">{t("by", { name: post.author.name })}</p>
         ) : null}
         {post.tags.length > 0 ? (
           <ul className="mt-4 flex flex-wrap gap-2">

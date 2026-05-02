@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { blocksSchema } from "@/lib/blocks/types";
@@ -37,6 +38,7 @@ function findPreviewImageId(blocks: unknown): string | null {
 }
 
 export default async function PartnersPage() {
+  const t = await getTranslations("public.partners");
   const config = getCollectionConfig("partner");
   const [rows, testimonials, faqs] = await Promise.all([
     db.page.findMany({
@@ -61,15 +63,13 @@ export default async function PartnersPage() {
         <div className="relative mx-auto max-w-7xl">
           <ScrollReveal>
             <p className="text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Collaboration
+              {t("eyebrow")}
             </p>
             <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-[var(--color-fg)] sm:text-5xl lg:text-6xl">
-              Our Partners
+              {t("heading")}
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[var(--color-muted-fg)]">
-              We believe lasting change comes from collaboration. These
-              organizations stand with us, bringing resources, expertise, and
-              shared vision to communities across Uganda.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -80,14 +80,14 @@ export default async function PartnersPage() {
         <div className="mx-auto max-w-7xl">
           <ScrollReveal>
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Current Partners
+              {t("currentPartners")}
             </h2>
           </ScrollReveal>
 
           {rows.length === 0 ? (
             <ScrollReveal>
               <p className="mt-8 text-[var(--color-muted-fg)]">
-                Partner profiles coming soon.
+                {t("empty")}
               </p>
             </ScrollReveal>
           ) : (
@@ -117,7 +117,7 @@ export default async function PartnersPage() {
                           </p>
                         ) : null}
                         <span className="inline-flex text-sm font-semibold text-[var(--color-primary)]">
-                          Learn more
+                          {t("learnMore")}
                         </span>
                       </div>
                     </Link>
@@ -135,12 +135,12 @@ export default async function PartnersPage() {
           <div className="mx-auto max-w-7xl">
             <ScrollReveal>
               <h2 className="font-display text-3xl font-bold tracking-tight text-[var(--color-fg)] sm:text-4xl">
-                What Our Partners Say
+                {t("whatPartnersSay")}
               </h2>
             </ScrollReveal>
             <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {testimonials.map((t, i) => (
-                <ScrollReveal key={t.id} delay={i * 0.06}>
+              {testimonials.map((testimonial, i) => (
+                <ScrollReveal key={testimonial.id} delay={i * 0.06}>
                   <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-8 shadow-sm">
                     <svg
                       className="h-8 w-8 text-[rgb(var(--token-primary)/0.60)]"
@@ -150,27 +150,27 @@ export default async function PartnersPage() {
                       <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151C7.546 6.068 5.983 8.789 5.983 11h4v10H0z" />
                     </svg>
                     <p className="mt-4 text-sm leading-relaxed text-[var(--color-muted-fg)]">
-                      {t.quote}
+                      {testimonial.quote}
                     </p>
                     <div className="mt-6 flex items-center gap-3">
-                      {t.avatarUrl ? (
+                      {testimonial.avatarUrl ? (
                         <img
-                          src={t.avatarUrl}
-                          alt={t.authorName}
+                          src={testimonial.avatarUrl}
+                          alt={testimonial.authorName}
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(var(--token-primary)/0.10)] text-sm font-bold text-[var(--color-primary)]">
-                          {t.authorName[0]}
+                          {testimonial.authorName[0]}
                         </div>
                       )}
                       <div>
                         <p className="text-sm font-semibold text-[var(--color-fg)]">
-                          {t.authorName}
+                          {testimonial.authorName}
                         </p>
-                        {(t.authorRole || t.authorOrg) && (
+                        {(testimonial.authorRole || testimonial.authorOrg) && (
                           <p className="text-xs text-[var(--color-muted-fg)]">
-                            {[t.authorRole, t.authorOrg]
+                            {[testimonial.authorRole, testimonial.authorOrg]
                               .filter(Boolean)
                               .join(", ")}
                           </p>
@@ -190,12 +190,11 @@ export default async function PartnersPage() {
         <div className="mx-auto max-w-3xl">
           <ScrollReveal>
             <h2 className="text-center font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Become a Partner
+              {t("becomePartner")}
             </h2>
             <div className="mx-auto mt-2 h-1 w-16 rounded-full bg-[var(--color-primary)]" />
             <p className="mx-auto mt-4 max-w-xl text-center text-[var(--color-muted-fg)]">
-              Interested in partnering with us? Fill out the form below and our
-              team will be in touch.
+              {t("becomePartnerDesc")}
             </p>
           </ScrollReveal>
           <div className="mt-10">
@@ -210,7 +209,7 @@ export default async function PartnersPage() {
           <div className="mx-auto max-w-3xl">
             <ScrollReveal>
               <h2 className="text-center font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                Partnership FAQs
+                {t("faqsHeading")}
               </h2>
               <div className="mx-auto mt-2 h-1 w-16 rounded-full bg-[var(--color-primary)]" />
             </ScrollReveal>

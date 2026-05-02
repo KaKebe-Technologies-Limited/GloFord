@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { getTeamMembersByDepartment } from "@/lib/services/teamMembers";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Facebook, Twitter, Linkedin, Instagram, Globe } from "lucide-react";
@@ -37,6 +38,7 @@ const SECTION_STYLES = [
 ];
 
 export default async function LeadershipPage() {
+  const t = await getTranslations("public.leadership");
   const grouped = await getTeamMembersByDepartment();
   const departments = Object.entries(grouped);
 
@@ -47,15 +49,13 @@ export default async function LeadershipPage() {
         <div className="relative mx-auto max-w-7xl">
           <ScrollReveal>
             <p className="text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Who We Are
+              {t("eyebrow")}
             </p>
             <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-[var(--color-fg)] sm:text-5xl lg:text-6xl">
-              Our Leadership
+              {t("heading")}
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[var(--color-muted-fg)]">
-              Meet the team guiding our strategy, operations, and accountability.
-              Each leader brings deep local knowledge and a commitment to
-              community-led development.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -66,7 +66,7 @@ export default async function LeadershipPage() {
         <section className="w-full px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <p className="text-[var(--color-muted-fg)]">
-              Team profiles coming soon. Check back shortly.
+              {t("empty")}
             </p>
           </div>
         </section>

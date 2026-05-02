@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { getActiveSiteStats } from "@/lib/services/siteStats";
@@ -45,6 +46,7 @@ export const metadata: Metadata = {
 };
 
 export default async function WhoWeArePage() {
+  const t = await getTranslations("public.whoWeAre");
   const [stats, testimonials, messages] = await Promise.all([
     getActiveSiteStats(),
     getActiveTestimonials(),
@@ -59,27 +61,26 @@ export default async function WhoWeArePage() {
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <ScrollReveal>
               <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-                About Us
+                {t("eyebrow")}
               </p>
               <h1 className="font-display text-4xl font-bold text-[var(--color-fg)] sm:text-5xl">
-                Who We Are
+                {t("heading")}
               </h1>
               <p className="mt-6 text-lg leading-relaxed text-[var(--color-muted-fg)]">
-                A community-driven foundation dedicated to empowering underserved
-                communities through sustainable development, education, and healthcare.
+                {t("subheading")}
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
                   href="/programs"
                   className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white transition hover:shadow-lg"
                 >
-                  Our Programs <ArrowRight className="h-4 w-4" />
+                  {t("ourProgramsCta")} <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/our-history"
                   className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
                 >
-                  Our History
+                  {t("ourHistoryCta")}
                 </Link>
               </div>
             </ScrollReveal>
@@ -87,18 +88,18 @@ export default async function WhoWeArePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-4">
                   <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
-                    <Image src={IMAGES.hero} alt="Community work" fill className="object-cover" sizes="25vw" priority />
+                    <Image src={IMAGES.hero} alt={t("imageAltCommunity")} fill className="object-cover" sizes="25vw" priority />
                   </div>
                   <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg">
-                    <Image src={IMAGES.climate} alt="Environmental work" fill className="object-cover" sizes="25vw" />
+                    <Image src={IMAGES.climate} alt={t("imageAltEnvironmental")} fill className="object-cover" sizes="25vw" />
                   </div>
                 </div>
                 <div className="mt-8 space-y-4">
                   <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg">
-                    <Image src={IMAGES.youth} alt="Youth programs" fill className="object-cover" sizes="25vw" />
+                    <Image src={IMAGES.youth} alt={t("imageAltYouth")} fill className="object-cover" sizes="25vw" />
                   </div>
                   <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
-                    <Image src={IMAGES.team} alt="Our team" fill className="object-cover" sizes="25vw" />
+                    <Image src={IMAGES.team} alt={t("imageAltTeam")} fill className="object-cover" sizes="25vw" />
                   </div>
                 </div>
               </div>
@@ -114,30 +115,15 @@ export default async function WhoWeArePage() {
             <ScrollReveal>
               <div className="space-y-6">
                 <p className="text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-                  Our Story
+                  {t("storyEyebrow")}
                 </p>
                 <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-                  From a Vision to a Movement
+                  {t("storyHeading")}
                 </h2>
                 <div className="space-y-4 text-[var(--color-muted-fg)] leading-relaxed">
-                  <p>
-                    Founded with a simple yet powerful belief — that every community
-                    deserves the opportunity to thrive — we began our journey in the
-                    heart of East Africa. What started as a small group of passionate
-                    individuals has grown into a movement touching thousands of lives.
-                  </p>
-                  <p>
-                    Over the years, we have partnered with local communities,
-                    governments, and international organizations to deliver programs
-                    that create lasting change. From building schools to training
-                    healthcare workers, every initiative is rooted in the belief
-                    that sustainable development begins with empowered people.
-                  </p>
-                  <p>
-                    Today, we continue to expand our reach, driven by the same
-                    passion that inspired our founding — and the communities we
-                    serve remain at the heart of everything we do.
-                  </p>
+                  <p>{t("storyP1")}</p>
+                  <p>{t("storyP2")}</p>
+                  <p>{t("storyP3")}</p>
                 </div>
               </div>
             </ScrollReveal>
@@ -146,7 +132,7 @@ export default async function WhoWeArePage() {
                 <div className="aspect-[4/3] overflow-hidden rounded-2xl shadow-2xl">
                   <Image
                     src={IMAGES.story}
-                    alt="Our journey"
+                    alt={t("imageAltJourney")}
                     fill
                     className="object-cover"
                     sizes="(max-width: 1024px) 100vw, 50vw"
@@ -154,7 +140,7 @@ export default async function WhoWeArePage() {
                 </div>
                 <div className="absolute -bottom-6 -left-6 rounded-xl bg-[var(--color-primary)] p-5 text-white shadow-xl">
                   <p className="text-3xl font-bold">10+</p>
-                  <p className="text-sm text-white/80">Years of Impact</p>
+                  <p className="text-sm text-white/80">{t("yearsOfImpact")}</p>
                 </div>
               </div>
             </ScrollReveal>
@@ -172,12 +158,10 @@ export default async function WhoWeArePage() {
                   <Target className="h-7 w-7 text-[var(--color-primary)]" />
                 </div>
                 <h3 className="mb-4 font-display text-2xl font-bold text-[var(--color-fg)]">
-                  Our Mission
+                  {t("missionHeading")}
                 </h3>
                 <p className="leading-relaxed text-[var(--color-muted-fg)]">
-                  To empower marginalized communities through education, healthcare,
-                  and sustainable development programs that foster self-reliance,
-                  dignity, and long-term prosperity for all.
+                  {t("missionText")}
                 </p>
               </div>
             </ScrollReveal>
@@ -187,12 +171,10 @@ export default async function WhoWeArePage() {
                   <Eye className="h-7 w-7 text-[var(--color-accent)]" />
                 </div>
                 <h3 className="mb-4 font-display text-2xl font-bold text-[var(--color-fg)]">
-                  Our Vision
+                  {t("visionHeading")}
                 </h3>
                 <p className="leading-relaxed text-[var(--color-muted-fg)]">
-                  A world where every community has equitable access to education,
-                  healthcare, and economic opportunity — where no one is left behind
-                  and every person can reach their full potential.
+                  {t("visionText")}
                 </p>
               </div>
             </ScrollReveal>
@@ -206,20 +188,20 @@ export default async function WhoWeArePage() {
           <ScrollReveal>
             <div className="mb-14 text-center">
               <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-                What Drives Us
+                {t("valuesEyebrow")}
               </p>
               <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-                Our Core Values
+                {t("valuesHeading")}
               </h2>
             </div>
           </ScrollReveal>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: Heart, title: "Compassion", desc: "We lead with empathy and genuine care for the communities we serve." },
-              { icon: Shield, title: "Integrity", desc: "Transparency and accountability in every action, every decision." },
-              { icon: Users, title: "Community", desc: "We believe in the power of collective action and local ownership." },
-              { icon: Sparkles, title: "Innovation", desc: "Creative, sustainable solutions tailored to each community's needs." },
+              { icon: Heart, title: t("valueCompassionTitle"), desc: t("valueCompassionDesc") },
+              { icon: Shield, title: t("valueIntegrityTitle"), desc: t("valueIntegrityDesc") },
+              { icon: Users, title: t("valueCommunityTitle"), desc: t("valueCommunityDesc") },
+              { icon: Sparkles, title: t("valueInnovationTitle"), desc: t("valueInnovationDesc") },
             ].map((v, i) => (
               <ScrollReveal key={v.title} delay={i * 0.1}>
                 <div className="group rounded-2xl border border-[var(--color-border)] p-8 text-center transition hover:border-[rgb(var(--token-primary)/0.30)] hover:shadow-lg">
@@ -269,24 +251,23 @@ export default async function WhoWeArePage() {
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <ScrollReveal>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-              Ready to Make a Difference?
+              {t("ctaHeading")}
             </h2>
             <p className="mt-4 text-[var(--color-muted-fg)]">
-              Join us in our mission to create lasting change. Every contribution
-              matters.
+              {t("ctaDesc")}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link
                 href="/donate"
                 className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-3.5 text-sm font-semibold text-white transition hover:shadow-lg"
               >
-                <Heart className="h-4 w-4" /> Donate Now
+                <Heart className="h-4 w-4" /> {t("ctaDonate")}
               </Link>
               <Link
                 href="/get-involved"
                 className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-8 py-3.5 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
               >
-                Get Involved <ArrowRight className="h-4 w-4" />
+                {t("ctaGetInvolved")} <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </ScrollReveal>

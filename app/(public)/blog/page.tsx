@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { ArrowRight, BookOpen } from "lucide-react";
@@ -22,6 +23,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogIndex() {
+  const t = await getTranslations("public.blog");
+
   const posts = await db.post.findMany({
     where: { status: "PUBLISHED" },
     orderBy: { publishedAt: "desc" },
@@ -45,14 +48,13 @@ export default async function BlogIndex() {
           <ScrollReveal>
             <div className="mx-auto max-w-3xl text-center">
               <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-                Our Blog
+                {t("eyebrow")}
               </p>
               <h1 className="font-display text-4xl font-bold text-[var(--color-fg)] sm:text-5xl">
-                Stories & Updates
+                {t("heading")}
               </h1>
               <p className="mt-4 text-lg text-[var(--color-muted-fg)]">
-                News, insights, and stories from our programs and the
-                communities we serve.
+                {t("subheading")}
               </p>
             </div>
           </ScrollReveal>
@@ -65,7 +67,7 @@ export default async function BlogIndex() {
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <BookOpen className="mb-4 h-12 w-12 text-[rgb(var(--token-muted-fg)/0.30)]" />
               <p className="text-[var(--color-muted-fg)]">
-                Posts will appear here once published.
+                {t("empty")}
               </p>
             </div>
           ) : (
@@ -95,7 +97,7 @@ export default async function BlogIndex() {
                     </div>
                     <div className="flex flex-col justify-center p-8 md:p-12">
                       <span className="mb-3 inline-block w-fit rounded-full bg-[rgb(var(--token-primary)/0.10)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-primary)]">
-                        Featured
+                        {t("featured")}
                       </span>
                       {featured.publishedAt && (
                         <time className="text-sm text-[var(--color-muted-fg)]">
@@ -118,7 +120,7 @@ export default async function BlogIndex() {
                         </p>
                       )}
                       <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-primary)]">
-                        Read Article <ArrowRight className="h-4 w-4" />
+                        {t("readArticle")} <ArrowRight className="h-4 w-4" />
                       </span>
                     </div>
                   </Link>
@@ -171,7 +173,7 @@ export default async function BlogIndex() {
                             </p>
                           )}
                           <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-primary)]">
-                            Read More{" "}
+                            {t("readMore")}{" "}
                             <ArrowRight className="h-3.5 w-3.5" />
                           </span>
                         </div>

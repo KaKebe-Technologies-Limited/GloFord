@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { CheckCircle2, ChevronDown, Loader2 } from "lucide-react";
 import { submitPartnerAction } from "./actions";
@@ -11,16 +12,17 @@ const selectCls =
   "w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm transition focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--token-primary)/0.20)] appearance-none";
 const labelCls = "block text-sm font-medium mb-1.5";
 
-const PARTNERSHIP_TYPES = [
-  "Strategic",
-  "Funding",
-  "Technical",
-  "Implementation",
-];
-
 export function PartnerApplicationForm() {
+  const t = useTranslations("public.partners");
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
+
+  const PARTNERSHIP_TYPES = [
+    { value: "Strategic", label: t("typeStrategic") },
+    { value: "Funding", label: t("typeFunding") },
+    { value: "Technical", label: t("typeTechnical") },
+    { value: "Implementation", label: t("typeImplementation") },
+  ];
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -38,10 +40,9 @@ export function PartnerApplicationForm() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
             <CheckCircle2 className="h-8 w-8 text-green-600" />
           </div>
-          <h3 className="mt-6 text-xl font-semibold">Application Submitted</h3>
+          <h3 className="mt-6 text-xl font-semibold">{t("successHeading")}</h3>
           <p className="mt-2 text-[var(--color-muted-fg)]">
-            Thank you for your interest in partnering with us. Our team will
-            review your application and respond shortly.
+            {t("successDesc")}
           </p>
         </div>
       </ScrollReveal>
@@ -56,31 +57,31 @@ export function PartnerApplicationForm() {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="organizationName" className={labelCls}>
-            Organization Name *
+            {t("formOrgName")}
           </label>
           <input
             id="organizationName"
             name="organizationName"
             required
             className={inputCls}
-            placeholder="Your organization"
+            placeholder={t("formOrgNamePlaceholder")}
           />
         </div>
         <div>
           <label htmlFor="contactName" className={labelCls}>
-            Contact Name *
+            {t("formContactName")}
           </label>
           <input
             id="contactName"
             name="contactName"
             required
             className={inputCls}
-            placeholder="Jane Doe"
+            placeholder={t("formContactNamePlaceholder")}
           />
         </div>
         <div>
           <label htmlFor="partEmail" className={labelCls}>
-            Email *
+            {t("formEmail")}
           </label>
           <input
             id="partEmail"
@@ -88,36 +89,36 @@ export function PartnerApplicationForm() {
             type="email"
             required
             className={inputCls}
-            placeholder="contact@org.com"
+            placeholder={t("formEmailPlaceholder")}
           />
         </div>
         <div>
           <label htmlFor="partPhone" className={labelCls}>
-            Phone
+            {t("formPhone")}
           </label>
           <input
             id="partPhone"
             name="phone"
             type="tel"
             className={inputCls}
-            placeholder="+256 700 000 000"
+            placeholder={t("formPhonePlaceholder")}
           />
         </div>
         <div>
           <label htmlFor="partWebsite" className={labelCls}>
-            Website
+            {t("formWebsite")}
           </label>
           <input
             id="partWebsite"
             name="website"
             type="url"
             className={inputCls}
-            placeholder="https://..."
+            placeholder={t("formWebsitePlaceholder")}
           />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="partnershipType" className={labelCls}>
-            Partnership Type *
+            {t("formPartnershipType")}
           </label>
           <div className="relative">
             <select
@@ -126,10 +127,10 @@ export function PartnerApplicationForm() {
               required
               className={selectCls}
             >
-              <option value="">Select type...</option>
-              {PARTNERSHIP_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              <option value="">{t("formSelectType")}</option>
+              {PARTNERSHIP_TYPES.map((pt) => (
+                <option key={pt.value} value={pt.value}>
+                  {pt.label}
                 </option>
               ))}
             </select>
@@ -138,7 +139,7 @@ export function PartnerApplicationForm() {
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="partDescription" className={labelCls}>
-            About Your Organization *
+            {t("formAboutOrg")}
           </label>
           <textarea
             id="partDescription"
@@ -146,19 +147,19 @@ export function PartnerApplicationForm() {
             required
             rows={4}
             className={inputCls}
-            placeholder="Brief description of your organization and its mission..."
+            placeholder={t("formAboutOrgPlaceholder")}
           />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="partMessage" className={labelCls}>
-            Additional Message
+            {t("formMessage")}
           </label>
           <textarea
             id="partMessage"
             name="message"
             rows={3}
             className={inputCls}
-            placeholder="How would you like to collaborate with us?"
+            placeholder={t("formMessagePlaceholder")}
           />
         </div>
       </div>
@@ -171,10 +172,10 @@ export function PartnerApplicationForm() {
           {isPending ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Submitting...
+              {t("formSubmitting")}
             </>
           ) : (
-            "Submit Application"
+            t("formSubmit")
           )}
         </button>
       </div>
