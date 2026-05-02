@@ -4,11 +4,13 @@ import type { PaymentProviderAdapter } from "./types";
 import { pesapalAdapter } from "./pesapal";
 import { mtnMomoAdapter } from "./mtn-momo";
 import { airtelMoneyAdapter } from "./airtel-money";
+import { stripeAdapter } from "./stripe";
 
 const ADAPTERS: Record<ProviderEnum, PaymentProviderAdapter> = {
   PESAPAL: pesapalAdapter,
   MTN_MOMO: mtnMomoAdapter,
   AIRTEL_MONEY: airtelMoneyAdapter,
+  STRIPE: stripeAdapter,
 };
 
 export function getAdapter(id: ProviderEnum): PaymentProviderAdapter {
@@ -40,4 +42,5 @@ export const ALL_PROVIDERS: {
   { id: "PESAPAL", label: pesapalAdapter.label, flow: pesapalAdapter.flow },
   { id: "MTN_MOMO", label: mtnMomoAdapter.label, flow: mtnMomoAdapter.flow },
   { id: "AIRTEL_MONEY", label: airtelMoneyAdapter.label, flow: airtelMoneyAdapter.flow },
+  { id: "STRIPE", label: stripeAdapter.label, flow: stripeAdapter.flow },
 ];

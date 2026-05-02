@@ -299,6 +299,7 @@ enum PaymentProvider {
   PESAPAL
   MTN_MOMO
   AIRTEL_MONEY
+  STRIPE
 }
 
 enum DonationStatus {

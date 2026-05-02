@@ -3,6 +3,8 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./lib/i18n/request.ts");
 
+const r2Url = process.env.R2_PUBLIC_URL;
+
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -11,7 +13,11 @@ const config: NextConfig = {
     serverActions: { bodySizeLimit: "2mb" },
   },
   images: {
-    remotePatterns: [],
+    remotePatterns: [
+      ...(r2Url
+        ? [{ hostname: new URL(r2Url).hostname, protocol: "https" as const }]
+        : []),
+    ],
     localPatterns: [
       { pathname: '/api/media/file/**' },
       { pathname: '/seed-images/**' },

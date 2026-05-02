@@ -21,13 +21,18 @@ export type MtnMomoPublic = { targetEnvironment?: string; currency?: string; cal
 export type AirtelMoneySecrets = { clientId: string; clientSecret: string };
 export type AirtelMoneyPublic = { country?: string; currency?: string };
 
+export type StripeSecrets = { secretKey: string; webhookSecret: string };
+export type StripePublic = { publishableKey?: string; currency?: string };
+
 export type ProviderConfig<P extends ProviderEnum> = P extends "PESAPAL"
   ? { secrets: PesapalSecrets; publicConfig: PesapalPublic; mode: string }
   : P extends "MTN_MOMO"
     ? { secrets: MtnMomoSecrets; publicConfig: MtnMomoPublic; mode: string }
     : P extends "AIRTEL_MONEY"
       ? { secrets: AirtelMoneySecrets; publicConfig: AirtelMoneyPublic; mode: string }
-      : never;
+      : P extends "STRIPE"
+        ? { secrets: StripeSecrets; publicConfig: StripePublic; mode: string }
+        : never;
 
 export async function loadConfig<P extends ProviderEnum>(
   provider: P,
