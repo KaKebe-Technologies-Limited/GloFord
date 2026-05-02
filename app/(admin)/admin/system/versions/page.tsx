@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { listVersions, listVersionEntityTypes } from "@/lib/services/system";
 import { RestoreButton } from "./RestoreButton";
@@ -7,56 +8,73 @@ export const metadata = { title: "Version history" };
 export default async function VersionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ entityType?: string; entityId?: string }>;
+  searchParams: Promise<{ entityType?: string; entityId?: string; cursor?: string }>;
 }) {
-  const { entityType, entityId } = await searchParams;
+  const params = await searchParams;
   await requireActorFromSession();
-  const [rows, entityTypes] = await Promise.all([
-    listVersions({ entityType, entityId }),
+  const [{ items, nextCursor, hasMore }, entityTypes] = await Promise.all([
+    listVersions({
+      entityType: params.entityType || undefined,
+      entityId: params.entityId || undefined,
+      cursor: params.cursor || undefined,
+    }),
     listVersionEntityTypes(),
   ]);
+
+  const buildUrl = (overrides: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    const merged = { ...params, ...overrides };
+    for (const [k, v] of Object.entries(merged)) {
+      if (v) p.set(k, v);
+    }
+    return `/admin/system/versions?${p.toString()}`;
+  };
 
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Version history</h1>
         <p className="text-sm text-[var(--color-muted-fg)]">
-          Point-in-time snapshots of every versioned entity. Restore reverts content to that state.
+          Point-in-time snapshots of every versioned entity. Inspect diffs or restore to any version.
         </p>
       </header>
 
       <form className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Entity type</span>
+        <div className="space-y-1">
+          <label htmlFor="ver-type" className="text-xs font-medium text-[var(--color-muted-fg)]">Entity type</label>
           <select
+            id="ver-type"
             name="entityType"
-            aria-label="Filter by entity type"
-            defaultValue={entityType ?? ""}
+            defaultValue={params.entityType ?? ""}
             className="rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm"
           >
             <option value="">All</option>
             {entityTypes.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
+              <option key={t} value={t}>{t}</option>
             ))}
           </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Entity id</span>
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="ver-id" className="text-xs font-medium text-[var(--color-muted-fg)]">Entity ID</label>
           <input
+            id="ver-id"
             name="entityId"
-            defaultValue={entityId ?? ""}
+            defaultValue={params.entityId ?? ""}
             placeholder="Optional CUID"
-            className="w-64 rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm"
+            className="w-56 rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm"
           />
-        </label>
+        </div>
         <button
           type="submit"
-          className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm hover:bg-[var(--color-muted)]"
+          className="rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-hover)]"
         >
           Filter
         </button>
+        {(params.entityType || params.entityId) && (
+          <Link href="/admin/system/versions" className="text-sm text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]">
+            Clear
+          </Link>
+        )}
       </form>
 
       <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
@@ -68,21 +86,21 @@ export default async function VersionsPage({
                 <th className="px-4 py-3">Entity</th>
                 <th className="px-4 py-3">Version</th>
                 <th className="px-4 py-3">Author</th>
-                <th className="px-4 py-3 w-0">Action</th>
+                <th className="px-4 py-3 w-0">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 ? (
+              {items.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-10 text-center text-[var(--color-muted-fg)]">
                     No versions recorded yet.
                   </td>
                 </tr>
               ) : (
-                rows.map((r) => (
-                  <tr key={r.id} className="border-b border-[var(--color-border)] last:border-0">
+                items.map((r) => (
+                  <tr key={r.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[rgb(var(--token-muted)/0.20)]">
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[var(--color-muted-fg)]">
-                      {r.createdAt.toLocaleString()}
+                      {r.createdAt.toLocaleString("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </td>
                     <td className="px-4 py-3">
                       <span className="font-medium">{r.entityType}</span>
@@ -90,12 +108,24 @@ export default async function VersionsPage({
                         #{r.entityId.slice(0, 8)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">v{r.version}</td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs font-medium">
+                        v{r.version}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 font-mono text-xs text-[var(--color-muted-fg)]">
                       {r.createdById.slice(0, 8)}
                     </td>
                     <td className="px-4 py-3">
-                      <RestoreButton id={r.id} />
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/system/versions/${r.id}`}
+                          className="text-xs text-[var(--color-primary)] hover:underline"
+                        >
+                          Inspect
+                        </Link>
+                        <RestoreButton id={r.id} />
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -104,6 +134,18 @@ export default async function VersionsPage({
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {hasMore && (
+        <div className="flex justify-center">
+          <Link
+            href={buildUrl({ cursor: nextCursor })}
+            className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)]"
+          >
+            Load more
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

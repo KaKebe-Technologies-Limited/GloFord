@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { requireActorFromSession } from "@/lib/auth-context";
-import { listDeadLetters } from "@/lib/services/system";
+import { listDeadLetters, countPendingDeadLetters } from "@/lib/services/system";
 import { DeadLetterRow } from "./DeadLetterRow";
 
 export const metadata = { title: "Dead letter queue" };
@@ -10,14 +11,27 @@ type Status = "PENDING" | "RETRIED" | "RESOLVED" | "IGNORED";
 export default async function DeadLetterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; cursor?: string }>;
 }) {
-  const { status } = await searchParams;
+  const params = await searchParams;
   await requireActorFromSession();
-  const normalized = ["PENDING", "RETRIED", "RESOLVED", "IGNORED"].includes(status ?? "")
-    ? (status as Status)
+  const normalized = ["PENDING", "RETRIED", "RESOLVED", "IGNORED"].includes(params.status ?? "")
+    ? (params.status as Status)
     : undefined;
-  const rows = await listDeadLetters({ status: normalized });
+
+  const [{ items, nextCursor, hasMore }, pendingCount] = await Promise.all([
+    listDeadLetters({ status: normalized, cursor: params.cursor || undefined }),
+    countPendingDeadLetters(),
+  ]);
+
+  const buildUrl = (overrides: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    const merged = { ...params, ...overrides };
+    for (const [k, v] of Object.entries(merged)) {
+      if (v) p.set(k, v);
+    }
+    return `/admin/system/dead-letter?${p.toString()}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -28,22 +42,19 @@ export default async function DeadLetterPage({
             Events that failed after retries. Inspect, retry, or dismiss.
           </p>
         </div>
-        {rows.some((r) => r.status === "PENDING") ? (
+        {pendingCount > 0 && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgb(239_180_0/0.10)] px-3 py-1 text-xs font-medium text-amber-600">
             <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-            {rows.filter((r) => r.status === "PENDING").length} pending
+            {pendingCount} pending
           </span>
-        ) : null}
+        )}
       </header>
 
       <form className="flex items-center gap-3">
-        <label htmlFor="dl-status" className="text-sm font-medium">
-          Status
-        </label>
+        <label htmlFor="dl-status" className="text-sm font-medium">Status</label>
         <select
           id="dl-status"
           name="status"
-          aria-label="Filter by status"
           defaultValue={normalized ?? ""}
           className="rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm"
         >
@@ -55,10 +66,15 @@ export default async function DeadLetterPage({
         </select>
         <button
           type="submit"
-          className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm hover:bg-[var(--color-muted)]"
+          className="rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-hover)]"
         >
           Filter
         </button>
+        {normalized && (
+          <Link href="/admin/system/dead-letter" className="text-sm text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]">
+            Clear
+          </Link>
+        )}
       </form>
 
       <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
@@ -76,14 +92,14 @@ export default async function DeadLetterPage({
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 ? (
+              {items.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-[var(--color-muted-fg)]">
-                    Inbox zero — no dead letters.
+                    {normalized ? "No dead letters match this filter." : "Inbox zero \u2014 no dead letters."}
                   </td>
                 </tr>
               ) : (
-                rows.map((r) => (
+                items.map((r) => (
                   <DeadLetterRow
                     key={r.id}
                     row={{
@@ -92,6 +108,7 @@ export default async function DeadLetterPage({
                       source: r.source,
                       eventType: r.eventType,
                       error: r.error,
+                      payload: r.payload as Record<string, unknown> | null,
                       attempts: r.attempts,
                       status: r.status,
                     }}
@@ -102,6 +119,18 @@ export default async function DeadLetterPage({
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {hasMore && (
+        <div className="flex justify-center">
+          <Link
+            href={buildUrl({ cursor: nextCursor })}
+            className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-muted)]"
+          >
+            Load more
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
