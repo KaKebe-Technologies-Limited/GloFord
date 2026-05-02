@@ -12,6 +12,7 @@ import {
 } from "./scheduled-dispatch";
 import { versionRestoreApply } from "./version-restore";
 import { userInviteSend } from "./user-invite";
+import { eventAutoReminder } from "./event-auto-reminder";
 
 /** The array Inngest's Next.js handler registers. Add new functions here. */
 export const functions = [
@@ -24,6 +25,7 @@ export const functions = [
   newsletterSend,
   eventAnnounceSend,
   eventReminderSend,
+  eventAutoReminder,
   // Drip automation
   enrollOnSignup,
   enrollOnDonation,

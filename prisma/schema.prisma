@@ -640,14 +640,36 @@ model Event {
   location     String?
   coverMediaId String?
   isPublic     Boolean   @default(true)
+  capacity     Int?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  cover         Media?              @relation("EventCover", fields: [coverMediaId], references: [id])
-  segments      Segment[]           @relation("EventSegments")
-  notifications EventNotification[]
+  cover          Media?              @relation("EventCover", fields: [coverMediaId], references: [id])
+  segments       Segment[]           @relation("EventSegments")
+  notifications  EventNotification[]
+  registrations  EventRegistration[]
 
   @@index([startsAt])
+}
+
+model EventRegistration {
+  id           String             @id @default(cuid())
+  eventId      String
+  email        String
+  name         String?
+  status       EventRsvpStatus    @default(GOING)
+  registeredAt DateTime           @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, email])
+  @@index([eventId, status])
+}
+
+enum EventRsvpStatus {
+  GOING
+  INTERESTED
+  CANCELED
 }
 
 model EventNotification {
