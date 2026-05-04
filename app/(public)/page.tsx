@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+
+export const dynamic = "force-dynamic";
 import { getTranslations } from "next-intl/server";
 import { getActiveHeroSlides } from "@/lib/services/heroSlides";
 import { getActiveTestimonials } from "@/lib/services/testimonials";
 import { getActiveLeaderMessages } from "@/lib/services/leaderMessages";
-import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { HeroSlider } from "@/components/public/HeroSlider";
 import { TestimonialsSection } from "@/components/public/TestimonialsSection";
 import { LeaderMessageSection } from "@/components/public/LeaderMessageSection";
@@ -67,7 +68,7 @@ export default async function HomePage() {
     getActiveHeroSlides(),
     getActiveTestimonials(),
     getActiveLeaderMessages(),
-    getActiveSiteStats(),
+    db.siteStatistic.findMany({ where: { isActive: true }, orderBy: { order: "asc" } }),
     db.post
       .findMany({
         where: { status: "PUBLISHED" },
