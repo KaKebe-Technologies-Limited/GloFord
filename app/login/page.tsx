@@ -34,7 +34,7 @@ export default async function LoginPage({
   } catch {
     /* DB not ready */
   }
-  if (!loginBgUrl) loginBgUrl = process.env.LOGIN_BG_IMAGE_URL ?? null;
+  if (!loginBgUrl) loginBgUrl = process.env.LOGIN_BG_IMAGE_URL ?? "/seed-images/gloford/hero-staff.jpg";
 
   return (
     <main className="grid min-h-[100dvh] lg:grid-cols-[1fr_1.1fr]">
