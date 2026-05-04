@@ -1,5 +1,6 @@
 import { PublicHeader } from "@/components/public/Header";
 import { PublicFooter } from "@/components/public/Footer";
+import { BackToTop } from "@/components/public/BackToTop";
 
 // All public pages read tenant data on every render (nav + content).
 // We let unstable_cache handle the actual caching; dynamic is set to
@@ -18,6 +19,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <PublicHeader />
       <main id="main-content" className="flex-1">{children}</main>
       <PublicFooter />
+      <BackToTop />
     </div>
   );
 }
