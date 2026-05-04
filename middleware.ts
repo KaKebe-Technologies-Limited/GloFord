@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { COUNTRY_LOCALE_MAP, defaultLocale } from "@/lib/i18n/config";
+
+const LOCALE_COOKIE = "gloford_locale";
 
 /**
  * Edge middleware:
  *   1. Stamp a correlation ID (`x-correlation-id`) for tracing
  *   2. Generate a CSP nonce per request for XSS protection
  *   3. Guard /admin by requiring a session cookie
+ *   4. Auto-detect locale from geo-IP on first visit
  */
 
 const SESSION_COOKIES = [
@@ -68,6 +72,25 @@ export function middleware(req: NextRequest) {
     const res = NextResponse.next({ request: { headers: forwardedHeaders } });
     res.headers.set(CORRELATION_HEADER, cid);
     res.headers.set("Content-Security-Policy", buildCsp(nonce));
+
+    // Auto-detect locale from geo-IP on first visit (no cookie yet)
+    if (!req.cookies.get(LOCALE_COOKIE)) {
+      const country =
+        req.headers.get("cf-ipcountry") ??            // Cloudflare
+        req.headers.get("x-vercel-ip-country") ??     // Vercel
+        (req as unknown as { geo?: { country?: string } }).geo?.country ??
+        null;
+      const detected = country
+        ? COUNTRY_LOCALE_MAP[country.toUpperCase()] ?? defaultLocale
+        : defaultLocale;
+      res.cookies.set(LOCALE_COOKIE, detected, {
+        path: "/",
+        httpOnly: false,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 365,
+      });
+    }
+
     return res;
   } catch {
     return NextResponse.next();

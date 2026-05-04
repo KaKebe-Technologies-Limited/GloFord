@@ -5,6 +5,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ─── RTL support ─── */
+html[dir="rtl"] {
+  font-family: "IBM Plex Sans Arabic", var(--font-inter), system-ui, sans-serif;
+}
+
+html[dir="rtl"] .rtl\:flip {
+  transform: scaleX(-1);
+}
+
 /* ────────────────────────────────────────────────────────────
    Design System — Dark Forest Green Brand
 
