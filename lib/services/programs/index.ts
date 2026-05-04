@@ -125,6 +125,7 @@ export function getPublishedProgramBySlug(s: string) {
     async () => {
       const row = await db.program.findFirst({
         where: { slug: s, status: "PUBLISHED" },
+        include: { cover: { select: { url: true, alt: true } } },
       });
       if (!row) throw new NotFoundError("Program");
       return row;

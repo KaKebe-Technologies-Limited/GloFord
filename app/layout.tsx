@@ -51,6 +51,7 @@ export function generateMetadata(): Metadata {
       siteName: brand.name,
       type: "website",
       locale: "en_US",
+      images: [{ url: "/logo.png", width: 512, height: 512, alt: brand.name }],
     },
     twitter: {
       card: "summary_large_image",

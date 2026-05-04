@@ -8,6 +8,8 @@ import { getCollectionConfig, toCollectionPath } from "@/lib/pages/collections";
 import { getActiveTestimonials } from "@/lib/services/testimonials";
 import { getActiveFaqs } from "@/lib/services/faqs";
 import { PartnerApplicationForm } from "./PartnerApplicationForm";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
       "Organizations and institutions collaborating with us to strengthen communities. Apply to become a partner.",
     type: "website",
     url: `${APP_URL}/partners`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Our Partners" },
 };
@@ -58,6 +60,20 @@ export default async function PartnersPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Our Partners",
+            path: "/partners",
+            description: "Organizations and institutions collaborating with us to strengthen communities.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Partners", href: "/partners" },
+          ]),
+        ]}
+      />
+
       {/* Hero */}
       <section className="relative w-full overflow-hidden bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <div className="relative mx-auto max-w-7xl">

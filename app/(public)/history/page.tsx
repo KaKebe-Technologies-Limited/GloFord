@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     description: "The story of our growth from a small community initiative to a regional force for change.",
     type: "website",
     url: `${APP_URL}/history`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Our History" },
 };

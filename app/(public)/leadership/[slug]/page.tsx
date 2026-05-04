@@ -24,7 +24,7 @@ export async function generateMetadata({
         description,
         type: "article",
         url: `${APP_URL}/leadership/${slug}`,
-        images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+        images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
       },
       twitter: { card: "summary_large_image" },
     };

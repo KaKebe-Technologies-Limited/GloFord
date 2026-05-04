@@ -1,8 +1,38 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getActiveCampaignBySlug } from "@/lib/services/campaigns";
 import { DonateWidget, type WidgetProvider } from "@/components/donate/DonateWidget";
 import { getPublicDonationContext } from "@/lib/services/donations/public";
 import { formatMoney } from "@/lib/utils/money";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const campaign = await getActiveCampaignBySlug(slug);
+    const title = `Donate to ${campaign.title}`;
+    const description = campaign.description.slice(0, 160);
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "website",
+        url: `${APP_URL}/donate/${slug}`,
+        images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
+      },
+      twitter: { card: "summary_large_image", title },
+    };
+  } catch {
+    return { title: "Donate" };
+  }
+}
 
 export default async function CampaignDonatePage({
   params,

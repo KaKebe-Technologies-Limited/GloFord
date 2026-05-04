@@ -27,6 +27,12 @@ import {
   Sparkles,
   History,
 } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  organizationJsonLd,
+  webSiteJsonLd,
+  breadcrumbJsonLd,
+} from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -41,7 +47,7 @@ export const metadata: Metadata = {
       "Strengthening communities through health, youth empowerment, and climate resilience across Uganda.",
     type: "website",
     url: APP_URL,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation community" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Gloford Foundation" },
 };
@@ -125,6 +131,14 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          organizationJsonLd(),
+          webSiteJsonLd(),
+          breadcrumbJsonLd([{ name: "Home", href: "/" }]),
+        ]}
+      />
+
       {/* ── Section 1: Hero Slider ── */}
       {slides.length > 0 ? (
         <HeroSlider

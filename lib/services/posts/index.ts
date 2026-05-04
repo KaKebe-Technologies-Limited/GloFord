@@ -168,7 +168,7 @@ export function getPublishedPostBySlug(s: string) {
     async () => {
       const row = await db.post.findFirst({
         where: { slug: s, status: "PUBLISHED" },
-        include: { author: { select: { name: true } }, tags: { include: { tag: true } } },
+        include: { author: { select: { name: true } }, tags: { include: { tag: true } }, cover: { select: { url: true, alt: true } } },
       });
       if (!row) throw new NotFoundError("Post");
       return row;

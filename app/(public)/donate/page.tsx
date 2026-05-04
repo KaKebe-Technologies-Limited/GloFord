@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description: "Support community-led programs in health, education, and resilience.",
     type: "website",
     url: `${APP_URL}/donate`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Donate" },
 };

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCareerBySlug } from "@/lib/services/careers";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { jobPostingJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 import {
   Briefcase,
   MapPin,
@@ -44,7 +46,7 @@ export async function generateMetadata({
         description,
         type: "article",
         url: `${APP_URL}/careers/${slug}`,
-        images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+        images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
       },
       twitter: { card: "summary_large_image" },
     };
@@ -78,6 +80,27 @@ export default async function CareerDetailPage({
 
   return (
     <>
+      <JsonLd
+        data={[
+          jobPostingJsonLd({
+            title: career.title,
+            slug,
+            description: career.description,
+            department: career.department,
+            location: career.location,
+            type: career.type,
+            salaryRange: career.salaryRange,
+            applicationDeadline: career.applicationDeadline,
+            postedAt: career.createdAt,
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Careers", href: "/careers" },
+            { name: career.title, href: `/careers/${slug}` },
+          ]),
+        ]}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] py-12 sm:py-16">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">

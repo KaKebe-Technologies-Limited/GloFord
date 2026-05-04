@@ -13,6 +13,8 @@ import {
 import { getActiveVolunteerOpportunities } from "@/lib/services/volunteer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -27,7 +29,7 @@ export const metadata: Metadata = {
       "Give your time and talent. Join our volunteer network and help build stronger communities across Uganda.",
     type: "website",
     url: `${APP_URL}/volunteer`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Volunteer" },
 };
@@ -38,6 +40,20 @@ export default async function VolunteerPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Volunteer",
+            path: "/volunteer",
+            description: "Give your time and talent. Join our volunteer network and help build stronger communities across Uganda.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Volunteer", href: "/volunteer" },
+          ]),
+        ]}
+      />
+
       {/* Hero */}
       <section className="relative w-full overflow-hidden bg-gradient-to-br from-[rgb(248_250_249)] to-[rgb(240_247_244)] px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <div className="relative mx-auto max-w-7xl text-center">

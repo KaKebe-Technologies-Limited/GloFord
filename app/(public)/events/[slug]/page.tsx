@@ -7,6 +7,8 @@ import { db } from "@/lib/db";
 import { getPublicEvent } from "@/lib/services/events/public";
 import { getRegistrationCounts } from "@/lib/services/events/registration";
 import { EventRsvp } from "@/components/public/EventRsvp";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { eventJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 export async function generateStaticParams() {
   try {
@@ -44,8 +46,8 @@ export async function generateMetadata({
       type: "article",
       url: `${APP_URL}/events/${slug}`,
       images: e.cover?.url
-        ? [{ url: e.cover.url, width: 1200, height: 630 }]
-        : [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+        ? [{ url: e.cover.url, width: 1200, height: 630, alt: e.title }]
+        : [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
     },
     twitter: { card: "summary_large_image" },
   };
@@ -65,6 +67,24 @@ export default async function EventDetailPage({
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
+      <JsonLd
+        data={[
+          eventJsonLd({
+            title: e.title,
+            slug,
+            description: e.description,
+            startsAt: e.startsAt,
+            endsAt: e.endsAt ?? undefined,
+            location: e.location ?? undefined,
+            coverUrl: e.cover?.url,
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Events", href: "/events" },
+            { name: e.title, href: `/events/${slug}` },
+          ]),
+        ]}
+      />
       <Link
         href="/events"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-[var(--color-muted-fg)] hover:text-[var(--color-fg)]"

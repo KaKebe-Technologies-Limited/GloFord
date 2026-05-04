@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { getTeamMembersByDepartment } from "@/lib/services/teamMembers";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Facebook, Twitter, Linkedin, Instagram, Globe } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -17,7 +19,7 @@ export const metadata: Metadata = {
       "Meet the dedicated team guiding our mission, strategy, and programs across communities.",
     type: "website",
     url: `${APP_URL}/leadership`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Our Leadership" },
 };
@@ -44,6 +46,20 @@ export default async function LeadershipPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Our Leadership",
+            path: "/leadership",
+            description: "Meet the dedicated team guiding our mission, strategy, and programs across communities.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Leadership", href: "/leadership" },
+          ]),
+        ]}
+      />
+
       {/* Hero */}
       <section className="relative w-full overflow-hidden bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <div className="relative mx-auto max-w-7xl">

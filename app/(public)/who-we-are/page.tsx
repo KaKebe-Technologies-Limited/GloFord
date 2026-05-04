@@ -26,6 +26,8 @@ import {
   Users,
   Sparkles,
 } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { nonprofitJsonLd, organizationJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -40,7 +42,7 @@ export const metadata: Metadata = {
       "Learn about our story, mission, vision, and the values that drive our work across communities.",
     type: "website",
     url: `${APP_URL}/who-we-are`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Who We Are" },
 };
@@ -55,6 +57,17 @@ export default async function WhoWeArePage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          nonprofitJsonLd(),
+          organizationJsonLd(),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Who We Are", href: "/who-we-are" },
+          ]),
+        ]}
+      />
+
       {/* ── Hero ── */}
       <section className="bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

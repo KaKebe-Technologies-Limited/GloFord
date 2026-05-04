@@ -5,6 +5,8 @@ import { getTranslations } from "next-intl/server";
 import { CalendarDays, MapPin, ArrowRight, Clock } from "lucide-react";
 import { listPublicEvents } from "@/lib/services/events/public";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -17,7 +19,7 @@ export const metadata: Metadata = {
     description: "Join us for community events, workshops, and launches.",
     type: "website",
     url: `${APP_URL}/events`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Events" },
 };
@@ -31,6 +33,20 @@ export default async function EventsPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Events",
+            path: "/events",
+            description: "Join us for community events, workshops, and launches.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Events", href: "/events" },
+          ]),
+        ]}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">

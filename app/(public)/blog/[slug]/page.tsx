@@ -4,6 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { getPublishedPostBySlug } from "@/lib/services/posts";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { blogPostingJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 export async function generateStaticParams() {
   try {
@@ -36,7 +38,9 @@ export async function generateMetadata(
         description: p.seoDesc ?? p.excerpt ?? "",
         type: "article",
         url: `${APP_URL}/blog/${slug}`,
-        images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+        images: p.cover?.url
+          ? [{ url: p.cover.url, width: 1200, height: 630, alt: p.title }]
+          : [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
       },
       twitter: { card: "summary_large_image" },
     };
@@ -58,6 +62,24 @@ export default async function PostDetail({ params }: { params: Promise<{ slug: s
 
   return (
     <article>
+      <JsonLd
+        data={[
+          blogPostingJsonLd({
+            title: post.title,
+            slug,
+            excerpt: post.excerpt,
+            publishedAt: post.publishedAt,
+            authorName: post.author?.name,
+            coverUrl: post.cover?.url,
+            tags: post.tags.map((pt) => pt.tag.name),
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Blog", href: "/blog" },
+            { name: post.title, href: `/blog/${slug}` },
+          ]),
+        ]}
+      />
       <header className="mx-auto max-w-3xl px-4 py-10">
         {post.publishedAt ? (
           <time className="text-xs uppercase tracking-wide text-[var(--color-muted-fg)]">

@@ -7,6 +7,8 @@ import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { ArrowRight } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
@@ -18,7 +20,7 @@ export const metadata: Metadata = {
     description: "Explore our community development programs in education, healthcare, and sustainable livelihoods.",
     type: "website",
     url: `${APP_URL}/programs`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Our Programs" },
 };
@@ -32,6 +34,20 @@ export default async function ProgramsPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Our Programs",
+            path: "/programs",
+            description: "Explore our community development programs in education, healthcare, and sustainable livelihoods.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Programs", href: "/programs" },
+          ]),
+        ]}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">

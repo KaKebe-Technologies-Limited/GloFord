@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description: "Gain real-world experience in community development. Explore our internship opportunities.",
     type: "website",
     url: `${APP_URL}/internships`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Internships" },
 };

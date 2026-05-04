@@ -6,6 +6,8 @@ import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { Heart, Users, Briefcase } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -20,7 +22,7 @@ export const metadata: Metadata = {
       "Make an impact. Donate, volunteer, or join our team to support lasting community change.",
     type: "website",
     url: `${APP_URL}/get-involved`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Get Involved" },
 };
@@ -61,6 +63,20 @@ export default async function GetInvolvedPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Get Involved",
+            path: "/get-involved",
+            description: "Make an impact. Donate, volunteer, or join our team to support lasting community change.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Get Involved", href: "/get-involved" },
+          ]),
+        ]}
+      />
+
       {/* Hero */}
       <section className="relative w-full overflow-hidden bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <div className="relative mx-auto max-w-7xl text-center">

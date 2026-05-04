@@ -5,6 +5,8 @@ import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { ArrowRight, BookOpen } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -17,7 +19,7 @@ export const metadata: Metadata = {
     description: "Stories, updates, and announcements from our programs and community.",
     type: "website",
     url: `${APP_URL}/blog`,
-    images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: "Gloford Foundation" }],
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Gloford" }],
   },
   twitter: { card: "summary_large_image", title: "Blog" },
 };
@@ -42,6 +44,20 @@ export default async function BlogIndex() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Blog",
+            path: "/blog",
+            description: "Stories, updates, and announcements from our programs and community.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Blog", href: "/blog" },
+          ]),
+        ]}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-[rgb(248_250_249)] to-[rgb(240_247_244)] py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
