@@ -252,21 +252,18 @@ async function DynamicStatsSection({
     <section className="bg-[rgb(var(--token-muted)/0.30)] py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {stats.map((stat, i) => (
-            <ScrollReveal key={stat.id} delay={i * 0.1}>
-              <div className="text-center">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-[rgb(var(--token-primary)/0.10)]">
-                  <TrendingUp className="h-7 w-7 text-[var(--color-primary)]" />
-                </div>
-                <AnimatedCounter
-                  value={stat.value}
-                  className="block text-3xl font-bold text-[var(--color-fg)] sm:text-4xl"
-                />
-                <p className="mt-1 text-sm text-[var(--color-muted-fg)]">
-                  {stat.label}
-                </p>
+          {stats.map((stat) => (
+            <div key={stat.id} className="text-center">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-[rgb(var(--token-primary)/0.10)]">
+                <TrendingUp className="h-7 w-7 text-[var(--color-primary)]" />
               </div>
-            </ScrollReveal>
+              <span className="block text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
+                {stat.value}
+              </span>
+              <p className="mt-1 text-sm text-[var(--color-muted-fg)]">
+                {stat.label}
+              </p>
+            </div>
           ))}
         </div>
       </div>
