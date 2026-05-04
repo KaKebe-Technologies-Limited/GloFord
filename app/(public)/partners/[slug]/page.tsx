@@ -4,7 +4,6 @@ import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { getPublishedCollectionPage } from "@/lib/services/pages";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export async function generateMetadata({
   params,

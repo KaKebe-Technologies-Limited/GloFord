@@ -105,7 +105,7 @@ function MetricCard({
   icon: Icon,
   label,
   value,
-  total,
+  total: _total,
   percentage,
   accent,
   danger,

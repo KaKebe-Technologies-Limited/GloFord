@@ -21,7 +21,6 @@ export async function generateStaticParams() {
 export const revalidate = 3600; // ISR: revalidate every hour
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> },
