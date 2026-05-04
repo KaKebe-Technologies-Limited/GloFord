@@ -51,7 +51,6 @@ export default async function DashboardPage() {
     eventsUpcoming,
     newslettersDraft,
     newslettersSent,
-    recentAudit,
     dlqPending,
   ] = await Promise.all([
     settle("pagesPublished", db.page.count({ where: { status: "PUBLISHED" } }), 0),
@@ -81,27 +80,6 @@ export default async function DashboardPage() {
     settle("eventsUpcoming", db.event.count({ where: { startsAt: { gte: new Date() } } }), 0),
     settle("newslettersDraft", db.newsletter.count({ where: { status: "DRAFT" } }), 0),
     settle("newslettersSent", db.newsletter.count({ where: { status: "SENT" } }), 0),
-    settle(
-      "recentAudit",
-      db.auditLog.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        select: {
-          id: true,
-          action: true,
-          entityType: true,
-          createdAt: true,
-          userId: true,
-        },
-      }),
-      [] as Array<{
-        id: string;
-        action: string;
-        entityType: string | null;
-        createdAt: Date;
-        userId: string | null;
-      }>,
-    ),
     settle("dlqPending", db.deadLetter.count({ where: { status: "PENDING" } }), 0),
   ]);
 
@@ -121,10 +99,5 @@ export default async function DashboardPage() {
     dlqPending,
   };
 
-  const serializedAudit = recentAudit.map((r) => ({
-    ...r,
-    createdAt: r.createdAt.toISOString(),
-  }));
-
-  return <DashboardClient stats={stats} recentAudit={serializedAudit} userName={userName} />;
+  return <DashboardClient stats={stats} userName={userName} />;
 }

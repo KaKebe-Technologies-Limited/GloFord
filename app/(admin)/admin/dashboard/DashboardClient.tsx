@@ -10,10 +10,8 @@ import {
   CalendarDays,
   ArrowRight,
   ArrowUpRight,
-  Activity,
-  PenTool,
   AlertTriangle,
-  Zap,
+  PenTool,
   Heart,
   Shield,
   CreditCard,
@@ -21,6 +19,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion, type Variants } from "framer-motion";
+import { AnalyticsCharts } from "@/components/admin/AnalyticsCharts";
+import { LiveActivityFeed } from "@/components/admin/LiveActivityFeed";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -29,47 +29,9 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-const ACTION_ICONS: Record<string, React.ElementType> = {
-  create: Zap,
-  update: PenTool,
-  delete: AlertTriangle,
-  publish: ArrowUpRight,
-  upload: FileText,
-  refund: HandCoins,
-};
-
-function getActionIcon(action: string): React.ElementType {
-  const key = Object.keys(ACTION_ICONS).find((k) =>
-    action.toLowerCase().includes(k),
-  );
-  return key ? ACTION_ICONS[key]! : Activity;
-}
-
-function getActionColor(action: string): string {
-  const a = action.toLowerCase();
-  if (a.includes("delete") || a.includes("refund"))
-    return "bg-[rgb(var(--token-danger)/0.10)] text-[var(--color-danger)]";
-  if (a.includes("create") || a.includes("upload"))
-    return "bg-[rgb(var(--token-success)/0.10)] text-[var(--color-success)]";
-  if (a.includes("publish"))
-    return "bg-[rgb(var(--token-primary)/0.10)] text-[var(--color-primary)]";
-  return "bg-[var(--color-muted)] text-[var(--color-muted-fg)]";
-}
-
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
 
 export function DashboardClient({
   stats,
-  recentAudit,
   userName,
 }: {
   stats: {
@@ -87,13 +49,6 @@ export function DashboardClient({
     newslettersSent: number;
     dlqPending: number;
   };
-  recentAudit: Array<{
-    id: string;
-    action: string;
-    entityType: string | null;
-    createdAt: string;
-    userId: string | null;
-  }>;
   userName: string;
 }) {
   const t = useTranslations("admin.dashboard");
@@ -217,75 +172,16 @@ export function DashboardClient({
         />
       </motion.section>
 
+      {/* Analytics Charts */}
+      <motion.section variants={item}>
+        <AnalyticsCharts />
+      </motion.section>
+
       {/* Lower grid */}
       <section className="grid gap-4 lg:grid-cols-3">
-        {/* Activity Feed */}
-        <motion.div
-          variants={item}
-          className="lg:col-span-2 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]"
-        >
-          <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">
-            <div className="flex items-center gap-2">
-              <Activity
-                className="h-4 w-4 text-[var(--color-muted-fg)]"
-                aria-hidden="true"
-              />
-              <h2 className="text-[13px] font-semibold text-[var(--color-fg)]">
-                {t("recentActivity.title")}
-              </h2>
-            </div>
-            <Link
-              href="/admin/system/audit"
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--color-muted-fg)] transition hover:text-[var(--color-fg)]"
-            >
-              {t("recentActivity.viewAudit")}
-              <ArrowRight className="h-3 w-3" aria-hidden="true" />
-            </Link>
-          </div>
-
-          {recentAudit.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-muted)]">
-                <Activity className="h-5 w-5 text-[var(--color-muted-fg)]" />
-              </div>
-              <p className="mt-3 text-[13px] text-[var(--color-muted-fg)]">
-                {t("recentActivity.empty")}
-              </p>
-            </div>
-          ) : (
-            <ul>
-              {recentAudit.map((r) => {
-                const ActionIcon = getActionIcon(r.action);
-                return (
-                  <li
-                    key={r.id}
-                    className="group flex items-center gap-3 border-b border-[var(--color-border)] px-5 py-3 last:border-0 transition-colors hover:bg-[rgb(var(--token-muted)/0.30)]"
-                  >
-                    <div
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${getActionColor(r.action)}`}
-                    >
-                      <ActionIcon className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium text-[var(--color-fg)]">
-                        {r.action}
-                        {r.entityType && (
-                          <span className="ml-1.5 font-normal text-[var(--color-muted-fg)]">
-                            {t("recentActivity.onEntity", {
-                              type: r.entityType,
-                            })}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-[11px] tabular-nums text-[var(--color-muted-fg)]">
-                      {relativeTime(r.createdAt)}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+        {/* Live Activity Feed */}
+        <motion.div variants={item} className="lg:col-span-2">
+          <LiveActivityFeed />
         </motion.div>
 
         {/* Right column */}

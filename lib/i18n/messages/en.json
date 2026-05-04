@@ -477,6 +477,17 @@
         "payments": "Payment providers",
         "users": "Invite users"
       }
+    },
+    "analytics": {
+      "donationTrend": "Donation trend",
+      "subscriberGrowth": "Subscriber growth",
+      "last30": "last 30 days",
+      "amount": "Amount",
+      "signups": "New signups",
+      "liveActivity": "Live activity",
+      "liveConnected": "Connected",
+      "liveReconnecting": "Reconnecting…",
+      "liveWaiting": "Waiting for activity…"
     }
   },
   "auth": {

@@ -477,6 +477,17 @@
         "payments": "Watoa Huduma wa Malipo",
         "users": "Alika Watumiaji"
       }
+    },
+    "analytics": {
+      "donationTrend": "Mwenendo wa michango",
+      "subscriberGrowth": "Ukuaji wa wasajiliwa",
+      "last30": "siku 30 zilizopita",
+      "amount": "Kiasi",
+      "signups": "Wasajiliwa wapya",
+      "liveActivity": "Shughuli za moja kwa moja",
+      "liveConnected": "Imeunganishwa",
+      "liveReconnecting": "Inaunganisha tena…",
+      "liveWaiting": "Inasubiri shughuli…"
     }
   },
   "auth": {
