@@ -7,7 +7,10 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MapPin, Phone, Mail } from "lucide-react";
 
 export async function PublicFooter() {
-  const t = await getTranslations("public.footer");
+  const [t, tNav] = await Promise.all([
+    getTranslations("public.footer"),
+    getTranslations("public.nav"),
+  ]);
   const year = new Date().getFullYear();
 
   const [footerRows, settings] = await Promise.all([
@@ -37,11 +40,11 @@ export async function PublicFooter() {
           .filter((n) => n.href)
           .map((n) => ({ href: n.href!, label: n.label }))
       : [
-          { href: "/about", label: "About Us" },
-          { href: "/programs", label: "Projects" },
-          { href: "/blog", label: "News" },
-          { href: "/events", label: "Events" },
-          { href: "/contact", label: "Contact" },
+          { href: "/about", label: tNav("about") },
+          { href: "/programs", label: tNav("programs") },
+          { href: "/blog", label: tNav("blog") },
+          { href: "/events", label: tNav("events") },
+          { href: "/contact", label: tNav("contact") },
         ];
 
   const socialLinks = [
