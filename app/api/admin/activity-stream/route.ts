@@ -15,6 +15,8 @@ export async function GET() {
   let lastId: string | null = null;
   let closed = false;
 
+  let intervalHandle: ReturnType<typeof setInterval> | null = null;
+
   const stream = new ReadableStream({
     async start(controller) {
       // Send initial batch (last 10 events)
@@ -44,9 +46,9 @@ export async function GET() {
       }
 
       // Poll for new events every 5s
-      const interval = setInterval(async () => {
+      intervalHandle = setInterval(async () => {
         if (closed) {
-          clearInterval(interval);
+          if (intervalHandle) clearInterval(intervalHandle);
           return;
         }
         try {
@@ -88,6 +90,7 @@ export async function GET() {
     },
     cancel() {
       closed = true;
+      if (intervalHandle) clearInterval(intervalHandle);
     },
   });
 

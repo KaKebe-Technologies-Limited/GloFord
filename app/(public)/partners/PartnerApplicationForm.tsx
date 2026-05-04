@@ -16,6 +16,7 @@ export function PartnerApplicationForm() {
   const t = useTranslations("public.partners");
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const PARTNERSHIP_TYPES = [
     { value: "Strategic", label: t("typeStrategic") },
@@ -26,10 +27,15 @@ export function PartnerApplicationForm() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
     const fd = new FormData(e.currentTarget);
     startTransition(async () => {
-      await submitPartnerAction(fd);
-      setSuccess(true);
+      try {
+        await submitPartnerAction(fd);
+        setSuccess(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to submit application. Please try again.");
+      }
     });
   }
 
@@ -37,8 +43,8 @@ export function PartnerApplicationForm() {
     return (
       <ScrollReveal>
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-12 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--token-success)/0.10)]">
+            <CheckCircle2 className="h-8 w-8 text-[var(--color-success)]" />
           </div>
           <h3 className="mt-6 text-xl font-semibold">{t("successHeading")}</h3>
           <p className="mt-2 text-[var(--color-muted-fg)]">
@@ -54,6 +60,11 @@ export function PartnerApplicationForm() {
       onSubmit={handleSubmit}
       className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 sm:p-8"
     >
+      {error && (
+        <p role="alert" className="mb-5 rounded-lg bg-[rgb(var(--token-danger)/0.10)] px-4 py-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="organizationName" className={labelCls}>

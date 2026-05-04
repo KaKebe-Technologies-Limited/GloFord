@@ -40,13 +40,13 @@ export function PublicNav({ items }: { items: NavTreeItem[] }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 4 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute left-0 top-full z-50 mt-1 w-60 overflow-hidden rounded-lg border border-gray-100 bg-white py-2 shadow-lg"
+                  className="absolute left-0 top-full z-50 mt-1 w-60 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] py-2 shadow-lg"
                 >
                   {item.children.map((child) => (
                     <Link
                       key={child.id}
                       href={child.href}
-                      className="block px-5 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-[var(--color-primary)]"
+                      className="block px-5 py-2.5 text-sm text-[var(--color-muted-fg)] transition hover:bg-[var(--color-muted)] hover:text-[var(--color-primary)]"
                     >
                       {child.label}
                     </Link>

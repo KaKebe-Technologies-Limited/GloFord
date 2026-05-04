@@ -26,7 +26,6 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export async function generateMetadata({
   params,
@@ -148,7 +147,7 @@ export default async function CareerDetailPage({
               </Link>
             )}
             {deadlinePassed && (
-              <p className="mt-6 rounded-xl border border-[rgb(var(--token-danger)/0.20)] bg-red-50 px-4 py-3 text-sm text-[var(--color-danger)]">
+              <p className="mt-6 rounded-xl border border-[rgb(var(--token-danger)/0.20)] bg-[rgb(var(--token-danger)/0.08)] px-4 py-3 text-sm text-[var(--color-danger)]">
                 Applications for this position are closed.
               </p>
             )}

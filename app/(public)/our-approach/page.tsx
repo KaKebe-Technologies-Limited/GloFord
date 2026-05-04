@@ -12,9 +12,10 @@ import {
   Shield,
   Lightbulb,
 } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export const metadata: Metadata = {
   title: "Our Approach",
@@ -95,6 +96,13 @@ const stats = [
 export default function OurApproachPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", href: "/" },
+          { name: "Our Approach", href: "/our-approach" },
+        ])}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-[rgb(248_250_249)] to-[rgb(240_247_244)] py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

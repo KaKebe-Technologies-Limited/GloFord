@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Plus, Trash2, ChevronUp, ChevronDown, Bold, Italic, List, ListOrdered, Link2, Heading2, Heading3, Quote, Code, Undo2, Redo2 } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Bold, Italic, List, ListOrdered, Link2, Heading2, Heading3, Quote, Code, Undo2 } from "lucide-react";
 import { BLOCK_META, newBlock, type Block, type BlockType } from "@/lib/blocks/types";
 import { Button } from "@/components/ui/Button";
 import { MediaPicker } from "@/components/ui/MediaPicker";

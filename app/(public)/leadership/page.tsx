@@ -7,7 +7,6 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export const metadata: Metadata = {
   title: "Our Leadership",

@@ -4,9 +4,10 @@ import { db } from "@/lib/db";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Briefcase, MapPin, Clock, ArrowRight, GraduationCap } from "lucide-react";
 import Image from "next/image";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export const metadata: Metadata = {
   title: "Internships",
@@ -29,6 +30,20 @@ export default async function InternshipsPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Internships",
+            path: "/internships",
+            description: "Gain real-world experience in community development. Explore our internship opportunities.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Internships", href: "/internships" },
+          ]),
+        ]}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

@@ -7,9 +7,10 @@ import { getPublicDonationContext } from "@/lib/services/donations/public";
 import { formatMoney } from "@/lib/utils/money";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Heart, Target, ArrowRight } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export const metadata: Metadata = {
   title: "Donate",
@@ -66,6 +67,13 @@ export default async function DonatePage() {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", href: "/" },
+          { name: "Donate", href: "/donate" },
+        ])}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">

@@ -93,6 +93,7 @@ html[dir="rtl"] .rtl\:flip {
   --token-primary-fg:   255 255 255;
   --token-secondary:    248 250 249;
   --token-secondary-fg: 10 10 11;
+  --token-card-fg:      10 10 11;
   --token-accent:       13 122 61;
   --token-accent-fg:    255 255 255;
   --token-danger:       239 68 68;
@@ -120,6 +121,7 @@ html[dir="rtl"] .rtl\:flip {
   --token-primary-fg:   255 255 255;
   --token-secondary:    21 23 28;
   --token-secondary-fg: 247 247 248;
+  --token-card-fg:      247 247 248;
   --token-accent:       45 170 100;
   --token-accent-fg:    10 10 11;
   --token-ring:         37 85 73;

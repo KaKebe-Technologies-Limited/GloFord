@@ -9,7 +9,6 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { contactPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const STAFF_OG = `${APP_URL}/seed-images/gloford/hero-staff.jpg`;
 
 export const metadata: Metadata = {
   title: "Contact Us",

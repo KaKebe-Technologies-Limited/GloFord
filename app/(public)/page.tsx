@@ -35,7 +35,6 @@ import {
 } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export const metadata: Metadata = {
   title: "Home",
@@ -53,6 +52,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
+  const t = await getTranslations("public.home");
   const [
     slides,
     testimonials,
@@ -158,43 +158,43 @@ export default async function HomePage() {
       )}
 
       {/* ── Section 2: Animated Stats (muted bg) ── */}
-      <DynamicStatsSection dbStats={siteStats} />
+      <DynamicStatsSection dbStats={siteStats} t={t} />
 
       {/* ── Section 3: About Intro (light gradient bg) ── */}
-      <AboutIntroSection />
+      <AboutIntroSection t={t} />
 
       {/* ── Section 4: Leader Messages (white bg) ── */}
       {leaderMessages.length > 0 && (
-        <LeaderMessageSection messages={leaderMessages} />
+        <LeaderMessageSection messages={leaderMessages} heading={t("leaderMessagesHeading")} />
       )}
 
       {/* ── Section 5: What We Do (muted bg) ── */}
-      <WhatWeDoSection />
+      <WhatWeDoSection t={t} />
 
       {/* ── Section 6: Latest Blog Posts ── */}
-      {latestPosts.length > 0 && <LatestPostsSection posts={latestPosts} />}
+      {latestPosts.length > 0 && <LatestPostsSection posts={latestPosts} t={t} />}
 
       {/* ── Section 7: Upcoming Events ── */}
       {upcomingEvents.length > 0 && (
-        <UpcomingEventsSection events={upcomingEvents} />
+        <UpcomingEventsSection events={upcomingEvents} t={t} />
       )}
 
       {/* ── Section 8: Open Positions ── */}
       {openPositions.length > 0 && (
-        <OpenPositionsSection positions={openPositions} />
+        <OpenPositionsSection positions={openPositions} t={t} />
       )}
 
       {/* ── Section 9: Impact Stories ── */}
       {impactStories.length > 0 && (
-        <ImpactStoriesSection stories={impactStories} />
+        <ImpactStoriesSection stories={impactStories} t={t} />
       )}
 
       {/* ── Section 10: Brief History ── */}
-      <BriefHistorySection />
+      <BriefHistorySection t={t} />
 
       {/* ── Section 11: Mini Gallery ── */}
       {galleryImages.length > 0 && (
-        <MiniGallerySection images={galleryImages} />
+        <MiniGallerySection images={galleryImages} t={t} />
       )}
 
       {/* ── Section 12: Testimonials ── */}
@@ -203,7 +203,7 @@ export default async function HomePage() {
       )}
 
       {/* ── Section 13: Get Involved CTA ── */}
-      <GetInvolvedSection />
+      <GetInvolvedSection t={t} />
     </>
   );
 }
@@ -211,6 +211,7 @@ export default async function HomePage() {
 /* ─── Stats Section ─── */
 async function DynamicStatsSection({
   dbStats,
+  t,
 }: {
   dbStats: Array<{
     id: string;
@@ -218,6 +219,7 @@ async function DynamicStatsSection({
     value: string;
     icon: string | null;
   }>;
+  t: (key: string) => string;
 }) {
   // Auto-compute live stats from real DB data
   const [programCount, visitorEstimate] = await Promise.all([
@@ -236,10 +238,10 @@ async function DynamicStatsSection({
 
   // Build auto stats, then overlay admin-configured ones
   const autoStats = [
-    { id: "_communities", label: "Communities Served", value: "45+", icon: "Users" },
-    { id: "_lives", label: "Lives Impacted", value: visitorEstimate > 0 ? `${visitorEstimate.toLocaleString("en")}+` : "500+", icon: "Heart" },
-    { id: "_programs", label: "Active Programs", value: programCount > 0 ? `${programCount}` : "8", icon: "Briefcase" },
-    { id: "_years", label: "Years of Impact", value: `${yearsOfImpact}+`, icon: "Calendar" },
+    { id: "_communities", label: t("statsCommunitiesServed"), value: "45+", icon: "Users" },
+    { id: "_lives", label: t("statsLivesImpacted"), value: visitorEstimate > 0 ? `${visitorEstimate.toLocaleString("en")}+` : "500+", icon: "Heart" },
+    { id: "_programs", label: t("statsActivePrograms"), value: programCount > 0 ? `${programCount}` : "8", icon: "Briefcase" },
+    { id: "_years", label: t("statsYearsOfImpact"), value: `${yearsOfImpact}+`, icon: "Calendar" },
   ];
 
   // Use admin DB stats if they exist, otherwise use auto-computed
@@ -272,35 +274,33 @@ async function DynamicStatsSection({
 }
 
 /* ─── About Intro Section ─── */
-async function AboutIntroSection() {
+function AboutIntroSection({ t }: { t: (key: string) => string }) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[rgb(240_247_244)] via-white to-[rgb(220_237_230)] py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="mx-auto max-w-3xl text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Who We Are
+              {t("aboutEyebrow")}
             </p>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl lg:text-5xl">
-              Empowering Communities, Transforming Lives
+              {t("aboutHeading")}
             </h2>
             <p className="mt-6 text-lg leading-relaxed text-[var(--color-muted-fg)]">
-              We are a community-driven foundation dedicated to creating lasting
-              change through education, healthcare, and sustainable development
-              programs across East Africa.
+              {t("aboutDesc")}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link
                 href="/who-we-are"
                 className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-7 py-3 text-sm font-semibold text-white transition hover:shadow-lg"
               >
-                Our Story <ArrowRight className="h-4 w-4" />
+                {t("aboutOurStory")} <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/programs"
                 className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-7 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
               >
-                Our Programs
+                {t("aboutOurPrograms")}
               </Link>
             </div>
           </div>
@@ -311,30 +311,30 @@ async function AboutIntroSection() {
 }
 
 /* ─── What We Do Section ─── */
-function WhatWeDoSection() {
+function WhatWeDoSection({ t }: { t: (key: string) => string }) {
   const cards = [
     {
       icon: BookOpen,
-      title: "Education",
-      desc: "Providing quality education and scholarships to underserved communities, empowering the next generation of leaders.",
+      title: t("whatWeDoEducation"),
+      desc: t("whatWeDoEducationDesc"),
       color: "from-blue-500 to-blue-600",
     },
     {
       icon: Heart,
-      title: "Healthcare",
-      desc: "Improving access to healthcare services, maternal care, and disease prevention programs across rural areas.",
+      title: t("whatWeDoHealthcare"),
+      desc: t("whatWeDoHealthcareDesc"),
       color: "from-rose-500 to-rose-600",
     },
     {
       icon: Users,
-      title: "Community Development",
-      desc: "Building sustainable livelihoods through microfinance, skills training, and agricultural innovation programs.",
+      title: t("whatWeDoCommunity"),
+      desc: t("whatWeDoCommunityDesc"),
       color: "from-emerald-500 to-emerald-600",
     },
     {
       icon: Globe,
-      title: "Environmental Conservation",
-      desc: "Protecting natural resources and promoting sustainable practices for future generations through community-led initiatives.",
+      title: t("whatWeDoEnvironment"),
+      desc: t("whatWeDoEnvironmentDesc"),
       color: "from-teal-500 to-teal-600",
     },
   ];
@@ -345,10 +345,10 @@ function WhatWeDoSection() {
         <ScrollReveal>
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              What We Do
+              {t("whatWeDoEyebrow")}
             </p>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-              Our Areas of Impact
+              {t("whatWeDoHeading")}
             </h2>
           </div>
         </ScrollReveal>
@@ -380,6 +380,7 @@ function WhatWeDoSection() {
 /* ─── Latest Blog Posts Section ─── */
 function LatestPostsSection({
   posts,
+  t,
 }: {
   posts: Array<{
     id: string;
@@ -389,6 +390,7 @@ function LatestPostsSection({
     publishedAt: Date | null;
     cover: { url: string; alt: string | null } | null;
   }>;
+  t: (key: string) => string;
 }) {
   return (
     <section className="bg-[var(--color-bg)] py-20 sm:py-28">
@@ -396,10 +398,10 @@ function LatestPostsSection({
         <ScrollReveal>
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              From Our Blog
+              {t("blogEyebrow")}
             </p>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-              Latest Posts
+              {t("blogHeading")}
             </h2>
           </div>
         </ScrollReveal>
@@ -445,7 +447,7 @@ function LatestPostsSection({
                     </p>
                   )}
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-primary)]">
-                    Read More <ArrowRight className="h-3.5 w-3.5" />
+                    {t("blogReadMore")} <ArrowRight className="h-3.5 w-3.5" />
                   </span>
                 </div>
               </Link>
@@ -459,7 +461,7 @@ function LatestPostsSection({
               href="/blog"
               className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-7 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
             >
-              View All Posts <ArrowRight className="h-4 w-4" />
+              {t("blogViewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </ScrollReveal>
@@ -471,6 +473,7 @@ function LatestPostsSection({
 /* ─── Upcoming Events Section ─── */
 function UpcomingEventsSection({
   events,
+  t,
 }: {
   events: Array<{
     id: string;
@@ -480,6 +483,7 @@ function UpcomingEventsSection({
     location: string | null;
     cover: { url: string; alt: string | null } | null;
   }>;
+  t: (key: string) => string;
 }) {
   return (
     <section className="bg-gradient-to-br from-[rgb(248_250_249)] to-[rgb(240_247_244)] py-20 sm:py-28">
@@ -487,10 +491,10 @@ function UpcomingEventsSection({
         <ScrollReveal>
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Mark Your Calendar
+              {t("eventsEyebrow")}
             </p>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-              Upcoming Events
+              {t("eventsHeading")}
             </h2>
           </div>
         </ScrollReveal>
@@ -539,7 +543,7 @@ function UpcomingEventsSection({
                       </p>
                     )}
                     <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-primary)]">
-                      Learn More <ArrowRight className="h-3.5 w-3.5" />
+                      {t("eventsLearnMore")} <ArrowRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
                 </Link>
@@ -554,7 +558,7 @@ function UpcomingEventsSection({
               href="/events"
               className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-7 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
             >
-              View All Events <ArrowRight className="h-4 w-4" />
+              {t("eventsViewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </ScrollReveal>
@@ -566,6 +570,7 @@ function UpcomingEventsSection({
 /* ─── Open Positions Section ─── */
 function OpenPositionsSection({
   positions,
+  t,
 }: {
   positions: Array<{
     slug: string;
@@ -574,9 +579,10 @@ function OpenPositionsSection({
     location: string;
     type: string;
   }>;
+  t: (key: string) => string;
 }) {
-  const typeLabel = (t: string) =>
-    t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const typeLabel = (tp: string) =>
+    tp.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
     <section className="bg-white py-20 sm:py-28">
@@ -584,10 +590,10 @@ function OpenPositionsSection({
         <ScrollReveal>
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Join Our Team
+              {t("careersEyebrow")}
             </p>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-              Open Positions
+              {t("careersHeading")}
             </h2>
           </div>
         </ScrollReveal>
@@ -633,7 +639,7 @@ function OpenPositionsSection({
               href="/careers"
               className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-7 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
             >
-              View All Careers <ArrowRight className="h-4 w-4" />
+              {t("careersViewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </ScrollReveal>
@@ -645,12 +651,14 @@ function OpenPositionsSection({
 /* ─── Impact Stories Section ─── */
 function ImpactStoriesSection({
   stories,
+  t,
 }: {
   stories: Array<{
     slug: string;
     title: string;
     seoDesc: string | null;
   }>;
+  t: (key: string) => string;
 }) {
   return (
     <section className="bg-gradient-to-br from-[rgb(248_250_249)] to-[rgb(240_247_244)] py-20 sm:py-28">
@@ -658,13 +666,13 @@ function ImpactStoriesSection({
         <ScrollReveal>
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Real Change
+              {t("impactEyebrow")}
             </p>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-              Impact Stories
+              {t("impactHeading")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[var(--color-muted-fg)]">
-              Stories of transformation from the communities we serve.
+              {t("impactDesc")}
             </p>
           </div>
         </ScrollReveal>
@@ -688,7 +696,7 @@ function ImpactStoriesSection({
                   </p>
                 )}
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-primary)]">
-                  Read Story <ArrowRight className="h-3.5 w-3.5" />
+                  {t("impactReadStory")} <ArrowRight className="h-3.5 w-3.5" />
                 </span>
               </Link>
             </ScrollReveal>
@@ -701,7 +709,7 @@ function ImpactStoriesSection({
               href="/impact-stories"
               className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-7 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
             >
-              View All Stories <ArrowRight className="h-4 w-4" />
+              {t("impactViewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </ScrollReveal>
@@ -711,7 +719,7 @@ function ImpactStoriesSection({
 }
 
 /* ─── Brief History Section ─── */
-function BriefHistorySection() {
+function BriefHistorySection({ t }: { t: (key: string) => string }) {
   return (
     <section className="bg-[rgb(248_250_249)] py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -722,27 +730,20 @@ function BriefHistorySection() {
                 <History className="h-6 w-6 text-[var(--color-primary)]" />
               </div>
               <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-                Our Roots
+                {t("historyEyebrow")}
               </p>
               <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-                A Brief History
+                {t("historyHeading")}
               </h2>
               <p className="mt-6 text-base leading-relaxed text-[var(--color-muted-fg)]">
-                Founded with a vision to uplift underserved communities across
-                East Africa, our organization has grown from a small
-                grassroots initiative into a multi-program foundation
-                impacting thousands of lives. Through decades of dedication,
-                partnership, and community-driven action, we have built
-                lasting programs in education, healthcare, and sustainable
-                development that continue to create ripple effects of
-                positive change.
+                {t("historyDesc")}
               </p>
               <div className="mt-8">
                 <Link
                   href="/our-history"
                   className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-7 py-3 text-sm font-semibold text-white transition hover:shadow-lg"
                 >
-                  Learn More <ArrowRight className="h-4 w-4" />
+                  {t("historyLearnMore")} <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
             </div>
@@ -752,7 +753,7 @@ function BriefHistorySection() {
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-xl">
               <Image
                 src={FALLBACK_IMAGES.hero}
-                alt="Our history"
+                alt={t("historyImageAlt")}
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -768,8 +769,10 @@ function BriefHistorySection() {
 /* ─── Mini Gallery Section ─── */
 function MiniGallerySection({
   images,
+  t,
 }: {
   images: Array<{ id: string; url: string; alt: string | null }>;
+  t: (key: string) => string;
 }) {
   return (
     <section className="bg-white py-20 sm:py-28">
@@ -777,10 +780,10 @@ function MiniGallerySection({
         <ScrollReveal>
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              In Pictures
+              {t("galleryEyebrow")}
             </p>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-              Gallery
+              {t("galleryHeading")}
             </h2>
           </div>
         </ScrollReveal>
@@ -791,7 +794,7 @@ function MiniGallerySection({
               <div className="group relative aspect-square overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[rgb(248_250_249)]">
                 <Image
                   src={img.url}
-                  alt={img.alt ?? "Gallery image"}
+                  alt={img.alt ?? t("galleryImageAlt")}
                   fill
                   className="object-cover transition duration-500 group-hover:scale-105"
                   sizes="(max-width: 640px) 50vw, 33vw"
@@ -807,7 +810,7 @@ function MiniGallerySection({
               href="/gallery"
               className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-7 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
             >
-              View Full Gallery <ArrowRight className="h-4 w-4" />
+              {t("galleryViewAll")} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </ScrollReveal>
@@ -817,28 +820,28 @@ function MiniGallerySection({
 }
 
 /* ─── Get Involved CTA ─── */
-function GetInvolvedSection() {
+function GetInvolvedSection({ t }: { t: (key: string) => string }) {
   const actions = [
     {
       icon: Heart,
-      title: "Donate",
-      desc: "Your contribution directly funds programs that change lives.",
+      title: t("ctaDonateTitle"),
+      desc: t("ctaDonateDesc"),
       href: "/donate",
-      label: "Give Now",
+      label: t("ctaDonateLabel"),
     },
     {
       icon: HandHeart,
-      title: "Volunteer",
-      desc: "Share your skills and time to make a meaningful difference.",
+      title: t("ctaVolunteerTitle"),
+      desc: t("ctaVolunteerDesc"),
       href: "/volunteer",
-      label: "Join Us",
+      label: t("ctaVolunteerLabel"),
     },
     {
       icon: Users,
-      title: "Partner",
-      desc: "Collaborate with us to scale impact across communities.",
+      title: t("ctaPartnerTitle"),
+      desc: t("ctaPartnerDesc"),
       href: "/partners",
-      label: "Learn More",
+      label: t("ctaPartnerLabel"),
     },
   ];
 
@@ -848,14 +851,13 @@ function GetInvolvedSection() {
         <ScrollReveal>
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-              Make a Difference
+              {t("ctaEyebrow")}
             </p>
             <h2 className="font-display text-3xl font-bold text-[var(--color-fg)] sm:text-4xl">
-              Get Involved Today
+              {t("ctaHeading")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[var(--color-muted-fg)]">
-              Every action counts. Whether you donate, volunteer, or partner with
-              us, you become part of the solution.
+              {t("ctaDesc")}
             </p>
           </div>
         </ScrollReveal>
@@ -891,6 +893,7 @@ function GetInvolvedSection() {
 /* ─── Fallback Hero (when no slides exist) ─── */
 async function FallbackHero() {
   const t = await getTranslations("public.hero");
+  const tHome = await getTranslations("public.home");
   return (
     <section className="relative min-h-[75vh] overflow-hidden bg-[rgb(26_40_35)]">
       <Image
@@ -921,7 +924,7 @@ async function FallbackHero() {
               href="/programs"
               className="inline-flex items-center gap-2 rounded-full border-2 border-white/40 px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
-              Our Programs
+              {tHome("fallbackOurPrograms")}
             </Link>
           </div>
         </div>

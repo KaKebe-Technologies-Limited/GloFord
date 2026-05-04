@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { ImageLightbox } from "@/components/ui/ImageLightbox";
 import { ImageIcon } from "lucide-react";
 
 export default function GalleryGrid() {
+  const t = useTranslations("public.gallery");
   const [images, setImages] = useState<
     Array<{ id: string; url: string; alt: string | null }>
   >([]);
@@ -28,14 +30,13 @@ export default function GalleryGrid() {
           <ScrollReveal>
             <div className="mx-auto max-w-3xl text-center">
               <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-                In Pictures
+                {t("eyebrow")}
               </p>
               <h1 className="font-display text-4xl font-bold text-[var(--color-fg)] sm:text-5xl">
-                Gallery
+                {t("heading")}
               </h1>
               <p className="mt-4 text-lg text-[var(--color-muted-fg)]">
-                A visual journey through our programs, events, and community
-                impact.
+                {t("subheading")}
               </p>
             </div>
           </ScrollReveal>
@@ -49,7 +50,7 @@ export default function GalleryGrid() {
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <ImageIcon className="mb-4 h-12 w-12 text-[rgb(var(--token-muted-fg)/0.30)]" />
               <p className="text-[var(--color-muted-fg)]">
-                Gallery images will appear here once uploaded.
+                {t("empty")}
               </p>
             </div>
           ) : (
@@ -66,7 +67,7 @@ export default function GalleryGrid() {
                     >
                       <Image
                         src={img.url}
-                        alt={img.alt ?? "Gallery image"}
+                        alt={img.alt ?? t("imageAlt")}
                         width={600}
                         height={400}
                         className="w-full object-cover transition duration-500 group-hover:scale-105"

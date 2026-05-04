@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils/cn";
 type Campaign = { slug: string; title: string; currency: string };
 
 export type WidgetProvider = {
-  id: "PESAPAL" | "MTN_MOMO" | "AIRTEL_MONEY";
+  id: "PESAPAL" | "MTN_MOMO" | "AIRTEL_MONEY" | "STRIPE";
   label: string;
   flow: "REDIRECT" | "AWAIT_PHONE";
 };
@@ -217,7 +217,7 @@ export function DonateWidget({
                       className={cn(
                         "flex w-full items-center gap-4 rounded-xl border p-4 text-left transition",
                         active
-                          ? "border-[var(--color-primary)] bg-[rgb(var(--token-primary)/0.5)] shadow-sm"
+                          ? "border-[var(--color-primary)] bg-[rgb(var(--token-primary)/0.06)] shadow-sm"
                           : "border-[var(--color-border)] bg-white hover:border-[rgb(var(--token-primary)/0.30)]",
                       )}>
                       <div className={cn(
@@ -294,7 +294,7 @@ export function DonateWidget({
           )}
 
           {error && (
-            <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-[var(--color-danger)]">
+            <p role="alert" className="mt-4 rounded-xl bg-[rgb(var(--token-danger)/0.10)] px-4 py-3 text-sm text-[var(--color-danger)]">
               {error}
             </p>
           )}
@@ -382,8 +382,8 @@ function PhoneWaitModal({ donationId, phone, onClose }: { donationId: string; ph
         {status === "SUCCEEDED" && (
           <>
             <div className="flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-                <CheckCircle2 className="h-10 w-10 text-green-500" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--token-success)/0.10)]">
+                <CheckCircle2 className="h-10 w-10 text-[var(--color-success)]" />
               </div>
             </div>
             <h2 className="mt-6 text-center text-xl font-bold text-[var(--color-fg)]">{t("successTitle")}</h2>
@@ -397,7 +397,7 @@ function PhoneWaitModal({ donationId, phone, onClose }: { donationId: string; ph
         {status === "FAILED" && (
           <>
             <div className="flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--token-danger)/0.10)]">
                 <XCircle className="h-10 w-10 text-[var(--color-danger)]" />
               </div>
             </div>

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { getCollectionConfig, toCollectionPath } from "@/lib/pages/collections";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -21,6 +24,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ReportsPage() {
+  const t = await getTranslations("public.reports");
   const config = getCollectionConfig("report");
   const rows = await db.page.findMany({
     where: { status: "PUBLISHED", slug: { startsWith: config.prefix } },
@@ -30,12 +34,26 @@ export default async function ReportsPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Reports & Accountability",
+            path: "/reports",
+            description: "Transparency reports, annual summaries, and accountability documents.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Reports", href: "/reports" },
+          ]),
+        ]}
+      />
+
       <section className="w-full bg-[linear-gradient(180deg,rgba(250,247,240,0.9),rgba(255,255,255,1))] px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <ScrollReveal>
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Reports & Accountability</h1>
+            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{t("heading")}</h1>
             <p className="mt-4 max-w-2xl text-lg text-[var(--color-muted-fg)]">
-              We are committed to transparency, stewardship, and honest reporting. Below you will find our annual reports, financial summaries, and impact assessments.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -43,7 +61,7 @@ export default async function ReportsPage() {
       <section className="w-full px-4 pb-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           {rows.length === 0 ? (
-            <p className="text-[var(--color-muted-fg)]">Reports will be published here. Check back soon.</p>
+            <p className="text-[var(--color-muted-fg)]">{t("empty")}</p>
           ) : (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {rows.map((row, i) => (
@@ -57,7 +75,7 @@ export default async function ReportsPage() {
                     </div>
                     <h2 className="text-xl font-semibold">{row.title}</h2>
                     {row.seoDesc ? <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--color-muted-fg)]">{row.seoDesc}</p> : null}
-                    <span className="mt-4 inline-flex text-sm font-semibold text-[var(--color-primary)]">Open report</span>
+                    <span className="mt-4 inline-flex text-sm font-semibold text-[var(--color-primary)]">{t("openReport")}</span>
                   </Link>
                 </ScrollReveal>
               ))}

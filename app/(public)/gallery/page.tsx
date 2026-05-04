@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import GalleryGrid from "./GalleryGrid";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -18,5 +19,22 @@ export const metadata: Metadata = {
 };
 
 export default function GalleryPage() {
-  return <GalleryGrid />;
+  return (
+    <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Gallery",
+            path: "/gallery",
+            description: "A visual journey through our programs, events, and community impact.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Gallery", href: "/gallery" },
+          ]),
+        ]}
+      />
+      <GalleryGrid />
+    </>
+  );
 }

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { getVersionPair } from "@/lib/services/system";
 import { RestoreButton } from "../RestoreButton";

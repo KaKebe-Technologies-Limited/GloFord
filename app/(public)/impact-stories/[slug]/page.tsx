@@ -2,9 +2,10 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { getPublishedCollectionPage } from "@/lib/services/pages";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
 
 export async function generateMetadata({
   params,
@@ -41,7 +42,26 @@ export default async function ImpactStoryPage({
   const { slug } = await params;
   try {
     const page = await getPublishedCollectionPage("impactStory", slug);
-    return <BlockRenderer blocks={page.blocks} />;
+    return (
+      <>
+        <JsonLd
+          data={[
+            articleJsonLd({
+              title: page.title,
+              path: `/impact-stories/${slug}`,
+              description: page.seoDesc,
+              publishedAt: page.publishedAt,
+            }),
+            breadcrumbJsonLd([
+              { name: "Home", href: "/" },
+              { name: "Impact Stories", href: "/impact-stories" },
+              { name: page.title, href: `/impact-stories/${slug}` },
+            ]),
+          ]}
+        />
+        <BlockRenderer blocks={page.blocks} />
+      </>
+    );
   } catch {
     notFound();
   }

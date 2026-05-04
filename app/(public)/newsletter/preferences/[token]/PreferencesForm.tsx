@@ -80,6 +80,7 @@ export function PreferencesForm({
         {PREF_OPTIONS.map((opt) => (
           <label
             key={opt.key}
+            aria-label={opt.label}
             className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-[var(--color-muted)]"
           >
             <div>

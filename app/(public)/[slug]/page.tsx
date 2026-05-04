@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { getPublishedPageBySlug } from "@/lib/services/pages";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -42,6 +44,20 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
 
   return (
     <article>
+      <JsonLd
+        data={[
+          articleJsonLd({
+            title: page.title,
+            path: `/${slug}`,
+            description: page.seoDesc,
+            publishedAt: page.publishedAt,
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: page.title, href: `/${slug}` },
+          ]),
+        ]}
+      />
       <BlockRenderer blocks={page.blocks} />
     </article>
   );

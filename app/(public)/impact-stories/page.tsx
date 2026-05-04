@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { blocksSchema } from "@/lib/blocks/types";
 import { getCollectionConfig, toCollectionPath } from "@/lib/pages/collections";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
-const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
+
 
 export const metadata: Metadata = {
   title: "Impact Stories",
@@ -36,6 +39,7 @@ function findPreviewImageId(blocks: unknown): string | null {
 }
 
 export default async function ImpactStoriesPage() {
+  const t = await getTranslations("public.impactStories");
   const config = getCollectionConfig("impactStory");
   const rows = await db.page.findMany({
     where: { status: "PUBLISHED", slug: { startsWith: config.prefix } },
@@ -51,12 +55,26 @@ export default async function ImpactStoriesPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          collectionPageJsonLd({
+            name: "Impact Stories",
+            path: "/impact-stories",
+            description: "Success stories and community impact from our programs.",
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", href: "/" },
+            { name: "Impact Stories", href: "/impact-stories" },
+          ]),
+        ]}
+      />
+
       <section className="w-full bg-[linear-gradient(180deg,rgba(250,247,240,0.9),rgba(255,255,255,1))] px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <ScrollReveal>
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Impact Stories</h1>
+            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{t("heading")}</h1>
             <p className="mt-4 max-w-2xl text-lg text-[var(--color-muted-fg)]">
-              Real stories of transformation from the communities we serve alongside. Each story represents lives changed through partnership, dignity, and sustained support.
+              {t("subheading")}
             </p>
           </ScrollReveal>
         </div>
@@ -64,7 +82,7 @@ export default async function ImpactStoriesPage() {
       <section className="w-full px-4 pb-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           {rows.length === 0 ? (
-            <p className="text-[var(--color-muted-fg)]">No stories published yet. Check back soon.</p>
+            <p className="text-[var(--color-muted-fg)]">{t("empty")}</p>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
               {rows.map((row, i) => {
@@ -83,7 +101,7 @@ export default async function ImpactStoriesPage() {
                       <div className="space-y-3 p-6">
                         <h2 className="text-xl font-semibold">{row.title}</h2>
                         {row.seoDesc ? <p className="line-clamp-3 text-sm leading-6 text-[var(--color-muted-fg)]">{row.seoDesc}</p> : null}
-                        <span className="inline-flex text-sm font-semibold text-[var(--color-primary)]">Read story</span>
+                        <span className="inline-flex text-sm font-semibold text-[var(--color-primary)]">{t("readStory")}</span>
                       </div>
                     </Link>
                   </ScrollReveal>

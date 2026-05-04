@@ -8,6 +8,8 @@ import { TestimonialsSection } from "@/components/public/TestimonialsSection";
 import { FaqSection } from "@/components/public/FaqSection";
 import { PartnerInquiryForm } from "./PartnerInquiryForm";
 import { Handshake, Building2, Globe, Heart, ArrowRight } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 const DEFAULT_OG = `${APP_URL}/seed-images/gloford/hero-community.jpg`;
@@ -38,6 +40,13 @@ export default async function PartnerWithUsPage() {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", href: "/" },
+          { name: "Partner With Us", href: "/partner-with-us" },
+        ])}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-[rgb(248_250_249)] via-white to-[rgb(240_247_244)] py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

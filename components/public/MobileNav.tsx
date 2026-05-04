@@ -36,7 +36,7 @@ export function MobileNav({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="fixed inset-x-0 top-[5rem] z-40 border-b border-gray-100 bg-white p-4 shadow-lg"
+            className="fixed inset-x-0 top-[5rem] z-40 border-b border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-lg"
           >
             <nav aria-label="Mobile" className="flex max-h-[calc(100dvh-7rem)] flex-col gap-1 overflow-y-auto">
               {items.map((item) =>
@@ -48,7 +48,7 @@ export function MobileNav({
                       className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-[var(--color-fg)]"
                     >
                       <span>{item.label}</span>
-                      <ChevronDown className={`h-4 w-4 text-gray-400 transition ${expanded === item.id ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`h-4 w-4 text-[var(--color-muted-fg)] transition ${expanded === item.id ? "rotate-180" : ""}`} />
                     </button>
                     <AnimatePresence initial={false}>
                       {expanded === item.id ? (
@@ -65,7 +65,7 @@ export function MobileNav({
                                 key={child.id}
                                 href={child.href}
                                 onClick={() => setOpen(false)}
-                                className="block py-2 text-sm text-gray-600 hover:text-[var(--color-primary)]"
+                                className="block py-2 text-sm text-[var(--color-muted-fg)] hover:text-[var(--color-primary)]"
                               >
                                 {child.label}
                               </Link>

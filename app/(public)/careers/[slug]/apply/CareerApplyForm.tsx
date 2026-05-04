@@ -42,6 +42,7 @@ export function CareerApplyForm({
 }) {
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [education, setEducation] = useState<Education[]>([{ ...EMPTY_EDUCATION }]);
   const [experience, setExperience] = useState<Experience[]>([{ ...EMPTY_EXPERIENCE }]);
 
@@ -49,6 +50,7 @@ export function CareerApplyForm({
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
     const form = e.currentTarget;
     const fd = new FormData(form);
     fd.set("slug", slug);
@@ -56,8 +58,12 @@ export function CareerApplyForm({
     fd.set("experience", JSON.stringify(experience.filter((ex) => ex.company)));
 
     startTransition(async () => {
-      await submitApplicationAction(fd);
-      setSuccess(true);
+      try {
+        await submitApplicationAction(fd);
+        setSuccess(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to submit application. Please try again.");
+      }
     });
   }
 
@@ -66,8 +72,8 @@ export function CareerApplyForm({
       <section className="flex min-h-[60vh] items-center justify-center px-4 py-20">
         <ScrollReveal>
           <div className="max-w-lg text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--token-success)/0.10)]">
+              <CheckCircle2 className="h-8 w-8 text-[var(--color-success)]" />
             </div>
             <h1 className="mt-6 font-display text-3xl font-bold text-[var(--color-fg)]">
               Application Submitted
@@ -134,6 +140,11 @@ export function CareerApplyForm({
       <section className="bg-[var(--color-bg)] py-12">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <form onSubmit={handleSubmit} className="space-y-10">
+            {error && (
+              <p role="alert" className="rounded-lg bg-[rgb(var(--token-danger)/0.10)] px-4 py-3 text-sm text-[var(--color-danger)]">
+                {error}
+              </p>
+            )}
             {/* Personal info */}
             <div>
               <h2 className="mb-6 text-lg font-bold text-[var(--color-fg)]">Personal Information</h2>
