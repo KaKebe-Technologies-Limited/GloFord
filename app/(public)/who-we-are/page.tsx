@@ -3,8 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
-import { getActiveSiteStats } from "@/lib/services/siteStats";
+import { StatsBar } from "@/components/public/StatsBar";
 import { getActiveTestimonials } from "@/lib/services/testimonials";
 import { getActiveLeaderMessages } from "@/lib/services/leaderMessages";
 import { TestimonialsSection } from "@/components/public/TestimonialsSection";
@@ -48,8 +47,7 @@ export const metadata: Metadata = {
 
 export default async function WhoWeArePage() {
   const t = await getTranslations("public.whoWeAre");
-  const [stats, testimonials, messages] = await Promise.all([
-    getActiveSiteStats(),
+  const [testimonials, messages] = await Promise.all([
     getActiveTestimonials(),
     getActiveLeaderMessages(),
   ]);
@@ -230,25 +228,7 @@ export default async function WhoWeArePage() {
       </section>
 
       {/* ── Stats ── */}
-      {stats.length > 0 && (
-        <section className="border-y border-[var(--color-border)] bg-[rgb(248_250_249)] py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-              {stats.map((stat, i) => (
-                <ScrollReveal key={stat.id} delay={i * 0.1}>
-                  <div className="text-center">
-                    <AnimatedCounter
-                      value={stat.value}
-                      className="block text-3xl font-bold text-[var(--color-primary)] sm:text-4xl"
-                    />
-                    <p className="mt-2 text-sm text-[var(--color-muted-fg)]">{stat.label}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      <StatsBar />
 
       {/* ── Leader Messages ── */}
       {messages.length > 0 && <LeaderMessageSection messages={messages} />}

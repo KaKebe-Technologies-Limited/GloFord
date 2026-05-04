@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 import { submitPartnerInquiryAction } from "./actions";
 
@@ -11,6 +12,7 @@ const selectCls =
 const labelCls = "block text-sm font-medium text-[var(--color-fg)] mb-1.5";
 
 export function PartnerInquiryForm() {
+  const t = useTranslations("public.partnerWithUs");
   const [isPending, startTransition] = useTransition();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function PartnerInquiryForm() {
         await submitPartnerInquiryAction(fd);
         setSent(true);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to submit inquiry. Please try again.");
+        setError(err instanceof Error ? err.message : t("formError"));
       }
     });
   }
@@ -36,10 +38,9 @@ export function PartnerInquiryForm() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgb(var(--token-success)/0.10)]">
             <CheckCircle2 className="h-8 w-8 text-[var(--color-success)]" />
           </div>
-          <h3 className="mt-4 text-xl font-bold text-[var(--color-fg)]">Inquiry Submitted</h3>
+          <h3 className="mt-4 text-xl font-bold text-[var(--color-fg)]">{t("successHeading")}</h3>
           <p className="mt-2 text-sm text-[var(--color-muted-fg)]">
-            Thank you for your interest in partnering with us. Our partnerships team
-            will review your inquiry and respond within 5 business days.
+            {t("successDesc")}
           </p>
         </div>
       </div>
@@ -56,51 +57,51 @@ export function PartnerInquiryForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
-            <label htmlFor="orgName" className={labelCls}>Organization Name *</label>
-            <input id="orgName" name="organizationName" required className={inputCls} placeholder="Your organization" />
+            <label htmlFor="orgName" className={labelCls}>{t("formOrgName")}</label>
+            <input id="orgName" name="organizationName" required className={inputCls} placeholder={t("formOrgNamePlaceholder")} />
           </div>
           <div>
-            <label htmlFor="contactName" className={labelCls}>Contact Person *</label>
-            <input id="contactName" name="contactName" required className={inputCls} placeholder="Full name" />
+            <label htmlFor="contactName" className={labelCls}>{t("formContactPerson")}</label>
+            <input id="contactName" name="contactName" required className={inputCls} placeholder={t("formContactPersonPlaceholder")} />
           </div>
           <div>
-            <label htmlFor="email" className={labelCls}>Email *</label>
-            <input id="email" name="email" type="email" required className={inputCls} placeholder="contact@org.com" />
+            <label htmlFor="email" className={labelCls}>{t("formEmail")}</label>
+            <input id="email" name="email" type="email" required className={inputCls} placeholder={t("formEmailPlaceholder")} />
           </div>
           <div>
-            <label htmlFor="phone" className={labelCls}>Phone</label>
-            <input id="phone" name="phone" type="tel" className={inputCls} placeholder="+1 (555) 000-0000" />
+            <label htmlFor="phone" className={labelCls}>{t("formPhone")}</label>
+            <input id="phone" name="phone" type="tel" className={inputCls} placeholder={t("formPhonePlaceholder")} />
           </div>
         </div>
         <div>
-          <label htmlFor="website" className={labelCls}>Organization Website</label>
-          <input id="website" name="website" type="url" className={inputCls} placeholder="https://yourorg.com" />
+          <label htmlFor="website" className={labelCls}>{t("formWebsite")}</label>
+          <input id="website" name="website" type="url" className={inputCls} placeholder={t("formWebsitePlaceholder")} />
         </div>
         <div>
-          <label htmlFor="partnershipType" className={labelCls}>Partnership Type *</label>
+          <label htmlFor="partnershipType" className={labelCls}>{t("formPartnershipType")}</label>
           <select id="partnershipType" name="partnershipType" required className={selectCls}>
-            <option value="">Select type...</option>
-            <option value="Funding">Funding Partnership</option>
-            <option value="Implementation">Implementation Partnership</option>
-            <option value="Technical">Technical Assistance</option>
-            <option value="Strategic">Strategic Alliance</option>
-            <option value="Other">Other</option>
+            <option value="">{t("formSelectType")}</option>
+            <option value="Funding">{t("formTypeFunding")}</option>
+            <option value="Implementation">{t("formTypeImplementation")}</option>
+            <option value="Technical">{t("formTypeTechnical")}</option>
+            <option value="Strategic">{t("formTypeStrategic")}</option>
+            <option value="Other">{t("formTypeOther")}</option>
           </select>
         </div>
         <div>
-          <label htmlFor="description" className={labelCls}>About Your Organization *</label>
+          <label htmlFor="description" className={labelCls}>{t("formAboutOrg")}</label>
           <textarea id="description" name="description" rows={3} required className={inputCls}
-            placeholder="Brief description of your organization, mission, and areas of work..." />
+            placeholder={t("formAboutOrgPlaceholder")} />
         </div>
         <div>
-          <label htmlFor="message" className={labelCls}>Why Partner With Us? *</label>
+          <label htmlFor="message" className={labelCls}>{t("formWhyPartner")}</label>
           <textarea id="message" name="message" rows={4} required className={inputCls}
-            placeholder="Describe the partnership you envision — what you hope to achieve together, areas of mutual interest, and how this aligns with your organization's goals..." />
+            placeholder={t("formWhyPartnerPlaceholder")} />
         </div>
         <button type="submit" disabled={isPending}
           className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-3.5 text-sm font-semibold text-white transition hover:shadow-lg disabled:opacity-60 sm:w-auto">
           {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          {isPending ? "Submitting..." : "Submit Partnership Inquiry"}
+          {isPending ? t("formSubmitting") : t("formSubmit")}
         </button>
       </form>
     </div>

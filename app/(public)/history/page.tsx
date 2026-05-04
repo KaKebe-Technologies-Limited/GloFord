@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { getActiveSiteStats } from "@/lib/services/siteStats";
@@ -32,27 +33,28 @@ const IMAGES = [
   "/seed-images/gloford/hero-staff.jpg",
 ];
 
-const TIMELINE = [
-  { year: "2009", title: "The Beginning", text: "Founded by Dr. Isaac Mukasa in Jinja district. The first program was a mobile reproductive health clinic visiting five villages on a rotating weekly schedule.", image: 0 },
-  { year: "2011", title: "Youth Program Launched", text: "We launched our first youth mentorship cohort. Twelve young people completed a six-month program combining life skills, financial literacy, and vocational training.", image: 1 },
-  { year: "2013", title: "Expansion to Soroti", text: "Community leaders in Soroti district invited us to replicate our health outreach model. We established our second field office and hired 15 local staff.", image: 2 },
-  { year: "2015", title: "Community Radio Goes Live", text: "We launched our community radio station, broadcasting in six local languages. Listenership reached 500,000 within the first year.", image: 3 },
-  { year: "2017", title: "Climate Resilience Program", text: "We distributed drought-resistant seed varieties, built rainwater harvesting systems, and established early-warning networks in 200 farming communities.", image: 4 },
-  { year: "2019", title: "Ten Years, Ten Districts", text: "Our annual beneficiary count exceeded 80,000, and our team had grown to 60 staff members across ten districts.", image: 5 },
-  { year: "2020", title: "COVID-19 Response", text: "Our mobile clinics adapted to include COVID-19 screening and prevention education. Our youth program pivoted to digital skills training.", image: 0 },
-  { year: "2022", title: "Northern Uganda Expansion", text: "We opened our Gulu field office, marking our entry into northern Uganda through a multi-year partnership with PEPFAR.", image: 1 },
-  { year: "2024", title: "14 Districts and Growing", text: "Today we operate across 14 districts with four integrated programs. Our community radio reaches over 2 million listeners weekly.", image: 5 },
-];
+const TIMELINE_YEARS = ["2009", "2011", "2013", "2015", "2017", "2019", "2020", "2022", "2024"];
+const TIMELINE_IMAGES = [0, 1, 2, 3, 4, 5, 0, 1, 5];
 
 export default async function HistoryPage() {
-  const stats = await getActiveSiteStats();
+  const [stats, t] = await Promise.all([
+    getActiveSiteStats(),
+    getTranslations("public.history"),
+  ]);
+
+  const timeline = TIMELINE_YEARS.map((year, i) => ({
+    year,
+    title: t(`timeline${i}Title` as Parameters<typeof t>[0]),
+    text: t(`timeline${i}Text` as Parameters<typeof t>[0]),
+    image: TIMELINE_IMAGES[i]!,
+  }));
 
   return (
     <>
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", href: "/" },
-          { name: "Our History", href: "/history" },
+          { name: t("heading"), href: "/history" },
         ])}
       />
 
@@ -62,27 +64,26 @@ export default async function HistoryPage() {
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <ScrollReveal>
               <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[var(--color-primary)]">
-                Our Journey
+                {t("eyebrow")}
               </p>
               <h1 className="font-display text-4xl font-bold text-[var(--color-fg)] sm:text-5xl">
-                Our History
+                {t("heading")}
               </h1>
               <p className="mt-4 text-lg text-[var(--color-muted-fg)]">
-                From a single mobile clinic in Jinja to a regional organization
-                serving 14 districts — this is the story of community-driven growth.
+                {t("subheading")}
               </p>
               <Link href="/who-we-are"
                 className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white transition hover:shadow-lg">
-                About Us <ArrowRight className="h-4 w-4" />
+                {t("aboutUsCta")} <ArrowRight className="h-4 w-4" />
               </Link>
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
               <div className="grid grid-cols-2 gap-3">
                 <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
-                  <Image src={IMAGES[0]!} alt="Early days" fill className="object-cover" sizes="25vw" priority />
+                  <Image src={IMAGES[0]!} alt={t("altEarlyDays")} fill className="object-cover" sizes="25vw" priority />
                 </div>
                 <div className="mt-8 relative aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
-                  <Image src={IMAGES[5]!} alt="Today" fill className="object-cover" sizes="25vw" />
+                  <Image src={IMAGES[5]!} alt={t("altToday")} fill className="object-cover" sizes="25vw" />
                 </div>
               </div>
             </ScrollReveal>
@@ -113,12 +114,12 @@ export default async function HistoryPage() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
             <div className="mb-14 text-center">
-              <h2 className="font-display text-3xl font-bold text-[var(--color-fg)]">Milestones</h2>
+              <h2 className="font-display text-3xl font-bold text-[var(--color-fg)]">{t("milestones")}</h2>
             </div>
           </ScrollReveal>
 
           <div className="space-y-12">
-            {TIMELINE.map((event, i) => (
+            {timeline.map((event, i) => (
               <ScrollReveal key={event.year} delay={i * 0.05}>
                 <div className={`flex flex-col gap-6 md:flex-row md:items-center md:gap-10 ${i % 2 === 1 ? "md:flex-row-reverse" : ""}`}>
                   <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl shadow-lg md:w-2/5">
@@ -148,19 +149,18 @@ export default async function HistoryPage() {
       <section className="bg-gradient-to-br from-[rgb(240_247_244)] to-[rgb(230_242_236)] py-16">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <ScrollReveal>
-            <h2 className="font-display text-3xl font-bold text-[var(--color-fg)]">Looking Forward</h2>
+            <h2 className="font-display text-3xl font-bold text-[var(--color-fg)]">{t("lookingForward")}</h2>
             <p className="mt-4 text-[var(--color-muted-fg)]">
-              As we enter our next chapter, we remain committed to our founding principles
-              while embracing innovation. Our goal: reach more communities and deepen our impact.
+              {t("lookingForwardDesc")}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link href="/programs"
                 className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-white transition hover:shadow-lg">
-                Our Programs
+                {t("ourPrograms")}
               </Link>
               <Link href="/donate"
                 className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-primary)] px-8 py-3 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white">
-                Support Us
+                {t("supportUs")}
               </Link>
             </div>
           </ScrollReveal>

@@ -3,9 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { listPublishedPrograms } from "@/lib/services/programs";
-import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
+import { StatsBar } from "@/components/public/StatsBar";
 import { ArrowRight } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
@@ -26,10 +25,7 @@ export const metadata: Metadata = {
 
 export default async function ProgramsPage() {
   const t = await getTranslations("public.programs");
-  const [programs, stats] = await Promise.all([
-    listPublishedPrograms(),
-    getActiveSiteStats(),
-  ]);
+  const programs = await listPublishedPrograms();
 
   return (
     <>
@@ -65,25 +61,7 @@ export default async function ProgramsPage() {
       </section>
 
       {/* Stats */}
-      {stats.length > 0 && (
-        <section className="border-y border-[var(--color-border)] bg-white py-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-              {stats.map((stat, i) => (
-                <ScrollReveal key={stat.id} delay={i * 0.1}>
-                  <div className="text-center">
-                    <AnimatedCounter
-                      value={stat.value}
-                      className="block text-3xl font-bold text-[var(--color-primary)]"
-                    />
-                    <p className="mt-1 text-sm text-[var(--color-muted-fg)]">{stat.label}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      <StatsBar />
 
       {/* Programs Grid */}
       <section className="bg-[var(--color-bg)] py-16 sm:py-20">

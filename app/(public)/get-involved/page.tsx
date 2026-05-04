@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { getActiveTestimonials } from "@/lib/services/testimonials";
-import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
+import { StatsBar } from "@/components/public/StatsBar";
 import { Heart, Users, Briefcase } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
@@ -28,10 +27,7 @@ export const metadata: Metadata = {
 
 export default async function GetInvolvedPage() {
   const t = await getTranslations("public.getInvolved");
-  const [testimonials, stats] = await Promise.all([
-    getActiveTestimonials(),
-    getActiveSiteStats(),
-  ]);
+  const testimonials = await getActiveTestimonials();
 
   const CARDS = [
     {
@@ -127,32 +123,7 @@ export default async function GetInvolvedPage() {
       </section>
 
       {/* Stats */}
-      {stats.length > 0 && (
-        <section className="w-full bg-[rgb(var(--token-muted)/0.30)] px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <ScrollReveal>
-              <h2 className="text-center font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                {t("impactHeading")}
-              </h2>
-            </ScrollReveal>
-            <div className="mt-12 grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {stats.map((stat, i) => (
-                <ScrollReveal key={stat.id} delay={i * 0.08}>
-                  <div className="text-center">
-                    <AnimatedCounter
-                      value={stat.value}
-                      className="font-display text-4xl font-bold text-[var(--color-primary)] sm:text-5xl"
-                    />
-                    <p className="mt-2 text-sm font-medium text-[var(--color-muted-fg)]">
-                      {stat.label}
-                    </p>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      <StatsBar />
 
       {/* Testimonials */}
       {testimonials.length > 0 && (
