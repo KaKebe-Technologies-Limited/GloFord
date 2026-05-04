@@ -26,7 +26,7 @@ export type BrandConfig = {
 const DEFAULT: BrandConfig = {
   name: "Platform",
   siteUrl: "http://localhost:3000",
-  logoUrl: null,
+  logoUrl: "/logo.png",
   supportEmail: null,
   fromEmail: "no-reply@example.org",
   primaryColor: "#1a3c34",

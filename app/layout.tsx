@@ -40,7 +40,13 @@ export function generateMetadata(): Metadata {
       template: `%s · ${brand.name}`,
     },
     description: `${brand.name} — community partnerships for impact.`,
-    icons: { icon: "/favicon.ico" },
+    icons: {
+      icon: [
+        { url: "/favicon.png", type: "image/png" },
+        { url: "/logo.png", type: "image/png", sizes: "192x192" },
+      ],
+      apple: "/logo.png",
+    },
     openGraph: {
       siteName: brand.name,
       type: "website",
