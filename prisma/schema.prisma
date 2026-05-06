@@ -409,6 +409,7 @@ model SiteSettings {
   contact          Json     @default("{}")
   socials          Json     @default("{}")
   seo              Json     @default("{}")
+  foundingYear     Int      @default(2017)
   donationsEnabled Boolean  @default(true)
   campaignsEnabled Boolean  @default(true)
   updatedAt        DateTime @updatedAt
@@ -932,6 +933,39 @@ model SiteStatistic {
   updatedAt DateTime @updatedAt
 
   @@index([isActive, order])
+}
+
+// ════════════════════════════════════════════════════════════
+// MILESTONES (history timeline)
+// ════════════════════════════════════════════════════════════
+
+model Milestone {
+  id          String   @id @default(cuid())
+  year        String
+  title       String
+  description String   @db.Text
+  imageUrl    String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+// ════════════════════════════════════════════════════════════
+// SITE IMAGES (page-specific CMS images)
+// Key-value pairs: "who-we-are-hero" → url, etc.
+// ════════════════════════════════════════════════════════════
+
+model SiteImage {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  url       String
+  alt       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ════════════════════════════════════════════════════════════

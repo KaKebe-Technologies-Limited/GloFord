@@ -6,10 +6,12 @@ import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { StatsBar } from "@/components/public/StatsBar";
 import { getActiveTestimonials } from "@/lib/services/testimonials";
 import { getActiveLeaderMessages } from "@/lib/services/leaderMessages";
+import { getSiteImages } from "@/lib/services/siteImages";
 import { TestimonialsSection } from "@/components/public/TestimonialsSection";
 import { LeaderMessageSection } from "@/components/public/LeaderMessageSection";
-// Seed images for varied visual sections
-const IMAGES = {
+
+// Fallbacks used only when no CMS images are set
+const FALLBACK_IMAGES = {
   hero: "/seed-images/gloford/hero-community.jpg",
   story: "/seed-images/gloford/hero-field.jpg",
   team: "/seed-images/gloford/hero-staff.jpg",
@@ -47,10 +49,25 @@ export const metadata: Metadata = {
 
 export default async function WhoWeArePage() {
   const t = await getTranslations("public.whoWeAre");
-  const [testimonials, messages] = await Promise.all([
+  const [testimonials, messages, siteImgs] = await Promise.all([
     getActiveTestimonials(),
     getActiveLeaderMessages(),
+    getSiteImages([
+      "who-we-are-hero",
+      "who-we-are-story",
+      "who-we-are-team",
+      "who-we-are-youth",
+      "who-we-are-climate",
+    ]),
   ]);
+
+  const IMAGES = {
+    hero: siteImgs.get("who-we-are-hero")?.url ?? FALLBACK_IMAGES.hero,
+    story: siteImgs.get("who-we-are-story")?.url ?? FALLBACK_IMAGES.story,
+    team: siteImgs.get("who-we-are-team")?.url ?? FALLBACK_IMAGES.team,
+    youth: siteImgs.get("who-we-are-youth")?.url ?? FALLBACK_IMAGES.youth,
+    climate: siteImgs.get("who-we-are-climate")?.url ?? FALLBACK_IMAGES.climate,
+  };
 
   return (
     <>
@@ -98,18 +115,22 @@ export default async function WhoWeArePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-4">
                   <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
-                    <Image src={IMAGES.hero} alt={t("imageAltCommunity")} fill className="object-cover" sizes="25vw" priority />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={IMAGES.hero} alt={siteImgs.get("who-we-are-hero")?.alt ?? t("imageAltCommunity")} className="h-full w-full object-cover" />
                   </div>
                   <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg">
-                    <Image src={IMAGES.climate} alt={t("imageAltEnvironmental")} fill className="object-cover" sizes="25vw" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={IMAGES.climate} alt={siteImgs.get("who-we-are-climate")?.alt ?? t("imageAltEnvironmental")} className="h-full w-full object-cover" />
                   </div>
                 </div>
                 <div className="mt-8 space-y-4">
                   <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg">
-                    <Image src={IMAGES.youth} alt={t("imageAltYouth")} fill className="object-cover" sizes="25vw" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={IMAGES.youth} alt={siteImgs.get("who-we-are-youth")?.alt ?? t("imageAltYouth")} className="h-full w-full object-cover" />
                   </div>
                   <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
-                    <Image src={IMAGES.team} alt={t("imageAltTeam")} fill className="object-cover" sizes="25vw" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={IMAGES.team} alt={siteImgs.get("who-we-are-team")?.alt ?? t("imageAltTeam")} className="h-full w-full object-cover" />
                   </div>
                 </div>
               </div>

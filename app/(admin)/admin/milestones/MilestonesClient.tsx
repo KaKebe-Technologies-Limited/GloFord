@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -19,70 +19,64 @@ import {
   ConfirmDialogCancel,
 } from "@/components/ui/ConfirmDialog";
 import {
-  createTestimonialAction,
-  updateTestimonialAction,
-  deleteTestimonialAction,
-  toggleTestimonialAction,
+  createMilestoneAction,
+  updateMilestoneAction,
+  deleteMilestoneAction,
+  toggleMilestoneAction,
 } from "./actions";
 
-type Testimonial = {
+type Milestone = {
   id: string;
-  quote: string;
-  authorName: string;
-  authorRole: string | null;
-  authorOrg: string | null;
-  avatarUrl: string | null;
-  rating: number | null;
+  year: string;
+  title: string;
+  description: string;
+  imageUrl: string | null;
   order: number;
   isActive: boolean;
 };
 
-export function TestimonialsClient({
-  testimonials,
-}: {
-  testimonials: Testimonial[];
-}) {
-  const [editing, setEditing] = useState<Testimonial | null>(null);
+export function MilestonesClient({ milestones }: { milestones: Milestone[] }) {
+  const [editing, setEditing] = useState<Milestone | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const router = useRouter();
 
   function openCreate() {
     setEditing(null);
-    setAvatarUrl(null);
+    setImageUrl(null);
     setShowForm(true);
   }
 
-  function openEdit(t: Testimonial) {
-    setEditing(t);
-    setAvatarUrl(t.avatarUrl);
+  function openEdit(milestone: Milestone) {
+    setEditing(milestone);
+    setImageUrl(milestone.imageUrl);
     setShowForm(true);
   }
 
   function closeForm() {
     setShowForm(false);
     setEditing(null);
-    setAvatarUrl(null);
+    setImageUrl(null);
   }
 
   async function handleSubmit(formData: FormData) {
     if (editing) {
       formData.set("id", editing.id);
-      await updateTestimonialAction(formData);
+      await updateMilestoneAction(formData);
     } else {
-      await createTestimonialAction(formData);
+      await createMilestoneAction(formData);
     }
     closeForm();
     router.refresh();
   }
 
   async function handleDelete(formData: FormData) {
-    await deleteTestimonialAction(formData);
+    await deleteMilestoneAction(formData);
     router.refresh();
   }
 
   async function handleToggle(formData: FormData) {
-    await toggleTestimonialAction(formData);
+    await toggleMilestoneAction(formData);
     router.refresh();
   }
 
@@ -90,79 +84,62 @@ export function TestimonialsClient({
     <div className="space-y-6">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Testimonials</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Milestones</h1>
           <p className="text-sm text-[var(--color-muted-fg)]">
-            Manage testimonials displayed on the public site.
+            Manage the timeline milestones displayed on the About page.
           </p>
         </div>
         <Button size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> Add Testimonial
+          <Plus className="h-4 w-4" /> Add Milestone
         </Button>
       </header>
 
+      {/* Form modal */}
       {showForm && (
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-6">
           <h2 className="mb-4 text-lg font-semibold">
-            {editing ? "Edit Testimonial" : "New Testimonial"}
+            {editing ? "Edit Milestone" : "New Milestone"}
           </h2>
           <form action={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="quote">Quote *</Label>
-              <textarea
-                id="quote"
-                name="quote"
-                required
-                rows={3}
-                defaultValue={editing?.quote ?? ""}
-                className="flex w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm placeholder:text-[var(--color-muted-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-              />
-            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="authorName">Author Name *</Label>
+                <Label htmlFor="year">Year *</Label>
                 <Input
-                  id="authorName"
-                  name="authorName"
+                  id="year"
+                  name="year"
                   required
-                  defaultValue={editing?.authorName ?? ""}
+                  defaultValue={editing?.year ?? ""}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="authorRole">Role</Label>
+                <Label htmlFor="title">Title *</Label>
                 <Input
-                  id="authorRole"
-                  name="authorRole"
-                  defaultValue={editing?.authorRole ?? ""}
+                  id="title"
+                  name="title"
+                  required
+                  defaultValue={editing?.title ?? ""}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="authorOrg">Organization</Label>
-                <Input
-                  id="authorOrg"
-                  name="authorOrg"
-                  defaultValue={editing?.authorOrg ?? ""}
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="description">Description *</Label>
+                <textarea
+                  id="description"
+                  name="description"
+                  required
+                  rows={3}
+                  defaultValue={editing?.description ?? ""}
+                  className="flex w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm placeholder:text-[var(--color-muted-fg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Avatar Photo</Label>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Timeline Image</Label>
                 <ImagePicker
-                  value={avatarUrl}
-                  onChange={setAvatarUrl}
-                  placeholder="Author avatar"
-                  aspect="1/1"
+                  value={imageUrl}
+                  onChange={setImageUrl}
+                  placeholder="Timeline image"
+                  aspect="16/10"
                 />
-                <input type="hidden" name="avatarUrl" value={avatarUrl ?? ""} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="rating">Rating (1-5)</Label>
-                <Input
-                  id="rating"
-                  name="rating"
-                  type="number"
-                  min={1}
-                  max={5}
-                  defaultValue={editing?.rating ?? ""}
-                />
+                <input type="hidden" name="imageUrl" value={imageUrl ?? ""} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="order">Order</Label>
@@ -206,72 +183,69 @@ export function TestimonialsClient({
         </div>
       )}
 
+      {/* Table */}
       <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-[var(--color-border)] bg-[rgb(var(--token-muted)/0.50)] text-left text-xs uppercase tracking-wider text-[var(--color-muted-fg)]">
               <tr>
-                <th className="px-4 py-3">Quote</th>
-                <th className="px-4 py-3">Author</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Org</th>
-                <th className="px-4 py-3">Rating</th>
+                <th className="px-4 py-3">Year</th>
+                <th className="px-4 py-3">Title</th>
+                <th className="px-4 py-3">Image</th>
+                <th className="px-4 py-3">Order</th>
                 <th className="px-4 py-3">Active</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-border)]">
-              {testimonials.length === 0 ? (
+              {milestones.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     className="px-4 py-10 text-center text-[var(--color-muted-fg)]"
                   >
-                    No testimonials yet.
+                    No milestones yet. Add one to get started.
                   </td>
                 </tr>
               ) : (
-                testimonials.map((t) => (
-                  <tr key={t.id} className="group hover:bg-[rgb(var(--token-muted)/0.50)]">
-                    <td className="max-w-xs truncate px-4 py-3 font-medium">
-                      {t.quote.length > 80
-                        ? t.quote.slice(0, 80) + "..."
-                        : t.quote}
-                    </td>
-                    <td className="px-4 py-3">{t.authorName}</td>
-                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">
-                      {t.authorRole ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">
-                      {t.authorOrg ?? "-"}
-                    </td>
+                milestones.map((milestone) => (
+                  <tr key={milestone.id} className="group hover:bg-[rgb(var(--token-muted)/0.50)]">
+                    <td className="px-4 py-3 font-medium">{milestone.year}</td>
+                    <td className="px-4 py-3">{milestone.title}</td>
                     <td className="px-4 py-3">
-                      {t.rating ? (
-                        <span className="inline-flex items-center gap-0.5 text-amber-500">
-                          <Star className="h-3 w-3 fill-current" />
-                          {t.rating}
-                        </span>
+                      {milestone.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={milestone.imageUrl}
+                          alt={milestone.title}
+                          className="h-10 w-16 rounded object-cover"
+                        />
                       ) : (
-                        "-"
+                        <div className="flex h-10 w-16 items-center justify-center rounded bg-[var(--color-muted)]">
+                          <ImageIcon className="h-4 w-4 text-[var(--color-muted-fg)]" />
+                        </div>
                       )}
+                    </td>
+                    <td className="px-4 py-3 text-[var(--color-muted-fg)]">
+                      {milestone.order}
                     </td>
                     <td className="px-4 py-3">
                       <form action={handleToggle}>
-                        <input type="hidden" name="id" value={t.id} />
+                        <input type="hidden" name="id" value={milestone.id} />
                         <input
                           type="hidden"
                           name="isActive"
-                          value={String(t.isActive)}
+                          value={String(milestone.isActive)}
                         />
                         <button
                           type="submit"
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            t.isActive
+                            milestone.isActive
                               ? "bg-[rgb(var(--token-success)/0.20)] text-[var(--color-success)]"
                               : "bg-[var(--color-muted)] text-[var(--color-muted-fg)]"
                           }`}
                         >
-                          {t.isActive ? "Active" : "Inactive"}
+                          {milestone.isActive ? "Active" : "Inactive"}
                         </button>
                       </form>
                     </td>
@@ -280,7 +254,7 @@ export function TestimonialsClient({
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => openEdit(t)}
+                          onClick={() => openEdit(milestone)}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -292,19 +266,16 @@ export function TestimonialsClient({
                           </ConfirmDialogTrigger>
                           <ConfirmDialogContent>
                             <ConfirmDialogHeader>
-                              <ConfirmDialogTitle>
-                                Delete testimonial
-                              </ConfirmDialogTitle>
+                              <ConfirmDialogTitle>Delete milestone</ConfirmDialogTitle>
                               <ConfirmDialogDescription>
-                                Are you sure you want to delete the testimonial from
-                                &quot;{t.authorName}&quot;? This action cannot be
-                                undone.
+                                Are you sure you want to delete &quot;{milestone.title}
+                                &quot;? This action cannot be undone.
                               </ConfirmDialogDescription>
                             </ConfirmDialogHeader>
                             <ConfirmDialogFooter>
                               <ConfirmDialogCancel>Cancel</ConfirmDialogCancel>
                               <form action={handleDelete}>
-                                <input type="hidden" name="id" value={t.id} />
+                                <input type="hidden" name="id" value={milestone.id} />
                                 <ConfirmDialogAction type="submit">
                                   Delete
                                 </ConfirmDialogAction>

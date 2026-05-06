@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { ImagePicker } from "@/components/ui/ImagePicker";
 import {
   ConfirmDialog,
   ConfirmDialogTrigger,
@@ -40,21 +41,25 @@ type Slide = {
 export function HeroSlidesClient({ slides }: { slides: Slide[] }) {
   const [editing, setEditing] = useState<Slide | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const router = useRouter();
 
   function openCreate() {
     setEditing(null);
+    setImageUrl(null);
     setShowForm(true);
   }
 
   function openEdit(slide: Slide) {
     setEditing(slide);
+    setImageUrl(slide.imageUrl);
     setShowForm(true);
   }
 
   function closeForm() {
     setShowForm(false);
     setEditing(null);
+    setImageUrl(null);
   }
 
   async function handleSubmit(formData: FormData) {
@@ -117,14 +122,15 @@ export function HeroSlidesClient({ slides }: { slides: Slide[] }) {
                   defaultValue={editing?.subtitle ?? ""}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="imageUrl">Image URL *</Label>
-                <Input
-                  id="imageUrl"
-                  name="imageUrl"
-                  required
-                  defaultValue={editing?.imageUrl ?? ""}
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Hero Image *</Label>
+                <ImagePicker
+                  value={imageUrl}
+                  onChange={setImageUrl}
+                  placeholder="Hero image"
+                  aspect="16/9"
                 />
+                <input type="hidden" name="imageUrl" value={imageUrl ?? ""} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="imageAlt">Image Alt Text</Label>

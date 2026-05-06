@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { ImagePicker } from "@/components/ui/ImagePicker";
 import {
   ConfirmDialog,
   ConfirmDialogTrigger,
@@ -43,21 +44,25 @@ export function LeaderMessagesClient({
 }) {
   const [editing, setEditing] = useState<LeaderMessage | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const router = useRouter();
 
   function openCreate() {
     setEditing(null);
+    setPhotoUrl(null);
     setShowForm(true);
   }
 
   function openEdit(m: LeaderMessage) {
     setEditing(m);
+    setPhotoUrl(m.photoUrl);
     setShowForm(true);
   }
 
   function closeForm() {
     setShowForm(false);
     setEditing(null);
+    setPhotoUrl(null);
   }
 
   async function handleSubmit(formData: FormData) {
@@ -132,12 +137,14 @@ export function LeaderMessagesClient({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="photoUrl">Photo URL</Label>
-                <Input
-                  id="photoUrl"
-                  name="photoUrl"
-                  defaultValue={editing?.photoUrl ?? ""}
+                <Label>Leader Photo</Label>
+                <ImagePicker
+                  value={photoUrl}
+                  onChange={setPhotoUrl}
+                  placeholder="Leader portrait"
+                  aspect="4/5"
                 />
+                <input type="hidden" name="photoUrl" value={photoUrl ?? ""} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signature">Signature</Label>

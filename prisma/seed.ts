@@ -56,6 +56,10 @@ async function main() {
   await seedFaqs();
   await seedVolunteerOpportunities();
 
+  console.log("→ Seeding milestones and site images…");
+  await seedMilestones();
+  await seedSiteImages();
+
   console.log("✓ Seed complete");
 }
 
@@ -2140,6 +2144,56 @@ function hexToRgbTriplet(hex: string): string | null {
   const g = (n >> 8) & 0xff;
   const b = n & 0xff;
   return `${r} ${g} ${b}`;
+}
+
+// ─── Milestones (history timeline) ───────────────────────────
+
+async function seedMilestones() {
+  const milestones = [
+    { year: "2009", title: "Community Beginnings", description: "A small group of volunteers began grassroots outreach in rural Uganda, laying the groundwork for what would become a formal organization.", order: 0 },
+    { year: "2011", title: "First Health Programs", description: "Launched community health worker training and mobile clinics reaching underserved populations in Kasese District.", order: 1 },
+    { year: "2013", title: "Education Initiative", description: "Opened the first community learning center providing after-school tutoring and adult literacy classes.", order: 2 },
+    { year: "2015", title: "Youth Empowerment", description: "Launched youth skills-training and mentorship programs, equipping young people with vocational and leadership skills.", order: 3 },
+    { year: "2017", title: "Official Registration", description: "Formally registered as Gloford Foundation, establishing governance structures and strategic partnerships.", order: 4 },
+    { year: "2019", title: "Regional Expansion", description: "Expanded operations to multiple districts, partnering with international organizations for broader impact.", order: 5 },
+    { year: "2020", title: "COVID-19 Response", description: "Rapidly pivoted to emergency relief, distributing supplies and health information across communities during the pandemic.", order: 6 },
+    { year: "2022", title: "Climate Resilience", description: "Introduced environmental conservation and climate-smart agriculture programs to build community resilience.", order: 7 },
+    { year: "2024", title: "Digital Transformation", description: "Launched digital platforms for community engagement, online learning, and transparent impact reporting.", order: 8 },
+  ];
+
+  for (const m of milestones) {
+    await db.milestone.upsert({
+      where: { id: `seed-milestone-${m.order}` },
+      update: {},
+      create: {
+        id: `seed-milestone-${m.order}`,
+        ...m,
+        imageUrl: `/seed-images/gloford/hero-${["community", "field", "radio", "climate", "youth", "staff", "community", "field", "staff"][m.order]}.jpg`,
+      },
+    });
+  }
+}
+
+// ─── Site Images (page-specific CMS images) ─────────────────
+
+async function seedSiteImages() {
+  const images = [
+    { key: "who-we-are-hero", label: "Who We Are — Hero", url: "/seed-images/gloford/hero-community.jpg", alt: "Community engagement" },
+    { key: "who-we-are-story", label: "Who We Are — Our Story", url: "/seed-images/gloford/hero-field.jpg", alt: "Field work" },
+    { key: "who-we-are-team", label: "Who We Are — Team", url: "/seed-images/gloford/hero-staff.jpg", alt: "Our team" },
+    { key: "who-we-are-youth", label: "Who We Are — Youth", url: "/seed-images/gloford/hero-youth.jpg", alt: "Youth empowerment" },
+    { key: "who-we-are-climate", label: "Who We Are — Climate", url: "/seed-images/gloford/hero-climate.jpg", alt: "Climate initiatives" },
+    { key: "history-hero-1", label: "History — Hero Left", url: "/seed-images/gloford/hero-community.jpg", alt: "Early days" },
+    { key: "history-hero-2", label: "History — Hero Right", url: "/seed-images/gloford/hero-staff.jpg", alt: "Today" },
+  ];
+
+  for (const img of images) {
+    await db.siteImage.upsert({
+      where: { key: img.key },
+      update: {},
+      create: img,
+    });
+  }
 }
 
 // Keep unused import from breaking the build.

@@ -5,6 +5,8 @@ import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { getActiveSiteStats } from "@/lib/services/siteStats";
+import { getActiveMilestones } from "@/lib/services/milestones";
+import { getSiteImages } from "@/lib/services/siteImages";
 import { ArrowRight, Calendar } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
@@ -24,30 +26,18 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "Our History" },
 };
 
-const IMAGES = [
-  "/seed-images/gloford/hero-community.jpg",
-  "/seed-images/gloford/hero-field.jpg",
-  "/seed-images/gloford/hero-radio.jpg",
-  "/seed-images/gloford/hero-climate.jpg",
-  "/seed-images/gloford/hero-youth.jpg",
-  "/seed-images/gloford/hero-staff.jpg",
-];
-
-const TIMELINE_YEARS = ["2009", "2011", "2013", "2015", "2017", "2019", "2020", "2022", "2024"];
-const TIMELINE_IMAGES = [0, 1, 2, 3, 4, 5, 0, 1, 5];
+const FALLBACK_IMG = "/seed-images/gloford/hero-community.jpg";
 
 export default async function HistoryPage() {
-  const [stats, t] = await Promise.all([
+  const [stats, t, milestones, siteImgs] = await Promise.all([
     getActiveSiteStats(),
     getTranslations("public.history"),
+    getActiveMilestones(),
+    getSiteImages(["history-hero-1", "history-hero-2"]),
   ]);
 
-  const timeline = TIMELINE_YEARS.map((year, i) => ({
-    year,
-    title: t(`timeline${i}Title` as Parameters<typeof t>[0]),
-    text: t(`timeline${i}Text` as Parameters<typeof t>[0]),
-    image: TIMELINE_IMAGES[i]!,
-  }));
+  const heroImg1 = siteImgs.get("history-hero-1")?.url ?? FALLBACK_IMG;
+  const heroImg2 = siteImgs.get("history-hero-2")?.url ?? "/seed-images/gloford/hero-staff.jpg";
 
   return (
     <>
@@ -80,10 +70,12 @@ export default async function HistoryPage() {
             <ScrollReveal delay={0.2}>
               <div className="grid grid-cols-2 gap-3">
                 <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
-                  <Image src={IMAGES[0]!} alt={t("altEarlyDays")} fill className="object-cover" sizes="25vw" priority />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={heroImg1} alt={siteImgs.get("history-hero-1")?.alt ?? t("altEarlyDays")} className="h-full w-full object-cover" />
                 </div>
                 <div className="mt-8 relative aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
-                  <Image src={IMAGES[5]!} alt={t("altToday")} fill className="object-cover" sizes="25vw" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={heroImg2} alt={siteImgs.get("history-hero-2")?.alt ?? t("altToday")} className="h-full w-full object-cover" />
                 </div>
               </div>
             </ScrollReveal>
@@ -119,24 +111,27 @@ export default async function HistoryPage() {
           </ScrollReveal>
 
           <div className="space-y-12">
-            {timeline.map((event, i) => (
-              <ScrollReveal key={event.year} delay={i * 0.05}>
+            {milestones.map((ms, i) => (
+              <ScrollReveal key={ms.id} delay={i * 0.05}>
                 <div className={`flex flex-col gap-6 md:flex-row md:items-center md:gap-10 ${i % 2 === 1 ? "md:flex-row-reverse" : ""}`}>
-                  <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl shadow-lg md:w-2/5">
-                    <Image src={IMAGES[event.image]!} alt={event.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 40vw" />
-                    <div className="absolute left-4 top-4 rounded-full bg-[var(--color-primary)] px-4 py-1.5 text-sm font-bold text-white shadow-lg">
-                      {event.year}
+                  {ms.imageUrl && (
+                    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl shadow-lg md:w-2/5">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={ms.imageUrl} alt={ms.title} className="h-full w-full object-cover" />
+                      <div className="absolute left-4 top-4 rounded-full bg-[var(--color-primary)] px-4 py-1.5 text-sm font-bold text-white shadow-lg">
+                        {ms.year}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgb(var(--token-primary)/0.10)]">
                         <Calendar className="h-4 w-4 text-[var(--color-primary)]" />
                       </div>
-                      <span className="text-sm font-semibold text-[var(--color-primary)]">{event.year}</span>
+                      <span className="text-sm font-semibold text-[var(--color-primary)]">{ms.year}</span>
                     </div>
-                    <h3 className="text-xl font-bold text-[var(--color-fg)]">{event.title}</h3>
-                    <p className="mt-2 leading-relaxed text-[var(--color-muted-fg)]">{event.text}</p>
+                    <h3 className="text-xl font-bold text-[var(--color-fg)]">{ms.title}</h3>
+                    <p className="mt-2 leading-relaxed text-[var(--color-muted-fg)]">{ms.description}</p>
                   </div>
                 </div>
               </ScrollReveal>
