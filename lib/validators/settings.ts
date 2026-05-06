@@ -4,6 +4,7 @@ export const siteSettingsUpdateSchema = z.object({
   siteName: z.string().trim().min(1).max(120),
   logoUrl: z.string().trim().max(500).optional().nullable(),
   loginBgUrl: z.string().trim().max(500).optional().nullable(),
+  foundingYear: z.number().int().min(1900).max(2100).default(2017),
   donationsEnabled: z.boolean().default(true),
   campaignsEnabled: z.boolean().default(true),
   contact: z

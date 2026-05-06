@@ -14,6 +14,7 @@ import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { FALLBACK_IMAGES } from "@/lib/utils/images";
 import { db } from "@/lib/db";
+import { getSiteSettings } from "@/lib/services/settings/site";
 import {
   Heart,
   Users,
@@ -54,6 +55,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const t = await getTranslations("public.home");
+  const settings = await getSiteSettings();
   const [
     slides,
     testimonials,
@@ -159,7 +161,7 @@ export default async function HomePage() {
       )}
 
       {/* ── Section 2: Animated Stats (muted bg) ── */}
-      <DynamicStatsSection dbStats={siteStats} t={t} />
+      <DynamicStatsSection dbStats={siteStats} t={t} foundingYear={settings?.foundingYear ?? 2017} />
 
       {/* ── Section 3: About Intro (light gradient bg) ── */}
       <AboutIntroSection t={t} />
@@ -213,6 +215,7 @@ export default async function HomePage() {
 async function DynamicStatsSection({
   dbStats,
   t,
+  foundingYear,
 }: {
   dbStats: Array<{
     id: string;
@@ -221,6 +224,7 @@ async function DynamicStatsSection({
     icon: string | null;
   }>;
   t: (key: string) => string;
+  foundingYear: number;
 }) {
   // Auto-compute live stats from real DB data
   const [programCount, visitorEstimate] = await Promise.all([
@@ -233,8 +237,6 @@ async function DynamicStatsSection({
     ]).then(([d, s, e]) => d + s + e),
   ]);
 
-  // Founding year — calculate years of impact
-  const foundingYear = 2017;
   const yearsOfImpact = new Date().getFullYear() - foundingYear;
 
   // Build auto stats, then overlay admin-configured ones

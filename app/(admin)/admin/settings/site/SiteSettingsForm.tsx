@@ -10,6 +10,7 @@ type Initial = {
   siteName: string;
   logoUrl: string;
   loginBgUrl: string;
+  foundingYear: number;
   donationsEnabled: boolean;
   campaignsEnabled: boolean;
   contact: { email: string; phone: string; address: string };
@@ -38,6 +39,7 @@ export function SiteSettingsForm({ initial }: { initial: Initial }) {
           siteName: state.siteName,
           logoUrl: state.logoUrl || null,
           loginBgUrl: state.loginBgUrl || null,
+          foundingYear: state.foundingYear,
           donationsEnabled: state.donationsEnabled,
           campaignsEnabled: state.campaignsEnabled,
           contact: state.contact,
@@ -69,6 +71,16 @@ export function SiteSettingsForm({ initial }: { initial: Initial }) {
               onChange={(url) => setState((s) => ({ ...s, logoUrl: url ?? "" }))}
               placeholder="Logo"
               aspect="3/1"
+            />
+          </Field>
+          <Field label="Founding year">
+            <input
+              type="number"
+              value={state.foundingYear}
+              onChange={(e) => setState((s) => ({ ...s, foundingYear: Number(e.target.value) }))}
+              className={inputCls}
+              min={1900}
+              max={2100}
             />
           </Field>
           <Field label="Login page background">

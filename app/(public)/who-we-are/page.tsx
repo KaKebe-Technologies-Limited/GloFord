@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { StatsBar } from "@/components/public/StatsBar";
@@ -161,12 +160,11 @@ export default async function WhoWeArePage() {
             <ScrollReveal delay={0.2}>
               <div className="relative">
                 <div className="aspect-[4/3] overflow-hidden rounded-2xl shadow-2xl">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={IMAGES.story}
-                    alt={t("imageAltJourney")}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    alt={siteImgs.get("who-we-are-story")?.alt ?? t("imageAltJourney")}
+                    className="h-full w-full object-cover"
                   />
                 </div>
                 <div className="absolute -bottom-6 -left-6 rounded-xl bg-[var(--color-primary)] p-5 text-white shadow-xl">

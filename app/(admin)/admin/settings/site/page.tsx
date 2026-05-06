@@ -27,6 +27,7 @@ export default async function SiteSettingsPage() {
           siteName: s?.siteName ?? "Platform",
           logoUrl: s?.logoUrl ?? "",
           loginBgUrl: s?.loginBgUrl ?? "",
+          foundingYear: s?.foundingYear ?? 2017,
           donationsEnabled: s?.donationsEnabled ?? true,
           campaignsEnabled: s?.campaignsEnabled ?? true,
           contact: {

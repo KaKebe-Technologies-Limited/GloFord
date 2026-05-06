@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo/json-ld";
+import { BlockRenderer } from "@/components/blocks/BlockRenderer";
+import { db } from "@/lib/db";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 
@@ -22,6 +24,26 @@ export const metadata: Metadata = {
 };
 
 export default async function PrivacyPage() {
+  const cmsPage = await db.page.findFirst({
+    where: { slug: "privacy", status: "PUBLISHED" },
+  });
+
+  if (cmsPage) {
+    return (
+      <article>
+        <JsonLd
+          data={[
+            breadcrumbJsonLd([
+              { name: "Home", href: "/" },
+              { name: cmsPage.title, href: "/privacy" },
+            ]),
+          ]}
+        />
+        <BlockRenderer blocks={cmsPage.blocks} />
+      </article>
+    );
+  }
+
   const t = await getTranslations("public.privacy");
 
   return (
