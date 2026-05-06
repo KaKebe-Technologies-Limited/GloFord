@@ -166,9 +166,7 @@ export function Sidebar({
             href="/admin/dashboard"
             className="flex items-center gap-2.5 overflow-hidden"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[rgb(37_85_73)] to-[rgb(26_60_52)] text-xs font-bold shadow-[inset_0_1px_0_rgb(255_255_255/0.12)]">
-              G
-            </div>
+                <img src="/logo.png" alt="Gloford" className="h-8 w-8 shrink-0 object-contain" />
             <span
               className={cn(
                 "whitespace-nowrap text-[15px] font-semibold tracking-[-0.01em] transition-all duration-300",
