@@ -2221,7 +2221,7 @@ async function seedWelcomeSeries() {
     create: {
       id: "seed-welcome-email-0",
       campaignId: "seed-welcome-series",
-      step: 0,
+      stepOrder: 0,
       delayMinutes: 0,
       subject: `Welcome to ${BRAND_NAME}!`,
       content: JSON.stringify([
@@ -2238,7 +2238,7 @@ async function seedWelcomeSeries() {
     create: {
       id: "seed-welcome-email-1",
       campaignId: "seed-welcome-series",
-      step: 1,
+      stepOrder: 1,
       delayMinutes: 1440,
       subject: "Our Programs",
       content: JSON.stringify([
@@ -2255,7 +2255,7 @@ async function seedWelcomeSeries() {
     create: {
       id: "seed-welcome-email-2",
       campaignId: "seed-welcome-series",
-      step: 2,
+      stepOrder: 2,
       delayMinutes: 4320,
       subject: "Support Our Work",
       content: JSON.stringify([
