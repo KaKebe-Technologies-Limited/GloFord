@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { getActiveSiteStats } from "@/lib/services/siteStats";
 import { getActiveMilestones } from "@/lib/services/milestones";
 import { getSiteImages } from "@/lib/services/siteImages";

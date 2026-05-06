@@ -11,6 +11,7 @@ import { getMailProvider } from "@/lib/mail";
 import { doubleOptInEmail, welcomeEmail } from "@/lib/mail/templates";
 import { buildBrand } from "@/lib/mail/brand";
 import { NotFoundError } from "@/lib/errors";
+import { inngest } from "@/lib/inngest/client";
 
 /**
  * Public subscribe: creates a PENDING subscriber + sends the
@@ -79,6 +80,12 @@ export async function confirmSubscriber(token: string): Promise<{ ok: boolean }>
     text,
     metadata: { type: "welcome", subscriberId: subscriber.id },
   });
+
+  // Emit event to trigger ON_SIGNUP email campaigns
+  void inngest.send({
+    name: "subscriber/confirmed",
+    data: { subscriberId: subscriber.id },
+  }).catch(() => {});
 
   return { ok: true };
 }

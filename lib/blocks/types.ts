@@ -125,6 +125,20 @@ export const pageCollectionBlockSchema = z.object({
   limit: z.number().int().min(1).max(12).default(6),
 });
 
+export const timelineBlockSchema = z.object({
+  heading: z.string().max(200).optional(),
+  items: z
+    .array(
+      z.object({
+        year: z.string().min(1).max(20),
+        title: z.string().min(1).max(200),
+        text: z.string().min(1).max(600),
+      }),
+    )
+    .min(1)
+    .max(20),
+});
+
 // ─── Discriminated union (the block envelope) ─────────────────
 
 export const blockSchema = z.discriminatedUnion("type", [
@@ -141,6 +155,7 @@ export const blockSchema = z.discriminatedUnion("type", [
   z.object({ id: z.string(), type: z.literal("eventList"), data: eventListBlockSchema }),
   z.object({ id: z.string(), type: z.literal("partnerLogos"), data: partnerLogosBlockSchema }),
   z.object({ id: z.string(), type: z.literal("pageCollection"), data: pageCollectionBlockSchema }),
+  z.object({ id: z.string(), type: z.literal("timeline"), data: timelineBlockSchema }),
 ]);
 
 export type Block = z.infer<typeof blockSchema>;
@@ -221,6 +236,11 @@ export const BLOCK_META: Record<
     label: "Page collection",
     description: "Auto-populated cards from impact stories, team, partners, or reports",
     emptyData: { collection: "impactStory", limit: 6 },
+  },
+  timeline: {
+    label: "Timeline",
+    description: "Chronological list of milestones with year, title, and description",
+    emptyData: { items: [{ year: "2024", title: "Milestone", text: "Describe this milestone." }] },
   },
 };
 

@@ -52,6 +52,8 @@ async function BlockSwitch({ block }: { block: Block }) {
       return <PartnerLogosBlock data={block.data} />;
     case "pageCollection":
       return <PageCollectionBlock data={block.data} />;
+    case "timeline":
+      return <TimelineBlock data={block.data} />;
   }
 }
 
@@ -717,6 +719,38 @@ async function PageCollectionBlock({ data }: { data: Extract<Block, { type: "pag
             <span aria-hidden="true">&rarr;</span>
           </Link>
         </ScrollReveal>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TIMELINE — Chronological milestones
+   ────────────────────────────────────────────────────────────── */
+function TimelineBlock({ data }: { data: Extract<Block, { type: "timeline" }>["data"] }) {
+  return (
+    <section className="w-full px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl">
+        {data.heading ? (
+          <ScrollReveal className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{data.heading}</h2>
+          </ScrollReveal>
+        ) : null}
+        <div className="relative border-l-2 border-[var(--color-primary)]/30 pl-8 sm:pl-10">
+          {data.items.map((item, i) => (
+            <ScrollReveal key={`${item.year}-${i}`} delay={i * 0.08}>
+              <div className="relative mb-10 last:mb-0">
+                {/* Dot on the timeline line */}
+                <div className="absolute -left-[calc(2rem+5px)] top-1.5 h-3 w-3 rounded-full border-2 border-[var(--color-primary)] bg-white sm:-left-[calc(2.5rem+5px)]" />
+                <span className="inline-block rounded-full bg-[rgb(var(--token-primary)/0.10)] px-3 py-0.5 text-xs font-semibold text-[var(--color-primary)]">
+                  {item.year}
+                </span>
+                <h3 className="mt-2 text-lg font-bold">{item.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-gray-600">{item.text}</p>
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>
       </div>
     </section>
   );

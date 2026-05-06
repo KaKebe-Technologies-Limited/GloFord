@@ -48,70 +48,111 @@ export const newsletterSend = inngest.createFunction(
       return { sent: 0 };
     }
 
+    // ─── A/B split logic ─────────────────────────────────────────
+    const isABTest = !!newsletter.subjectB;
+    const abPercent = newsletter.abTestPercent ?? 20;
+
+    // Shuffle eligible array to randomize split
+    const shuffled = [...eligible].sort(() => Math.random() - 0.5);
+    const splitIndex = isABTest
+      ? Math.max(1, Math.round((shuffled.length * abPercent) / 100))
+      : 0;
+
+    // Variant B gets the first `splitIndex` subscribers, variant A gets the rest
+    const variantBSubs = isABTest ? shuffled.slice(0, splitIndex) : [];
+    const variantASubs = isABTest ? shuffled.slice(splitIndex) : shuffled;
+
     const html = sanitizeHtml(blocksToEmailHtml(newsletter.content as unknown));
     const text = blocksToPlainText(newsletter.content as unknown);
     const provider = getMailProvider();
 
+    async function sendChunk(
+      chunk: typeof eligible,
+      subject: string,
+      variant: "A" | "B",
+      startIdx: number,
+    ) {
+      for (const s of chunk) {
+        const unsubUrl = `${brand.siteUrl}/newsletter/unsubscribe/${s.unsubToken}`;
+        const prefsUrl = `${brand.siteUrl}/newsletter/preferences/${s.unsubToken}`;
+        const mail = newsletterEmail({
+          brand,
+          subject,
+          preheader: newsletter.preheader ?? "",
+          bodyHtml: html,
+          bodyText: text,
+          unsubUrl,
+          prefsUrl,
+        });
+        try {
+          const res = await provider.send({
+            to: s.email,
+            subject: mail.subject,
+            html: mail.html,
+            text: mail.text,
+            metadata: { type: "newsletter", newsletterId: newsletter.id, subscriberId: s.id },
+          });
+          await db.newsletterLog.upsert({
+            where: {
+              newsletterId_subscriberId: { newsletterId: newsletter.id, subscriberId: s.id },
+            },
+            update: {
+              providerMsgId: res.providerMessageId,
+              status: "SENT",
+              metadata: isABTest ? { variant } : undefined,
+            },
+            create: {
+              newsletterId: newsletter.id,
+              subscriberId: s.id,
+              providerMsgId: res.providerMessageId,
+              status: "SENT",
+              metadata: isABTest ? { variant } : undefined,
+            },
+          });
+          sent++;
+        } catch (e) {
+          await db.newsletterLog.upsert({
+            where: {
+              newsletterId_subscriberId: { newsletterId: newsletter.id, subscriberId: s.id },
+            },
+            update: {
+              status: "FAILED",
+              error: e instanceof Error ? e.message : String(e),
+              metadata: isABTest ? { variant } : undefined,
+            },
+            create: {
+              newsletterId: newsletter.id,
+              subscriberId: s.id,
+              status: "FAILED",
+              error: e instanceof Error ? e.message : String(e),
+              metadata: isABTest ? { variant } : undefined,
+            },
+          });
+        }
+      }
+    }
+
     const CHUNK = 50;
     let sent = 0;
-    for (let i = 0; i < eligible.length; i += CHUNK) {
-      const chunk = eligible.slice(i, i + CHUNK);
-      await step.run(`send-${i}`, async () => {
-        for (const s of chunk) {
-          const unsubUrl = `${brand.siteUrl}/newsletter/unsubscribe/${s.unsubToken}`;
-          const prefsUrl = `${brand.siteUrl}/newsletter/preferences/${s.unsubToken}`;
-          const mail = newsletterEmail({
-            brand,
-            subject: newsletter.subject,
-            preheader: newsletter.preheader ?? "",
-            bodyHtml: html,
-            bodyText: text,
-            unsubUrl,
-            prefsUrl,
-          });
-          try {
-            const res = await provider.send({
-              to: s.email,
-              subject: mail.subject,
-              html: mail.html,
-              text: mail.text,
-              metadata: { type: "newsletter", newsletterId: newsletter.id, subscriberId: s.id },
-            });
-            await db.newsletterLog.upsert({
-              where: {
-                newsletterId_subscriberId: { newsletterId: newsletter.id, subscriberId: s.id },
-              },
-              update: {
-                providerMsgId: res.providerMessageId,
-                status: "SENT",
-              },
-              create: {
-                newsletterId: newsletter.id,
-                subscriberId: s.id,
-                providerMsgId: res.providerMessageId,
-                status: "SENT",
-              },
-            });
-            sent++;
-          } catch (e) {
-            await db.newsletterLog.upsert({
-              where: {
-                newsletterId_subscriberId: { newsletterId: newsletter.id, subscriberId: s.id },
-              },
-              update: {
-                status: "FAILED",
-                error: e instanceof Error ? e.message : String(e),
-              },
-              create: {
-                newsletterId: newsletter.id,
-                subscriberId: s.id,
-                status: "FAILED",
-                error: e instanceof Error ? e.message : String(e),
-              },
-            });
-          }
+
+    // Send variant A
+    for (let i = 0, chunkIndex = 0; i < variantASubs.length; i += CHUNK, chunkIndex++) {
+      if (chunkIndex > 0) {
+        await step.sleep(`rate-limit-a-${chunkIndex}`, "5s");
+      }
+      const chunk = variantASubs.slice(i, i + CHUNK);
+      await step.run(`send-a-${i}`, () => sendChunk(chunk, newsletter.subject, "A", i));
+    }
+
+    // Send variant B (only if A/B test)
+    if (isABTest && variantBSubs.length > 0) {
+      for (let i = 0, chunkIndex = 0; i < variantBSubs.length; i += CHUNK, chunkIndex++) {
+        if (chunkIndex > 0) {
+          await step.sleep(`rate-limit-b-${chunkIndex}`, "5s");
         }
-      });
+        const chunk = variantBSubs.slice(i, i + CHUNK);
+        await step.run(`send-b-${i}`, () => sendChunk(chunk, newsletter.subjectB!, "B", i));
+      }
     }
 
     await step.run("mark-sent", () =>
@@ -121,6 +162,11 @@ export const newsletterSend = inngest.createFunction(
       }),
     );
 
-    return { sent, total: eligible.length, skippedByPrefs: audience.length - eligible.length };
+    return {
+      sent,
+      total: eligible.length,
+      skippedByPrefs: audience.length - eligible.length,
+      ...(isABTest ? { variantA: variantASubs.length, variantB: variantBSubs.length } : {}),
+    };
   },
 );

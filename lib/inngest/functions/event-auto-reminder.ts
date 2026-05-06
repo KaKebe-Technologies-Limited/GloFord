@@ -67,7 +67,7 @@ export const eventAutoReminder = inngest.createFunction(
             eventUrl: `${brand.siteUrl}/events/${event.slug}`,
             bodyHtml: `<p>This is a friendly reminder that this event is starting soon. We look forward to seeing you there!</p>`,
             bodyText: `Reminder: ${event.title} starts ${startsAtDate.toISOString()}. ${event.location ? `Location: ${event.location}` : ""}`,
-            unsubUrl: `${brand.siteUrl}/newsletter/unsubscribe/auto-reminder`,
+            unsubUrl: `${brand.siteUrl}/contact`,
           });
 
           try {

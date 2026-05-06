@@ -56,9 +56,13 @@ async function main() {
   await seedFaqs();
   await seedVolunteerOpportunities();
 
-  console.log("→ Seeding milestones and site images…");
+  console.log("→ Seeding milestones, site images, and service areas…");
   await seedMilestones();
   await seedSiteImages();
+  await seedServiceAreas();
+
+  console.log("→ Seeding welcome series…");
+  await seedWelcomeSeries();
 
   console.log("✓ Seed complete");
 }
@@ -2192,6 +2196,123 @@ async function seedSiteImages() {
       where: { key: img.key },
       update: {},
       create: img,
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Welcome Series Email Campaign
+// ---------------------------------------------------------------------------
+async function seedWelcomeSeries() {
+  await db.emailCampaign.upsert({
+    where: { id: "seed-welcome-series" },
+    update: {},
+    create: {
+      id: "seed-welcome-series",
+      name: "Welcome Series",
+      trigger: "ON_SIGNUP",
+      isActive: true,
+    },
+  });
+
+  await db.campaignEmail.upsert({
+    where: { id: "seed-welcome-email-0" },
+    update: {},
+    create: {
+      id: "seed-welcome-email-0",
+      campaignId: "seed-welcome-series",
+      step: 0,
+      delayMinutes: 0,
+      subject: `Welcome to ${BRAND_NAME}!`,
+      content: JSON.stringify([
+        { type: "text", content: `<p>Welcome to ${BRAND_NAME}! We're thrilled to have you join our community.</p>` },
+        { type: "text", content: `<p>${BRAND_NAME} is dedicated to creating lasting change through education, health, and community development programs across the globe.</p>` },
+        { type: "text", content: "<p>Over the next few days we'll share more about what we do and how you can get involved.</p>" },
+      ]),
+    },
+  });
+
+  await db.campaignEmail.upsert({
+    where: { id: "seed-welcome-email-1" },
+    update: {},
+    create: {
+      id: "seed-welcome-email-1",
+      campaignId: "seed-welcome-series",
+      step: 1,
+      delayMinutes: 1440,
+      subject: "Our Programs",
+      content: JSON.stringify([
+        { type: "text", content: `<p>At ${BRAND_NAME}, our programs are designed to uplift communities and create sustainable impact.</p>` },
+        { type: "text", content: "<p>From education scholarships and vocational training to maternal health clinics and clean-water initiatives, every program is built with long-term outcomes in mind.</p>" },
+        { type: "text", content: "<p>Visit our website to explore each program in detail and see the communities we serve.</p>" },
+      ]),
+    },
+  });
+
+  await db.campaignEmail.upsert({
+    where: { id: "seed-welcome-email-2" },
+    update: {},
+    create: {
+      id: "seed-welcome-email-2",
+      campaignId: "seed-welcome-series",
+      step: 2,
+      delayMinutes: 4320,
+      subject: "Support Our Work",
+      content: JSON.stringify([
+        { type: "text", content: `<p>Every contribution to ${BRAND_NAME} goes directly toward expanding our reach and deepening our impact.</p>` },
+        { type: "text", content: "<p>Whether it's a one-time gift or a monthly commitment, your generosity funds real programs that change real lives.</p>" },
+        { type: "text", content: "<p><a href=\"/donate\">Donate today</a> and help us build a brighter future together.</p>" },
+      ]),
+    },
+  });
+}
+
+// ─── Service Areas ──────────────────────────────────────────
+
+async function seedServiceAreas() {
+  const areas = [
+    {
+      title: "Education",
+      description:
+        "Providing quality education and learning opportunities to underserved communities through scholarships, school infrastructure, and teacher training programs.",
+      icon: "BookOpen",
+      color: "from-blue-500 to-blue-600",
+      order: 0,
+    },
+    {
+      title: "Healthcare",
+      description:
+        "Improving health outcomes through community health initiatives, medical outreach, maternal care, and disease prevention programs.",
+      icon: "Heart",
+      color: "from-rose-500 to-rose-600",
+      order: 1,
+    },
+    {
+      title: "Community Development",
+      description:
+        "Empowering communities through capacity building, livelihood programs, infrastructure development, and grassroots leadership training.",
+      icon: "Users",
+      color: "from-emerald-500 to-emerald-600",
+      order: 2,
+    },
+    {
+      title: "Environment",
+      description:
+        "Promoting environmental sustainability through climate resilience programs, reforestation, clean energy access, and environmental education.",
+      icon: "Globe",
+      color: "from-teal-500 to-teal-600",
+      order: 3,
+    },
+  ];
+
+  for (const area of areas) {
+    await db.serviceArea.upsert({
+      where: { id: area.title.toLowerCase().replace(/\s+/g, "-") },
+      update: {},
+      create: {
+        id: area.title.toLowerCase().replace(/\s+/g, "-"),
+        ...area,
+      },
     });
   }
 }

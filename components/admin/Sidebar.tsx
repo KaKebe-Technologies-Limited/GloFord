@@ -33,6 +33,7 @@ import {
   Newspaper,
   PanelLeftClose,
   PanelLeft,
+  Languages,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -101,6 +102,10 @@ const GROUPS: Group[] = [
     key: "settings",
     items: [
       { href: "/admin/hero-slides", key: "heroSlides", icon: SlidersHorizontal },
+      { href: "/admin/milestones", key: "milestones", icon: History },
+      { href: "/admin/site-images", key: "siteImages", icon: Image },
+      { href: "/admin/service-areas", key: "serviceAreas", icon: Briefcase },
+      { href: "/admin/translations", key: "translations", icon: Languages },
       { href: "/admin/site-stats", key: "siteStats", icon: BarChart3 },
       { href: "/admin/theme", key: "theme", icon: Palette },
       { href: "/admin/nav", key: "nav", icon: Navigation },

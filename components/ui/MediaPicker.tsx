@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import { Upload, Library, X, Loader2, Search } from "lucide-react";
-import { listMediaForPickerAction, finalizeMediaAction } from "@/lib/actions/media";
+import { listMediaForPickerAction, finalizeMediaAction, updateMediaAltAction } from "@/lib/actions/media";
 
 type MediaRow = {
   id: string;
@@ -96,6 +96,94 @@ function MediaPickerDialog({
   onClose: () => void;
 }) {
   const [mode, setMode] = useState<Mode>("library");
+  const [pendingPick, setPendingPick] = useState<{ id: string; url: string } | null>(null);
+  const [altText, setAltText] = useState("");
+  const [savingAlt, setSavingAlt] = useState(false);
+
+  const handleRawPick = (picked: { id: string; url: string }) => {
+    setPendingPick(picked);
+    setAltText("");
+  };
+
+  const confirmPick = async () => {
+    if (!pendingPick) return;
+    if (altText.trim()) {
+      setSavingAlt(true);
+      try {
+        await updateMediaAltAction(pendingPick.id, altText.trim());
+      } catch {
+        // best-effort — continue even if alt save fails
+      }
+      setSavingAlt(false);
+    }
+    onPick(pendingPick);
+  };
+
+  const skipAlt = () => {
+    if (pendingPick) onPick(pendingPick);
+  };
+
+  if (pendingPick) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+        onClick={onClose}
+        role="presentation"
+      >
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
+        <div
+          className="flex w-full max-w-lg flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)]"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+        >
+          <header className="border-b border-[var(--color-border)] px-5 py-3">
+            <h3 className="text-sm font-semibold">Add alt text for accessibility</h3>
+          </header>
+          <div className="space-y-4 p-5">
+            <div className="mx-auto max-w-xs overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={pendingPick.url} alt="" className="h-40 w-full object-cover" />
+            </div>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-[var(--color-muted-fg)]">Alt text (describes the image for screen readers)</span>
+              <input
+                type="text"
+                value={altText}
+                onChange={(e) => setAltText(e.target.value)}
+                placeholder="e.g. Children playing in schoolyard"
+                className="w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]"
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") confirmPick();
+                }}
+              />
+            </label>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={skipAlt}
+                className="rounded-[var(--radius-md)] px-3 py-2 text-xs font-medium text-[var(--color-muted-fg)] hover:bg-[var(--color-muted)]"
+              >
+                Skip
+              </button>
+              <button
+                type="button"
+                onClick={confirmPick}
+                disabled={savingAlt}
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-xs font-semibold text-[var(--color-primary-fg)] transition hover:brightness-110 disabled:opacity-50"
+              >
+                {savingAlt ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -134,7 +222,7 @@ function MediaPickerDialog({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
-          {mode === "library" ? <LibraryTab onPick={onPick} /> : <UploadTab onPick={onPick} />}
+          {mode === "library" ? <LibraryTab onPick={handleRawPick} /> : <UploadTab onPick={handleRawPick} />}
         </div>
       </div>
     </div>

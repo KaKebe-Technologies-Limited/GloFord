@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireActorFromSession } from "@/lib/auth-context";
+import { db } from "@/lib/db";
 import {
   createNewsletter,
   updateNewsletter,
@@ -41,4 +42,20 @@ export async function deleteNewsletterAction(raw: unknown) {
   await deleteNewsletter(actor, raw);
   revalidatePath("/admin/newsletters");
   redirect("/admin/newsletters");
+}
+
+export async function previewAudienceCountAction(
+  segmentIds: string[],
+): Promise<number> {
+  await requireActorFromSession();
+  if (segmentIds.length === 0) {
+    return db.subscriber.count({ where: { status: "ACTIVE" } });
+  }
+  const count = await db.subscriber.count({
+    where: {
+      status: "ACTIVE",
+      segments: { some: { segmentId: { in: segmentIds } } },
+    },
+  });
+  return count;
 }

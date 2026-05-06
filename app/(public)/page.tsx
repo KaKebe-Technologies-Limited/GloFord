@@ -5,6 +5,7 @@ import Image from "next/image";
 export const dynamic = "force-dynamic";
 import { getTranslations } from "next-intl/server";
 import { getActiveHeroSlides } from "@/lib/services/heroSlides";
+import { getActiveServiceAreas } from "@/lib/services/serviceAreas";
 import { getActiveTestimonials } from "@/lib/services/testimonials";
 import { getActiveLeaderMessages } from "@/lib/services/leaderMessages";
 import { HeroSlider } from "@/components/public/HeroSlider";
@@ -28,6 +29,7 @@ import {
   Briefcase,
   Sparkles,
   History,
+  type LucideIcon,
 } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
@@ -66,6 +68,7 @@ export default async function HomePage() {
     openPositions,
     impactStories,
     galleryImages,
+    serviceAreas,
   ] = await Promise.all([
     getActiveHeroSlides(),
     getActiveTestimonials(),
@@ -130,6 +133,7 @@ export default async function HomePage() {
         select: { id: true, url: true, alt: true },
       })
       .catch(() => []),
+    getActiveServiceAreas(),
   ]);
 
   return (
@@ -172,7 +176,7 @@ export default async function HomePage() {
       )}
 
       {/* ── Section 5: What We Do (muted bg) ── */}
-      <WhatWeDoSection t={t} />
+      <WhatWeDoSection t={t} serviceAreas={serviceAreas} />
 
       {/* ── Section 6: Latest Blog Posts ── */}
       {latestPosts.length > 0 && <LatestPostsSection posts={latestPosts} t={t} />}
@@ -311,8 +315,25 @@ function AboutIntroSection({ t }: { t: (key: string) => string }) {
 }
 
 /* ─── What We Do Section ─── */
-function WhatWeDoSection({ t }: { t: (key: string) => string }) {
-  const cards = [
+const ICON_MAP: Record<string, LucideIcon> = {
+  BookOpen,
+  Heart,
+  Users,
+  Globe,
+  Briefcase,
+  TrendingUp,
+  HandHeart,
+  Sparkles,
+};
+
+function WhatWeDoSection({
+  t,
+  serviceAreas,
+}: {
+  t: (key: string) => string;
+  serviceAreas: Array<{ id: string; title: string; description: string; icon: string; color: string }>;
+}) {
+  const fallbackCards = [
     {
       icon: BookOpen,
       title: t("whatWeDoEducation"),
@@ -338,6 +359,16 @@ function WhatWeDoSection({ t }: { t: (key: string) => string }) {
       color: "from-teal-500 to-teal-600",
     },
   ];
+
+  const cards =
+    serviceAreas.length > 0
+      ? serviceAreas.map((area) => ({
+          icon: ICON_MAP[area.icon] ?? BookOpen,
+          title: area.title,
+          desc: area.description,
+          color: area.color,
+        }))
+      : fallbackCards;
 
   return (
     <section className="bg-[rgb(248_250_249)] py-20 sm:py-28">

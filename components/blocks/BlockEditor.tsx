@@ -598,6 +598,43 @@ function BlockForm({ block, onChange }: { block: Block; onChange: (d: unknown) =
         />
       );
     }
+    case "timeline": {
+      const d = block.data;
+      const updateItem = (i: number, patch: Partial<(typeof d.items)[number]>) => {
+        onChange({ ...d, items: d.items.map((item, idx) => (idx === i ? { ...item, ...patch } : item)) });
+      };
+      const removeItem = (i: number) => onChange({ ...d, items: d.items.filter((_, idx) => idx !== i) });
+      const addItem = () =>
+        onChange({ ...d, items: [...d.items, { year: "", title: "New milestone", text: "" }] });
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <input type="text" value={d.heading ?? ""} onChange={(e) => onChange({ ...d, heading: e.target.value })} className={inputCls} />
+          </Field>
+          {d.items.map((item, i) => (
+            <div key={i} className="grid grid-cols-1 gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-3 md:grid-cols-2">
+              <Field label="Year">
+                <input type="text" value={item.year} onChange={(e) => updateItem(i, { year: e.target.value })} className={inputCls} />
+              </Field>
+              <Field label="Title">
+                <input type="text" value={item.title} onChange={(e) => updateItem(i, { title: e.target.value })} className={inputCls} />
+              </Field>
+              <Field label="Text" className="md:col-span-2">
+                <textarea value={item.text} onChange={(e) => updateItem(i, { text: e.target.value })} rows={3} className={inputCls} />
+              </Field>
+              <div className="md:col-span-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => removeItem(i)}>
+                  <Trash2 className="h-4 w-4" /> Remove milestone
+                </Button>
+              </div>
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={addItem} disabled={d.items.length >= 20}>
+            <Plus className="h-4 w-4" /> Add milestone
+          </Button>
+        </div>
+      );
+    }
   }
 }
 

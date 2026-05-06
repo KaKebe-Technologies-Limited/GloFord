@@ -3,12 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { finalizeMediaUpload, deleteMedia, listMedia } from "@/lib/services/media";
+import { db } from "@/lib/db";
 
 export async function finalizeMediaAction(raw: unknown) {
   const actor = await requireActorFromSession();
   const row = await finalizeMediaUpload(actor, raw);
   revalidatePath("/admin/media");
   return row;
+}
+
+export async function updateMediaAltAction(mediaId: string, alt: string) {
+  await requireActorFromSession();
+  await db.media.update({
+    where: { id: mediaId },
+    data: { alt },
+  });
 }
 
 export async function deleteMediaAction(raw: unknown) {

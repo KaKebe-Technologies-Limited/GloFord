@@ -54,7 +54,12 @@ export const enrollOnDonation = inngest.createFunction(
   { id: "campaign-enroll-on-donation", retries: 3 },
   { event: "subscriber/donation.succeeded" },
   async ({ event, step }) => {
-    const { subscriberId } = event.data;
+    const extra = event.data as typeof event.data & { donorEmail?: string };
+    if (!extra.donorEmail) return { enrolled: 0, reason: "no donor email" };
+
+    // Wait 30s for donation-tag-donor to finish creating/tagging the subscriber
+    await step.sleep("wait-for-tag-donor", "30s");
+
     const campaigns = await step.run("find-campaigns", () =>
       db.emailCampaign.findMany({
         where: { isActive: true, trigger: "ON_DONATION" },
@@ -67,8 +72,8 @@ export const enrollOnDonation = inngest.createFunction(
     if (campaigns.length === 0) return { enrolled: 0 };
 
     const sub = await step.run("load-subscriber", () =>
-      db.subscriber.findUnique({
-        where: { id: subscriberId },
+      db.subscriber.findFirst({
+        where: { email: extra.donorEmail! },
         include: { segments: { select: { segmentId: true } } },
       }),
     );
