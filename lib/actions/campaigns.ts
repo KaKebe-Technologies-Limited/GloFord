@@ -19,8 +19,9 @@ export async function createCampaignAction(raw: unknown) {
 
 export async function updateCampaignAction(raw: unknown) {
   const actor = await requireActorFromSession();
-  await updateCampaign(actor, raw);
+  const row = await updateCampaign(actor, raw);
   revalidatePath("/admin/campaigns");
+  revalidatePath(`/admin/campaigns/${row.id}`);
 }
 
 export async function toggleCampaignAction(raw: unknown) {

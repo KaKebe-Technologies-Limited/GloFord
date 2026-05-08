@@ -22,8 +22,9 @@ export async function createEmailCampaignAction(raw: unknown) {
 
 export async function updateEmailCampaignAction(raw: unknown) {
   const actor = await requireActorFromSession();
-  await updateEmailCampaign(actor, raw);
+  const row = await updateEmailCampaign(actor, raw);
   revalidatePath("/admin/email-campaigns");
+  revalidatePath(`/admin/email-campaigns/${row.id}`);
 }
 
 export async function deleteEmailCampaignAction(raw: unknown) {

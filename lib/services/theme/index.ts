@@ -28,11 +28,7 @@ export const updateTheme = createService({
         shadows: input.shadows as never,
       },
     });
-    try {
-      revalidateTag(tags.theme());
-    } catch {
-      /* revalidateTag isn't always available in test contexts */
-    }
+    revalidateTag(tags.theme());
     return row;
   },
   version: (out) => ({ entityType: "Theme", entityId: out.id }),

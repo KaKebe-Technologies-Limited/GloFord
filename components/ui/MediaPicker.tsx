@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import { Upload, Library, X, Loader2, Search } from "lucide-react";
-import { listMediaForPickerAction, finalizeMediaAction, updateMediaAltAction } from "@/lib/actions/media";
+import { listMediaForPickerAction, updateMediaAltAction } from "@/lib/actions/media";
 
 type MediaRow = {
   id: string;
@@ -324,46 +324,15 @@ function UploadTab({ onPick }: { onPick: (picked: { id: string; url: string }) =
   async function handleFile(file: File) {
     setError(null);
     try {
-      const presignRes = await fetch("/api/media/presign", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: file.name, mime: file.type, size: file.size }),
-      });
-      if (!presignRes.ok) {
-        const body = await presignRes.json().catch(() => ({}));
-        throw new Error(body.error ?? `Presign failed: ${presignRes.status}`);
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/media/presign", { method: "POST", body: form });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Upload failed: ${res.status}`);
       }
-      const { key, uploadUrl, publicUrl } = (await presignRes.json()) as {
-        key: string;
-        uploadUrl: string;
-        publicUrl: string;
-      };
-
-      const putRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "content-type": file.type },
-        body: file,
-      });
-      if (!putRes.ok) throw new Error(`Upload failed: ${putRes.status}`);
-
-      let width: number | undefined;
-      let height: number | undefined;
-      try {
-        const dims = await readImageDims(file);
-        width = dims.width;
-        height = dims.height;
-      } catch {
-        /* optional */
-      }
-      const row = await finalizeMediaAction({
-        key,
-        mime: file.type,
-        sizeBytes: file.size,
-        width,
-        height,
-        alt: "",
-      });
-      onPick({ id: row.id, url: publicUrl });
+      const row = (await res.json()) as { id: string; url: string };
+      onPick({ id: row.id, url: row.url });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -403,20 +372,4 @@ function UploadTab({ onPick }: { onPick: (picked: { id: string; url: string }) =
       {error ? <p className="mt-3 text-sm text-[var(--color-danger)]">Upload failed: {error}</p> : null}
     </div>
   );
-}
-
-function readImageDims(file: File): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new window.Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("failed to read image dimensions"));
-    };
-    img.src = url;
-  });
 }

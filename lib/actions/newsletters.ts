@@ -21,8 +21,9 @@ export async function createNewsletterAction(raw: unknown) {
 
 export async function updateNewsletterAction(raw: unknown) {
   const actor = await requireActorFromSession();
-  await updateNewsletter(actor, raw);
+  const row = await updateNewsletter(actor, raw);
   revalidatePath("/admin/newsletters");
+  revalidatePath(`/admin/newsletters/${row.id}`);
 }
 
 export async function scheduleNewsletterAction(raw: unknown) {

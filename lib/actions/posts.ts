@@ -14,14 +14,16 @@ export async function createPostAction(raw: unknown) {
 
 export async function updatePostAction(raw: unknown) {
   const actor = await requireActorFromSession();
-  await updatePost(actor, raw);
+  const row = await updatePost(actor, raw);
   revalidatePath("/admin/posts");
+  revalidatePath(`/admin/posts/${row.id}`);
 }
 
 export async function setPostStatusAction(raw: unknown) {
   const actor = await requireActorFromSession();
-  await setPostStatus(actor, raw);
+  const row = await setPostStatus(actor, raw);
   revalidatePath("/admin/posts");
+  revalidatePath(`/admin/posts/${row.id}`);
 }
 
 export async function deletePostAction(raw: unknown) {

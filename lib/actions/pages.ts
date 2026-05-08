@@ -19,14 +19,16 @@ export async function createPageAction(raw: unknown) {
 
 export async function updatePageAction(raw: unknown) {
   const actor = await requireActorFromSession();
-  await updatePage(actor, raw);
+  const row = await updatePage(actor, raw);
   revalidatePath("/admin/pages");
+  revalidatePath(`/admin/pages/${row.id}`);
 }
 
 export async function setPageStatusAction(raw: unknown) {
   const actor = await requireActorFromSession();
-  await setPageStatus(actor, raw);
+  const row = await setPageStatus(actor, raw);
   revalidatePath("/admin/pages");
+  revalidatePath(`/admin/pages/${row.id}`);
 }
 
 export async function deletePageAction(raw: unknown) {

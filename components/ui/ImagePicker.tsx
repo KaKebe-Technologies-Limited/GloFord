@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import { Upload, Library, Link as LinkIcon, X, Loader2, Search } from "lucide-react";
-import { listMediaForPickerAction, finalizeMediaAction } from "@/lib/actions/media";
+import { listMediaForPickerAction } from "@/lib/actions/media";
 
 type MediaRow = {
   id: string;
@@ -269,50 +269,15 @@ function UploadTab({ onPick }: { onPick: (url: string) => void }) {
   async function handleFile(file: File) {
     setError(null);
     try {
-      // 1. Ask server for a presigned URL.
-      const presignRes = await fetch("/api/media/presign", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: file.name, mime: file.type, size: file.size }),
-      });
-      if (!presignRes.ok) {
-        const body = await presignRes.json().catch(() => ({}));
-        throw new Error(body.error ?? `Presign failed: ${presignRes.status}`);
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/media/presign", { method: "POST", body: form });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Upload failed: ${res.status}`);
       }
-      const { key, uploadUrl, publicUrl } = (await presignRes.json()) as {
-        key: string;
-        uploadUrl: string;
-        publicUrl: string;
-      };
-
-      // 2. PUT the file directly to R2/S3.
-      const putRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "content-type": file.type },
-        body: file,
-      });
-      if (!putRes.ok) throw new Error(`Upload failed: ${putRes.status}`);
-
-      // 3. Finalize: create the Media row server-side.
-      let width: number | undefined;
-      let height: number | undefined;
-      try {
-        const dims = await readImageDims(file);
-        width = dims.width;
-        height = dims.height;
-      } catch {
-        /* ignore — dimensions are optional */
-      }
-      await finalizeMediaAction({
-        key,
-        mime: file.type,
-        sizeBytes: file.size,
-        width,
-        height,
-        alt: "",
-      });
-
-      onPick(publicUrl);
+      const row = (await res.json()) as { id: string; url: string };
+      onPick(row.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -422,20 +387,4 @@ function UrlTab({ onPick }: { onPick: (url: string) => void }) {
       </div>
     </div>
   );
-}
-
-function readImageDims(file: File): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new window.Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("failed to read image dimensions"));
-    };
-    img.src = url;
-  });
 }

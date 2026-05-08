@@ -19,14 +19,16 @@ export async function createProgramAction(raw: unknown) {
 
 export async function updateProgramAction(raw: unknown) {
   const actor = await requireActorFromSession();
-  await updateProgram(actor, raw);
+  const row = await updateProgram(actor, raw);
   revalidatePath("/admin/programs");
+  revalidatePath(`/admin/programs/${row.id}`);
 }
 
 export async function setProgramStatusAction(raw: unknown) {
   const actor = await requireActorFromSession();
-  await setProgramStatus(actor, raw);
+  const row = await setProgramStatus(actor, raw);
   revalidatePath("/admin/programs");
+  revalidatePath(`/admin/programs/${row.id}`);
 }
 
 export async function deleteProgramAction(raw: unknown) {

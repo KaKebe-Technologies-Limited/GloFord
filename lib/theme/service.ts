@@ -61,7 +61,7 @@ async function loadActiveTheme(): Promise<ThemeTokens> {
 export const getActiveThemeTokens = unstable_cache(
   loadActiveTheme,
   ["active-theme"],
-  { tags: ["theme"], revalidate: 3600 },
+  { tags: ["theme"], revalidate: 300 },
 );
 
 export { tags };
