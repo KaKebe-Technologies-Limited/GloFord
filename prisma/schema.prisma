@@ -42,6 +42,10 @@ model User {
   grants        ResourceGrant[] @relation("GrantedTo")
   grantsGiven   ResourceGrant[] @relation("GrantedBy")
   postsAuthored Post[]          @relation("PostAuthor")
+  mediaUploads         Media[]              @relation("MediaUploader")
+  newslettersCreated   Newsletter[]         @relation("NewsletterCreator")
+  careersReviewed      CareerApplication[]  @relation("CareerReviewer")
+  partnersReviewed     PartnerApplication[] @relation("PartnerReviewer")
 
   @@index([email])
   @@index([roleId])
@@ -222,7 +226,7 @@ model Program {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  cover     Media?     @relation(fields: [coverMediaId], references: [id])
+  cover     Media?     @relation(fields: [coverMediaId], references: [id], onDelete: SetNull)
   campaigns Campaign[]
 
   @@index([status])
@@ -245,7 +249,7 @@ model Post {
   seoTitle String?
   seoDesc  String?
 
-  cover  Media?    @relation("PostCover", fields: [coverMediaId], references: [id])
+  cover  Media?    @relation("PostCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
   author User      @relation("PostAuthor", fields: [authorId], references: [id])
   tags   PostTag[]
 
@@ -284,9 +288,12 @@ model Media {
   uploadedById String?
   createdAt    DateTime @default(now())
 
-  programs Program[]
-  posts    Post[]    @relation("PostCover")
-  events   Event[]   @relation("EventCover")
+  uploadedBy User?     @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  programs   Program[]
+  posts      Post[]    @relation("PostCover")
+  events     Event[]   @relation("EventCover")
+
+  @@index([uploadedById])
 
   @@index([createdAt])
 }
@@ -328,7 +335,7 @@ model Campaign {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  program   Program?   @relation(fields: [programId], references: [id])
+  program   Program?   @relation(fields: [programId], references: [id], onDelete: SetNull)
   donations Donation[]
 
   @@index([isActive])
@@ -365,8 +372,8 @@ model Donation {
   createdAt        DateTime        @default(now())
   completedAt      DateTime?
 
-  donor    Donor?    @relation(fields: [donorId], references: [id])
-  campaign Campaign? @relation(fields: [campaignId], references: [id])
+  donor    Donor?    @relation(fields: [donorId], references: [id], onDelete: SetNull)
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([donorId])
@@ -416,13 +423,32 @@ model SiteSettings {
 }
 
 model Theme {
-  id         String   @id @default("singleton")
+  id         String       @id @default("singleton")
+  colors     Json         @default("{}")
+  typography Json         @default("{}")
+  radius     Json         @default("{}")
+  shadows    Json         @default("{}")
+  custom     Json?
+  presetId   String?
+  preset     ThemePreset? @relation("ThemeActivePreset", fields: [presetId], references: [id], onDelete: SetNull)
+  updatedAt  DateTime     @updatedAt
+}
+
+model ThemePreset {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  slug       String   @unique
   colors     Json     @default("{}")
   typography Json     @default("{}")
   radius     Json     @default("{}")
   shadows    Json     @default("{}")
-  custom     Json?
+  builtIn    Boolean  @default(false)
+  order      Int      @default(0)
+  themes     Theme[]  @relation("ThemeActivePreset")
+  createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([builtIn, order])
 }
 
 // ════════════════════════════════════════════════════════════
@@ -495,7 +521,10 @@ model Newsletter {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
-  logs NewsletterLog[]
+  createdBy User            @relation("NewsletterCreator", fields: [createdById], references: [id])
+  logs      NewsletterLog[]
+
+  @@index([createdById])
 
   @@index([status, scheduledAt])
 }
@@ -659,7 +688,7 @@ model Event {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  cover          Media?              @relation("EventCover", fields: [coverMediaId], references: [id])
+  cover          Media?              @relation("EventCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
   segments       Segment[]           @relation("EventSegments")
   notifications  EventNotification[]
   registrations  EventRegistration[]
@@ -1073,11 +1102,13 @@ model CareerApplication {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
-  career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  career     Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  reviewedBy User?  @relation("CareerReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([careerId, status])
   @@index([email])
   @@index([status])
+  @@index([reviewedById])
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1105,8 +1136,11 @@ model PartnerApplication {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
+  reviewedBy User? @relation("PartnerReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
   @@index([status])
   @@index([email])
+  @@index([reviewedById])
 }
 
 // ════════════════════════════════════════════════════════════

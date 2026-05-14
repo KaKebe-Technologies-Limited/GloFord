@@ -50,6 +50,7 @@ export function TranslationsClient({
   const [editValue, setEditValue] = useState("");
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
@@ -64,9 +65,14 @@ export function TranslationsClient({
 
   function handleLocaleChange(newLocale: string) {
     setLocale(newLocale);
+    setError(null);
     startTransition(async () => {
-      const data = await listTranslationsAction(newLocale);
-      setTranslations(data);
+      try {
+        const data = await listTranslationsAction(newLocale);
+        setTranslations(data);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to load translations");
+      }
     });
   }
 
@@ -76,12 +82,17 @@ export function TranslationsClient({
     fd.set("locale", locale);
     fd.set("key", newKey.trim());
     fd.set("value", newValue.trim());
+    setError(null);
     startTransition(async () => {
-      await upsertTranslationAction(fd);
-      const data = await listTranslationsAction(locale);
-      setTranslations(data);
-      setNewKey("");
-      setNewValue("");
+      try {
+        await upsertTranslationAction(fd);
+        const data = await listTranslationsAction(locale);
+        setTranslations(data);
+        setNewKey("");
+        setNewValue("");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Something went wrong");
+      }
     });
   }
 
@@ -90,11 +101,16 @@ export function TranslationsClient({
     fd.set("locale", t.locale);
     fd.set("key", t.key);
     fd.set("value", editValue);
+    setError(null);
     startTransition(async () => {
-      await upsertTranslationAction(fd);
-      const data = await listTranslationsAction(locale);
-      setTranslations(data);
-      setEditingId(null);
+      try {
+        await upsertTranslationAction(fd);
+        const data = await listTranslationsAction(locale);
+        setTranslations(data);
+        setEditingId(null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Something went wrong");
+      }
     });
   }
 
@@ -102,15 +118,26 @@ export function TranslationsClient({
     const fd = new FormData();
     fd.set("id", t.id);
     fd.set("locale", t.locale);
+    setError(null);
     startTransition(async () => {
-      await deleteTranslationAction(fd);
-      const data = await listTranslationsAction(locale);
-      setTranslations(data);
+      try {
+        await deleteTranslationAction(fd);
+        const data = await listTranslationsAction(locale);
+        setTranslations(data);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Delete failed");
+      }
     });
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[rgb(var(--token-danger)/0.08)] p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <Languages className="h-6 w-6 text-[var(--color-primary)]" />

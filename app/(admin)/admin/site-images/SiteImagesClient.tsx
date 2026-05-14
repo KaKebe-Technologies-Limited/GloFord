@@ -34,6 +34,7 @@ export function SiteImagesClient({ images }: { images: SiteImage[] }) {
   const [editing, setEditing] = useState<SiteImage | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   function openCreate() {
@@ -55,18 +56,24 @@ export function SiteImagesClient({ images }: { images: SiteImage[] }) {
   }
 
   async function handleSubmit(formData: FormData) {
-    await upsertSiteImageAction(formData);
-    closeForm();
-    router.refresh();
-  }
-
-  async function handleDelete(formData: FormData) {
-    await deleteSiteImageAction(formData);
-    router.refresh();
+    setError(null);
+    try {
+      await upsertSiteImageAction(formData);
+      closeForm();
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    }
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[rgb(var(--token-danger)/0.08)] p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Site Images</h1>
@@ -214,12 +221,21 @@ export function SiteImagesClient({ images }: { images: SiteImage[] }) {
                       </ConfirmDialogHeader>
                       <ConfirmDialogFooter>
                         <ConfirmDialogCancel>Cancel</ConfirmDialogCancel>
-                        <form action={handleDelete}>
-                          <input type="hidden" name="id" value={image.id} />
-                          <ConfirmDialogAction type="submit">
-                            Delete
-                          </ConfirmDialogAction>
-                        </form>
+                        <ConfirmDialogAction
+                          onClick={async () => {
+                            setError(null);
+                            try {
+                              const fd = new FormData();
+                              fd.set("id", image.id);
+                              await deleteSiteImageAction(fd);
+                              router.refresh();
+                            } catch (e) {
+                              setError(e instanceof Error ? e.message : "Delete failed");
+                            }
+                          }}
+                        >
+                          Delete
+                        </ConfirmDialogAction>
                       </ConfirmDialogFooter>
                     </ConfirmDialogContent>
                   </ConfirmDialog>

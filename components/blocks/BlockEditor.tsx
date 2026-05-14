@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Plus, Trash2, ChevronUp, ChevronDown, Bold, Italic, List, ListOrdered, Link2, Heading2, Heading3, Quote, Code, Undo2 } from "lucide-react";
+import { useState } from "react";
+import { Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { BLOCK_META, newBlock, type Block, type BlockType } from "@/lib/blocks/types";
 import { Button } from "@/components/ui/Button";
 import { MediaPicker } from "@/components/ui/MediaPicker";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -202,69 +203,7 @@ function ImageField({
   );
 }
 
-function RichTextEditor({ html, onChange }: { html: string; onChange: (html: string) => void }) {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const [showSource, setShowSource] = useState(false);
-
-  const exec = (cmd: string, value?: string) => {
-    document.execCommand(cmd, false, value);
-    if (editorRef.current) onChange(editorRef.current.innerHTML);
-  };
-
-  const handleLink = () => {
-    const url = prompt("Enter URL:");
-    if (url) exec("createLink", url);
-  };
-
-  if (showSource) {
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-1">
-          <button type="button" onClick={() => setShowSource(false)} className={tbBtnCls}>
-            <Undo2 className="h-3.5 w-3.5" /> Visual
-          </button>
-        </div>
-        <textarea
-          value={html}
-          onChange={(e) => onChange(e.target.value)}
-          rows={10}
-          className={cn(inputCls, "font-mono text-xs")}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-0 rounded-[var(--radius-md)] border border-[var(--color-input)] overflow-hidden">
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-[var(--color-border)] bg-[var(--color-muted)] px-2 py-1.5">
-        <button type="button" onClick={() => exec("bold")} className={tbBtnCls} title="Bold"><Bold className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={() => exec("italic")} className={tbBtnCls} title="Italic"><Italic className="h-3.5 w-3.5" /></button>
-        <span className="mx-1 h-4 w-px bg-[var(--color-border)]" />
-        <button type="button" onClick={() => exec("formatBlock", "h2")} className={tbBtnCls} title="Heading 2"><Heading2 className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={() => exec("formatBlock", "h3")} className={tbBtnCls} title="Heading 3"><Heading3 className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={() => exec("formatBlock", "blockquote")} className={tbBtnCls} title="Quote"><Quote className="h-3.5 w-3.5" /></button>
-        <span className="mx-1 h-4 w-px bg-[var(--color-border)]" />
-        <button type="button" onClick={() => exec("insertUnorderedList")} className={tbBtnCls} title="Bullet list"><List className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={() => exec("insertOrderedList")} className={tbBtnCls} title="Numbered list"><ListOrdered className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={handleLink} className={tbBtnCls} title="Insert link"><Link2 className="h-3.5 w-3.5" /></button>
-        <span className="mx-1 h-4 w-px bg-[var(--color-border)]" />
-        <button type="button" onClick={() => setShowSource(true)} className={tbBtnCls} title="View HTML source"><Code className="h-3.5 w-3.5" /></button>
-      </div>
-      <div
-        ref={editorRef}
-        contentEditable
-        suppressContentEditableWarning
-        dangerouslySetInnerHTML={{ __html: html }}
-        onBlur={() => {
-          if (editorRef.current) onChange(editorRef.current.innerHTML);
-        }}
-        className="min-h-[120px] bg-[var(--color-bg)] px-4 py-3 text-sm leading-relaxed prose prose-sm max-w-none focus:outline-none [&_a]:text-[var(--color-primary)] [&_a]:underline [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-[var(--color-primary)] [&_blockquote]:pl-4 [&_blockquote]:italic"
-      />
-    </div>
-  );
-}
-
-const tbBtnCls = "inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-muted-fg)] hover:bg-[var(--color-card)] hover:text-[var(--color-fg)] transition-colors";
+/* RichTextEditor is now imported from @/components/ui/RichTextEditor (CKEditor 5) */
 
 function MultiMediaPicker({
   label,

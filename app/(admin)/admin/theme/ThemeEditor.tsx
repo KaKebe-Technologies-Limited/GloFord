@@ -1,19 +1,30 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Save } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Save, Check, Palette, Undo2 } from "lucide-react";
 import { updateThemeAction } from "@/lib/actions/theme";
 import { Button } from "@/components/ui/Button";
 
 type TokenMap = Record<string, string>;
-type Initial = {
+type ThemeData = {
   colors: TokenMap;
   typography: TokenMap;
   radius: TokenMap;
   shadows: TokenMap;
 };
 
-type GroupKey = keyof Initial;
+type Preset = {
+  id: string;
+  name: string;
+  slug: string;
+  colors: TokenMap;
+  typography: TokenMap;
+  radius: TokenMap;
+  shadows: TokenMap;
+  builtIn: boolean;
+};
+
+type GroupKey = keyof ThemeData;
 
 const GROUP_LABELS: Record<GroupKey, string> = {
   colors: "Colors",
@@ -22,147 +33,308 @@ const GROUP_LABELS: Record<GroupKey, string> = {
   shadows: "Shadows",
 };
 
+/* ── RGB ↔ Hex conversion ── */
+function rgbTripletToHex(triplet: string): string {
+  const parts = triplet.trim().split(/\s+/).map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return "#000000";
+  return (
+    "#" +
+    parts
+      .map((n) =>
+        Math.max(0, Math.min(255, n))
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+  );
+}
 
-const PRESETS: Record<string, Initial> = {
-  "Gloford Forest": {
-    colors: {
-      "bg": "245 248 245", "surface-2": "235 242 236", "fg": "10 10 11",
-      "muted": "243 245 243", "muted-fg": "100 107 105", "card": "255 255 255",
-      "card-fg": "10 10 11", "hairline": "26 60 52", "input": "235 242 236",
-      "ring": "26 60 52", "primary": "26 60 52", "primary-fg": "255 255 255",
-      "secondary": "235 242 236", "secondary-fg": "10 10 11",
-      "accent": "13 122 61", "accent-fg": "255 255 255",
-      "danger": "239 68 68", "danger-fg": "255 255 255",
-      "success": "34 197 94", "border": "220 230 220",
-    },
-        typography: { "sans": "'Inter', ui-sans-serif, system-ui, sans-serif", "serif": "'Playfair Display', ui-serif, Georgia, serif" },
-    radius: { "sm": "0.25rem", "md": "0.5rem", "lg": "0.75rem" },
-    shadows: {},
-  },
-  "Ocean Blue": {
-    colors: {
-      "bg": "245 248 252", "surface-2": "230 240 250", "fg": "10 10 30",
-      "muted": "235 242 250", "muted-fg": "90 110 140", "card": "255 255 255",
-      "card-fg": "10 10 30", "hairline": "30 80 160", "input": "225 235 248",
-      "ring": "30 80 160", "primary": "30 80 160", "primary-fg": "255 255 255",
-      "secondary": "225 235 248", "secondary-fg": "10 10 30",
-      "accent": "14 130 200", "accent-fg": "255 255 255",
-      "danger": "239 68 68", "danger-fg": "255 255 255",
-      "success": "34 197 94", "border": "200 220 240",
-    },
-    typography: { "sans": "'Inter', ui-sans-serif, system-ui, sans-serif", "serif": "'Playfair Display', ui-serif, Georgia, serif" },
-    radius: { "sm": "0.3rem", "md": "0.6rem", "lg": "1rem" },
-    shadows: {},
-  },
-  "Warm Amber": {
-    colors: {
-      "bg": "252 248 240", "surface-2": "245 235 215", "fg": "30 20 5",
-      "muted": "245 238 220", "muted-fg": "120 90 50", "card": "255 252 245",
-      "card-fg": "30 20 5", "hairline": "160 100 20", "input": "240 228 205",
-      "ring": "160 100 20", "primary": "160 100 20", "primary-fg": "255 255 255",
-      "secondary": "240 228 205", "secondary-fg": "30 20 5",
-      "accent": "200 130 30", "accent-fg": "255 255 255",
-      "danger": "239 68 68", "danger-fg": "255 255 255",
-      "success": "34 197 94", "border": "230 210 175",
-    },
-    typography: { "sans": "'Inter', ui-sans-serif, system-ui, sans-serif", "serif": "'Playfair Display', ui-serif, Georgia, serif" },
-    radius: { "sm": "0.2rem", "md": "0.4rem", "lg": "0.6rem" },
-    shadows: {},
-  },
-  "Slate Purple": {
-    colors: {
-      "bg": "248 246 252", "surface-2": "235 230 248", "fg": "15 10 30",
-      "muted": "238 234 250", "muted-fg": "100 90 130", "card": "255 255 255",
-      "card-fg": "15 10 30", "hairline": "90 60 160", "input": "228 222 245",
-      "ring": "90 60 160", "primary": "90 60 160", "primary-fg": "255 255 255",
-      "secondary": "228 222 245", "secondary-fg": "15 10 30",
-      "accent": "120 80 200", "accent-fg": "255 255 255",
-      "danger": "239 68 68", "danger-fg": "255 255 255",
-      "success": "34 197 94", "border": "215 205 240",
-    },
-    typography: { "sans": "'Inter', ui-sans-serif, system-ui, sans-serif", "serif": "'Playfair Display', ui-serif, Georgia, serif" },
-    radius: { "sm": "0.375rem", "md": "0.75rem", "lg": "1.25rem" },
-    shadows: {},
-  },
-};
+function hexToRgbTriplet(hex: string): string {
+  const h = hex.replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) return "0 0 0";
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `${r} ${g} ${b}`;
+}
 
-export function ThemeEditor({ initial }: { initial: Initial }) {
-  const [groups, setGroups] = useState<Initial>(initial);
+const CSS_TOKEN_KEY = /^[a-z][a-z0-9-]*$/;
+
+/**
+ * Apply theme tokens as inline styles on <html>.
+ *
+ * Inline styles beat ALL stylesheet rules (including !important),
+ * so this reliably overrides the server-rendered :root style from
+ * layout.tsx, the static :root defaults in globals.css, and anything
+ * Tailwind generates.
+ *
+ * We track which properties we've set so clearTokensFromDOM() can
+ * cleanly remove them without touching other inline styles.
+ */
+const managedProps = new Set<string>();
+
+function applyTokensToDOM(data: ThemeData) {
+  const html = document.documentElement;
+  const props: Array<[string, string]> = [];
+
+  for (const [k, v] of Object.entries(data.colors))
+    props.push([`--token-${k}`, v]);
+  for (const [k, v] of Object.entries(data.typography))
+    props.push([`--token-font-${k}`, v]);
+  for (const [k, v] of Object.entries(data.radius))
+    props.push([`--token-radius-${k}`, v]);
+  for (const [k, v] of Object.entries(data.shadows))
+    props.push([`--token-shadow-${k}`, v]);
+
+  // Remove any previously managed props that are no longer in the set
+  const nextKeys = new Set(props.map(([k]) => k));
+  for (const old of managedProps) {
+    if (!nextKeys.has(old)) {
+      html.style.removeProperty(old);
+      managedProps.delete(old);
+    }
+  }
+
+  for (const [k, v] of props) {
+    const safe = v.replace(/[{}<>]/g, "");
+    html.style.setProperty(k, safe);
+    managedProps.add(k);
+  }
+}
+
+function clearTokensFromDOM() {
+  const html = document.documentElement;
+  for (const k of managedProps) {
+    html.style.removeProperty(k);
+  }
+  managedProps.clear();
+}
+
+export function ThemeEditor({
+  initial,
+  presets,
+  activePresetId,
+}: {
+  initial: ThemeData;
+  presets: Preset[];
+  activePresetId: string | null;
+}) {
+  const [groups, setGroups] = useState<ThemeData>(initial);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(activePresetId);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [pending, start] = useTransition();
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [savedGroups, setSavedGroups] = useState<ThemeData>(initial);
+
+  const markDirty = useCallback(() => {
+    setDirty(true);
+    setSaved(false);
+  }, []);
+
+  const selectPreset = useCallback(
+    (preset: Preset) => {
+      const data: ThemeData = {
+        colors: { ...preset.colors },
+        typography: { ...preset.typography },
+        radius: { ...preset.radius },
+        shadows: { ...preset.shadows },
+      };
+      setGroups(data);
+      setSelectedPresetId(preset.id);
+      markDirty();
+      applyTokensToDOM(data);
+    },
+    [markDirty],
+  );
+
+  const updateColor = (key: string, hex: string) => {
+    const triplet = hexToRgbTriplet(hex);
+    setGroups((s) => {
+      const next = { ...s, colors: { ...s.colors, [key]: triplet } };
+      applyTokensToDOM(next);
+      return next;
+    });
+    setSelectedPresetId(null);
+    markDirty();
+  };
 
   const updateToken = (group: GroupKey, key: string, value: string) => {
-    setGroups((s) => ({ ...s, [group]: { ...s[group], [key]: value } }));
+    setGroups((s) => {
+      const next = { ...s, [group]: { ...s[group], [key]: value } };
+      applyTokensToDOM(next);
+      return next;
+    });
+    setSelectedPresetId(null);
+    markDirty();
   };
+
   const addToken = (group: GroupKey) => {
-    const key = prompt(`New ${GROUP_LABELS[group]} token name (e.g. primary):`);
-    if (!key) return;
-    if (groups[group][key]) return;
-    updateToken(group, key, "");
+    const key = prompt(`New ${GROUP_LABELS[group]} token name (e.g. primary):`)?.trim().toLowerCase();
+    if (!key || !CSS_TOKEN_KEY.test(key) || groups[group][key]) return;
+    updateToken(group, key, group === "colors" ? "128 128 128" : "0.5rem");
   };
+
   const removeToken = (group: GroupKey, key: string) => {
     setGroups((s) => {
       const next = { ...s[group] };
       delete next[key];
-      return { ...s, [group]: next };
+      const updated = { ...s, [group]: next };
+      applyTokensToDOM(updated);
+      return updated;
     });
+    setSelectedPresetId(null);
+    markDirty();
   };
 
-  const save = () => {
+  const revert = () => {
+    setGroups(savedGroups);
+    setSelectedPresetId(activePresetId);
+    setDirty(false);
+    setSaved(false);
+    setError(null);
+    // Re-apply saved tokens (or remove preview to reveal server style)
+    applyTokensToDOM(savedGroups);
+  };
+
+  const save = async () => {
     setError(null);
     setSaved(false);
-    start(async () => {
-      try {
-        await updateThemeAction(groups);
-        setSaved(true);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to save");
-      }
-    });
+    setSaving(true);
+    try {
+      await updateThemeAction({ ...groups, presetId: selectedPresetId });
+      setSaved(true);
+      setDirty(false);
+      setSavedGroups(groups);
+      // Keep the preview <style> in place — it already shows the correct
+      // saved values. No router.refresh() needed. The next hard navigation
+      // will pick up the persisted tokens from the DB via layout.tsx.
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const pasteJson = () => {
     try {
-      const parsed = JSON.parse(pasteText) as Partial<Initial>;
-      setGroups((s) => ({
-        colors: { ...s.colors, ...(parsed.colors ?? {}) },
-        typography: { ...s.typography, ...(parsed.typography ?? {}) },
-        radius: { ...s.radius, ...(parsed.radius ?? {}) },
-        shadows: { ...s.shadows, ...(parsed.shadows ?? {}) },
-      }));
+      const parsed = JSON.parse(pasteText) as Partial<ThemeData>;
+      setGroups((s) => {
+        const next = {
+          colors: { ...s.colors, ...(parsed.colors ?? {}) },
+          typography: { ...s.typography, ...(parsed.typography ?? {}) },
+          radius: { ...s.radius, ...(parsed.radius ?? {}) },
+          shadows: { ...s.shadows, ...(parsed.shadows ?? {}) },
+        };
+        applyTokensToDOM(next);
+        return next;
+      });
+      setSelectedPresetId(null);
       setPasteOpen(false);
       setPasteText("");
+      markDirty();
     } catch {
       setError("That isn't valid JSON.");
     }
   };
 
+  const colorEntries = Object.entries(groups.colors);
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
       <div className="space-y-6">
+        {/* ── Preset themes ── */}
+        <section className="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+          <div className="flex items-center gap-2">
+            <Palette className="h-4 w-4 text-[var(--color-muted-fg)]" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
+              Theme Presets
+            </h2>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {presets.map((preset) => {
+              const isActive = selectedPresetId === preset.id;
+              const primaryColor = preset.colors.primary ?? "26 60 52";
+              const accentColor = preset.colors.accent ?? "13 122 61";
+              const bgColor = preset.colors.bg ?? "255 255 255";
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => selectPreset(preset)}
+                  className={`group relative flex flex-col gap-2 rounded-[var(--radius-md)] border-2 p-4 text-left transition-all ${
+                    isActive
+                      ? "border-[rgb(var(--token-primary))] bg-[rgb(var(--token-primary)/0.05)] shadow-sm"
+                      : "border-[var(--color-border)] bg-[var(--color-bg)] hover:border-[var(--color-muted-fg)] hover:shadow-sm"
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[rgb(var(--token-primary))]">
+                      <Check className="h-3 w-3 text-white" />
+                    </span>
+                  )}
+                  <div className="flex gap-1.5">
+                    <span className="h-6 w-6 rounded-full border border-black/10" style={{ backgroundColor: `rgb(${primaryColor})` }} />
+                    <span className="h-6 w-6 rounded-full border border-black/10" style={{ backgroundColor: `rgb(${accentColor})` }} />
+                    <span className="h-6 w-6 rounded-full border border-black/10" style={{ backgroundColor: `rgb(${bgColor})` }} />
+                  </div>
+                  <span className="text-sm font-medium">{preset.name}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-[var(--color-muted-fg)]">
+            Click a preset for instant preview. Hit <strong>Save theme</strong> to apply globally.
+          </p>
+        </section>
 
-      {/* Preset themes */}
-      <section className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">Preset Themes</h2>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(PRESETS).map(([name, preset]) => (
-            <button
-              key={name}
-              onClick={() => setGroups(preset)}
-              className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm font-medium transition hover:bg-[var(--color-surface-2)] hover:text-[var(--color-fg)]"
-            >
-              {name}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-[var(--color-muted-fg)]">Click a preset to load it, then click Save theme to apply.</p>
-      </section>
+        {/* ── Color Picker Grid ── */}
+        <section className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
+              Colors
+            </h2>
+            <Button size="sm" variant="outline" onClick={() => addToken("colors")}>
+              Add color
+            </Button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {colorEntries.map(([k, v]) => (
+              <div key={k} className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] p-2">
+                <label aria-label={`Pick color for ${k}`} className="relative h-9 w-9 shrink-0 cursor-pointer overflow-hidden rounded-[var(--radius-sm)] border border-black/15">
+                  <input
+                    type="color"
+                    value={rgbTripletToHex(v)}
+                    onChange={(e) => updateColor(k, e.target.value)}
+                    className="absolute inset-0 h-full w-full cursor-pointer border-0 p-0"
+                    style={{ opacity: 0 }}
+                  />
+                  <span
+                    className="block h-full w-full"
+                    style={{ backgroundColor: v ? `rgb(${v})` : "#808080" }}
+                  />
+                </label>
+                <div className="flex flex-1 flex-col">
+                  <span className="text-xs font-medium text-[var(--color-fg)]">{k}</span>
+                  <span className="font-mono text-[10px] text-[var(--color-muted-fg)]">
+                    {rgbTripletToHex(v)}
+                  </span>
+                </div>
+                <button
+                  onClick={() => removeToken("colors", k)}
+                  className="text-xs text-[var(--color-muted-fg)] transition hover:text-[var(--color-danger)]"
+                  title="Remove"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
 
-
-        {(Object.keys(GROUP_LABELS) as GroupKey[]).map((group) => {
+        {/* ── Typography, Radius & Shadows ── */}
+        {(["typography", "radius", "shadows"] as GroupKey[]).map((group) => {
           const entries = Object.entries(groups[group]);
           return (
             <section
@@ -192,11 +364,7 @@ export function ThemeEditor({ initial }: { initial: Initial }) {
                         onChange={(e) => updateToken(group, k, e.target.value)}
                         className="flex-1 rounded-[var(--radius-sm)] border border-[var(--color-input)] bg-[var(--color-bg)] px-2 py-1 text-sm font-mono"
                       />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => removeToken(group, k)}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => removeToken(group, k)}>
                         Remove
                       </Button>
                     </li>
@@ -207,6 +375,7 @@ export function ThemeEditor({ initial }: { initial: Initial }) {
           );
         })}
 
+        {/* ── Paste JSON ── */}
         <section className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-fg)]">
@@ -222,7 +391,7 @@ export function ThemeEditor({ initial }: { initial: Initial }) {
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
                 rows={10}
-                placeholder='{"colors": {"primary": "212 92% 38%"}, "radius": {"md": "0.5rem"}}'
+                placeholder='{"colors": {"primary": "26 60 52"}, "radius": {"md": "0.5rem"}}'
                 className="w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] p-3 font-mono text-xs"
               />
               <Button size="sm" onClick={pasteJson} disabled={!pasteText.trim()}>
@@ -233,27 +402,34 @@ export function ThemeEditor({ initial }: { initial: Initial }) {
         </section>
       </div>
 
+      {/* ── Sidebar ── */}
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
         <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           {error ? (
-            <p
-              role="alert"
-              className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]"
-            >
+            <p role="alert" className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-danger)/0.10)] p-2 text-sm text-[var(--color-danger)]">
               {error}
             </p>
           ) : null}
           {saved ? (
             <p className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-success)/0.10)] p-2 text-sm text-[var(--color-success)]">
-              Theme saved. Reload the public site to see updates.
+              Theme saved and applied globally.
             </p>
           ) : null}
-          <Button onClick={save} disabled={pending} className="w-full">
-            <Save className="h-4 w-4" /> {pending ? "Saving…" : "Save theme"}
+          {dirty && (
+            <p className="rounded-[var(--radius-sm)] bg-[rgb(var(--token-primary)/0.08)] p-2 text-xs text-[var(--color-muted-fg)]">
+              Previewing unsaved changes.
+            </p>
+          )}
+          <Button onClick={save} disabled={saving || !dirty} className="w-full">
+            <Save className="h-4 w-4" /> {saving ? "Saving\u2026" : "Save theme"}
           </Button>
+          {dirty && (
+            <Button variant="outline" onClick={revert} className="w-full">
+              <Undo2 className="h-4 w-4" /> Revert changes
+            </Button>
+          )}
           <p className="text-xs text-[var(--color-muted-fg)]">
-            Token names should match your CSS custom-property names (without the{" "}
-            <code>--</code> prefix).
+            Pick colors visually. Click <strong>Save theme</strong> to apply for all visitors.
           </p>
         </div>
       </aside>

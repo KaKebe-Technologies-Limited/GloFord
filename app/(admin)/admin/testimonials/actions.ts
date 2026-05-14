@@ -7,47 +7,46 @@ import {
   updateTestimonial,
   deleteTestimonial,
 } from "@/lib/services/testimonials";
+import {
+  parseFormData,
+  createTestimonialSchema,
+  updateTestimonialSchema,
+  toggleSchema,
+  deleteSchema,
+} from "@/lib/validators/admin";
 
 export async function createTestimonialAction(formData: FormData) {
   await requireActorFromSession();
+  const data = parseFormData(createTestimonialSchema, formData);
   await createTestimonial({
-    quote: formData.get("quote") as string,
-    authorName: formData.get("authorName") as string,
-    authorRole: (formData.get("authorRole") as string) || undefined,
-    authorOrg: (formData.get("authorOrg") as string) || undefined,
-    avatarUrl: (formData.get("avatarUrl") as string) || undefined,
-    rating: formData.get("rating") ? Number(formData.get("rating")) : undefined,
-    order: Number(formData.get("order") || 0),
+    quote: data.quote,
+    authorName: data.authorName,
+    authorRole: data.authorRole ?? undefined,
+    authorOrg: data.authorOrg ?? undefined,
+    avatarUrl: data.avatarUrl ?? undefined,
+    rating: data.rating,
+    order: data.order,
   });
   revalidatePath("/admin/testimonials");
 }
 
 export async function updateTestimonialAction(formData: FormData) {
   await requireActorFromSession();
-  const id = formData.get("id") as string;
-  await updateTestimonial(id, {
-    quote: formData.get("quote") as string,
-    authorName: formData.get("authorName") as string,
-    authorRole: (formData.get("authorRole") as string) || null,
-    authorOrg: (formData.get("authorOrg") as string) || null,
-    avatarUrl: (formData.get("avatarUrl") as string) || null,
-    rating: formData.get("rating") ? Number(formData.get("rating")) : null,
-    order: Number(formData.get("order") || 0),
-    isActive: formData.get("isActive") === "on",
-  });
+  const { id, ...rest } = parseFormData(updateTestimonialSchema, formData);
+  await updateTestimonial(id, rest);
   revalidatePath("/admin/testimonials");
 }
 
 export async function deleteTestimonialAction(formData: FormData) {
   await requireActorFromSession();
-  await deleteTestimonial(formData.get("id") as string);
+  const { id } = parseFormData(deleteSchema, formData);
+  await deleteTestimonial(id);
   revalidatePath("/admin/testimonials");
 }
 
 export async function toggleTestimonialAction(formData: FormData) {
   await requireActorFromSession();
-  const id = formData.get("id") as string;
-  const isActive = formData.get("isActive") === "true";
+  const { id, isActive } = parseFormData(toggleSchema, formData);
   await updateTestimonial(id, { isActive: !isActive });
   revalidatePath("/admin/testimonials");
 }

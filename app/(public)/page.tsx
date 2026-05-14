@@ -11,7 +11,6 @@ import { getActiveLeaderMessages } from "@/lib/services/leaderMessages";
 import { HeroSlider } from "@/components/public/HeroSlider";
 import { TestimonialsSection } from "@/components/public/TestimonialsSection";
 import { LeaderMessageSection } from "@/components/public/LeaderMessageSection";
-import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { FALLBACK_IMAGES } from "@/lib/utils/images";
 import { db } from "@/lib/db";
@@ -926,7 +925,7 @@ async function FallbackHero() {
   const t = await getTranslations("public.hero");
   const tHome = await getTranslations("public.home");
   return (
-    <section className="relative min-h-[75vh] overflow-hidden bg-[rgb(26_40_35)]">
+    <section className="relative min-h-[75vh] overflow-hidden bg-[rgb(var(--token-primary))]">
       <Image
         src={FALLBACK_IMAGES.hero}
         alt="Community action"

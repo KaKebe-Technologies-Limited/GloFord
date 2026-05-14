@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { blocksSchema } from "@/lib/blocks/types";
 import { getCollectionConfig, toCollectionPath } from "@/lib/pages/collections";
@@ -116,9 +119,11 @@ export default async function PartnersPage() {
                       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_16px_54px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 sm:flex-row"
                     >
                       {preview?.url ? (
-                        <img
+                        <Image
                           src={preview.url}
                           alt={preview.alt ?? row.title}
+                          width={192}
+                          height={192}
                           className="aspect-video w-full object-contain bg-white p-6 sm:aspect-square sm:w-48"
                         />
                       ) : (
@@ -169,9 +174,11 @@ export default async function PartnersPage() {
                     </p>
                     <div className="mt-6 flex items-center gap-3">
                       {testimonial.avatarUrl ? (
-                        <img
+                        <Image
                           src={testimonial.avatarUrl}
                           alt={testimonial.authorName}
+                          width={40}
+                          height={40}
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (

@@ -5,6 +5,9 @@ import {
 } from "@/lib/validators/media";
 import { deleteObject, publicUrlFor } from "@/lib/storage/r2";
 import { db } from "@/lib/db";
+import { revalidateTag } from "next/cache";
+
+const CACHE_TAG = "media";
 
 export const finalizeMediaUpload = createService({
   module: "media",
@@ -12,7 +15,7 @@ export const finalizeMediaUpload = createService({
   schema: mediaFinalizeSchema,
   permission: () => ({ type: "Media" }),
   exec: async ({ input, actor, tx }) => {
-    return tx.media.create({
+    const row = await tx.media.create({
       data: {
         url: publicUrlFor(input.key),
         key: input.key,
@@ -24,6 +27,8 @@ export const finalizeMediaUpload = createService({
         uploadedById: actor.userId,
       },
     });
+    revalidateTag(CACHE_TAG);
+    return row;
   },
 });
 
@@ -36,6 +41,7 @@ export const deleteMedia = createService({
   exec: async ({ input, tx }) => {
     const row = await tx.media.delete({ where: { id: input.id } });
     void deleteObject(row.key).catch(() => {});
+    revalidateTag(CACHE_TAG);
     return { id: row.id };
   },
 });

@@ -32,17 +32,29 @@ export function PartnerApplicationsClient({
   applications: PartnerApplication[];
 }) {
   const [viewingId, setViewingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const viewing = applications.find((a) => a.id === viewingId);
 
   async function handleStatusChange(formData: FormData) {
-    await updatePartnerApplicationStatusAction(formData);
-    router.refresh();
+    setError(null);
+    try {
+      await updatePartnerApplicationStatusAction(formData);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    }
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[rgb(var(--token-danger)/0.08)] p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">
           Partner Applications

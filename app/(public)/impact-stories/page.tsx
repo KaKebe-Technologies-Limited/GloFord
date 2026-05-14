@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
+
+export const dynamic = "force-dynamic";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { blocksSchema } from "@/lib/blocks/types";
 import { getCollectionConfig, toCollectionPath } from "@/lib/pages/collections";
@@ -94,7 +97,7 @@ export default async function ImpactStoriesPage() {
                       className="group block overflow-hidden rounded-[calc(var(--radius-lg)+0.15rem)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_16px_54px_rgba(15,23,42,0.06)] transition hover:-translate-y-1"
                     >
                       {preview?.url ? (
-                        <img src={preview.url} alt={preview.alt ?? row.title} className="aspect-[4/2.7] w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+                        <Image src={preview.url} alt={preview.alt ?? row.title} width={600} height={400} className="aspect-[4/2.7] w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
                       ) : (
                         <div className="aspect-[4/2.7] bg-[linear-gradient(135deg,rgba(201,168,76,0.15),rgba(250,247,240,1))]" />
                       )}

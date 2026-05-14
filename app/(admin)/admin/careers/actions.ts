@@ -8,6 +8,14 @@ import {
   deleteCareer,
   updateApplicationStatus,
 } from "@/lib/services/careers";
+import {
+  parseFormData,
+  createCareerSchema,
+  updateCareerSchema,
+  toggleSchema,
+  deleteSchema,
+  updateCareerAppStatusSchema,
+} from "@/lib/validators/admin";
 
 function slugify(text: string): string {
   return text
@@ -20,73 +28,60 @@ function slugify(text: string): string {
 
 export async function createCareerAction(formData: FormData) {
   await requireActorFromSession();
-  const title = formData.get("title") as string;
-  const deadline = formData.get("applicationDeadline") as string;
+  const data = parseFormData(createCareerSchema, formData);
 
   await createCareer({
-    title,
-    slug: slugify(title),
-    department: formData.get("department") as string,
-    location: formData.get("location") as string,
-    type: (formData.get("type") as "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "VOLUNTEER") || undefined,
-    description: formData.get("description") as string,
-    salaryRange: (formData.get("salaryRange") as string) || undefined,
-    applicationDeadline: deadline ? new Date(deadline) : undefined,
-    requirements: parseList(formData.get("requirements") as string),
-    responsibilities: parseList(formData.get("responsibilities") as string),
+    title: data.title,
+    slug: slugify(data.title),
+    department: data.department,
+    location: data.location,
+    type: data.type as "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "VOLUNTEER",
+    description: data.description,
+    salaryRange: data.salaryRange ?? undefined,
+    applicationDeadline: data.applicationDeadline ?? undefined,
+    requirements: data.requirements,
+    responsibilities: data.responsibilities,
   });
   revalidatePath("/admin/careers");
 }
 
 export async function updateCareerAction(formData: FormData) {
   await requireActorFromSession();
-  const id = formData.get("id") as string;
-  const title = formData.get("title") as string;
-  const deadline = formData.get("applicationDeadline") as string;
+  const data = parseFormData(updateCareerSchema, formData);
 
-  await updateCareer(id, {
-    title,
-    slug: slugify(title),
-    department: formData.get("department") as string,
-    location: formData.get("location") as string,
-    type: (formData.get("type") as "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "VOLUNTEER") || undefined,
-    description: formData.get("description") as string,
-    salaryRange: (formData.get("salaryRange") as string) || null,
-    applicationDeadline: deadline ? new Date(deadline) : null,
-    requirements: parseList(formData.get("requirements") as string),
-    responsibilities: parseList(formData.get("responsibilities") as string),
-    isActive: formData.get("isActive") === "on",
+  await updateCareer(data.id, {
+    title: data.title,
+    slug: slugify(data.title),
+    department: data.department,
+    location: data.location,
+    type: data.type as "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "VOLUNTEER",
+    description: data.description,
+    salaryRange: data.salaryRange,
+    applicationDeadline: data.applicationDeadline,
+    requirements: data.requirements,
+    responsibilities: data.responsibilities,
+    isActive: data.isActive,
   });
   revalidatePath("/admin/careers");
 }
 
 export async function deleteCareerAction(formData: FormData) {
   await requireActorFromSession();
-  await deleteCareer(formData.get("id") as string);
+  const { id } = parseFormData(deleteSchema, formData);
+  await deleteCareer(id);
   revalidatePath("/admin/careers");
 }
 
 export async function toggleCareerAction(formData: FormData) {
   await requireActorFromSession();
-  const id = formData.get("id") as string;
-  const isActive = formData.get("isActive") === "true";
+  const { id, isActive } = parseFormData(toggleSchema, formData);
   await updateCareer(id, { isActive: !isActive });
   revalidatePath("/admin/careers");
 }
 
 export async function updateApplicationStatusAction(formData: FormData) {
   await requireActorFromSession();
-  const id = formData.get("id") as string;
-  const status = formData.get("status") as "SUBMITTED" | "REVIEWING" | "SHORTLISTED" | "INTERVIEW" | "OFFERED" | "REJECTED" | "WITHDRAWN";
-  const notes = (formData.get("notes") as string) || undefined;
-  await updateApplicationStatus(id, status, notes);
+  const data = parseFormData(updateCareerAppStatusSchema, formData);
+  await updateApplicationStatus(data.id, data.status, data.notes ?? undefined);
   revalidatePath("/admin/careers");
-}
-
-function parseList(text: string | null): string[] {
-  if (!text) return [];
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
 }

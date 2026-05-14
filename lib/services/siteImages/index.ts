@@ -1,4 +1,7 @@
 import { db } from "@/lib/db";
+import { revalidateTag } from "next/cache";
+
+const CACHE_TAG = "site-images";
 
 export async function getSiteImage(key: string) {
   return db.siteImage.findUnique({ where: { key } });
@@ -20,13 +23,16 @@ export async function upsertSiteImage(data: {
   url: string;
   alt?: string | null;
 }) {
-  return db.siteImage.upsert({
+  const row = await db.siteImage.upsert({
     where: { key: data.key },
     create: data,
     update: { label: data.label, url: data.url, alt: data.alt },
   });
+  revalidateTag(CACHE_TAG);
+  return row;
 }
 
 export async function deleteSiteImage(id: string) {
-  return db.siteImage.delete({ where: { id } });
+  await db.siteImage.delete({ where: { id } });
+  revalidateTag(CACHE_TAG);
 }

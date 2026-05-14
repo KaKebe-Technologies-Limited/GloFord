@@ -54,7 +54,7 @@ function StatsGrid({
   stats: Array<{ id: string; label: string; value: string }>;
 }) {
   return (
-    <section className="border-y border-[var(--color-border)] bg-[rgb(248_250_249)] py-14">
+    <section className="border-y border-[var(--color-border)] bg-[rgb(var(--token-surface-2))] py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {stats.map((stat, i) => (

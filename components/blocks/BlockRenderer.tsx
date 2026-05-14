@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { blocksSchema, type Block } from "@/lib/blocks/types";
+import { sanitizeHtml } from "@/lib/blocks/sanitize";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
 import { getCollectionConfig, type PageCollectionKind, toCollectionPath } from "@/lib/pages/collections";
@@ -70,7 +71,7 @@ async function HeroBlock({ data }: { data: Extract<Block, { type: "hero" }>["dat
 
   return (
     <section
-      className="relative min-h-[70vh] overflow-hidden bg-[rgb(26_40_35)]"
+      className="relative min-h-[70vh] overflow-hidden bg-[rgb(var(--token-primary))]"
       style={
         media?.url
           ? { backgroundImage: `url(${media.url})`, backgroundSize: "cover", backgroundPosition: "center" }
@@ -157,7 +158,7 @@ function RichTextBlock({ data }: { data: Extract<Block, { type: "richText" }>["d
         <ScrollReveal>
           <div
             className="prose prose-gray max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-p:text-[1.04rem] prose-p:leading-8 prose-a:text-[var(--color-primary)] prose-a:no-underline hover:prose-a:underline"
-            dangerouslySetInnerHTML={{ __html: data.html }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.html) }}
           />
         </ScrollReveal>
       </div>
@@ -172,7 +173,7 @@ function CtaBlock({ data }: { data: Extract<Block, { type: "cta" }>["data"] }) {
   const isPrimary = data.variant === "primary";
 
   return (
-    <section className={`w-full px-4 py-16 sm:px-6 lg:px-8 ${isPrimary ? "bg-[rgb(26_40_35)] text-white" : ""}`}>
+    <section className={`w-full px-4 py-16 sm:px-6 lg:px-8 ${isPrimary ? "bg-[rgb(var(--token-primary))] text-[rgb(var(--token-primary-fg))]" : ""}`}>
       <ScrollReveal>
         <div className={`mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 sm:flex-row sm:items-center ${
           isPrimary ? "" : "rounded-xl border border-gray-100 bg-white p-8 shadow-sm"

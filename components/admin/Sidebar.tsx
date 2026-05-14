@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -8,7 +9,7 @@ import {
   FileText,
   Briefcase,
   PenTool,
-  Image,
+  Image as ImageIcon,
   HandCoins,
   Users,
   Send,
@@ -58,7 +59,7 @@ const GROUPS: Group[] = [
       { href: "/admin/impact-stories", key: "impactStories", icon: FileText },
       { href: "/admin/press", key: "press", icon: Newspaper },
       { href: "/admin/reports", key: "reports", icon: FileText },
-      { href: "/admin/media", key: "media", icon: Image },
+      { href: "/admin/media", key: "media", icon: ImageIcon },
     ],
   },
   {
@@ -103,7 +104,7 @@ const GROUPS: Group[] = [
     items: [
       { href: "/admin/hero-slides", key: "heroSlides", icon: SlidersHorizontal },
       { href: "/admin/milestones", key: "milestones", icon: History },
-      { href: "/admin/site-images", key: "siteImages", icon: Image },
+      { href: "/admin/site-images", key: "siteImages", icon: ImageIcon },
       { href: "/admin/service-areas", key: "serviceAreas", icon: Briefcase },
       { href: "/admin/translations", key: "translations", icon: Languages },
       { href: "/admin/site-stats", key: "siteStats", icon: BarChart3 },
@@ -157,7 +158,7 @@ export function Sidebar({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/[0.06] bg-[rgb(18_30_26)] text-white transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/[0.06] bg-[rgb(var(--token-primary))] text-white transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
           expanded ? "w-[260px]" : "w-[60px]",
           mobileOpen
             ? "w-[260px] translate-x-0"
@@ -171,7 +172,7 @@ export function Sidebar({
             href="/admin/dashboard"
             className="flex items-center gap-2.5 overflow-hidden"
           >
-                <img src="/logo.png" alt="Gloford" className="h-8 w-8 shrink-0 object-contain" />
+                <Image src="/logo.png" alt="Gloford" width={32} height={32} className="h-8 w-8 shrink-0 object-contain" />
             <span
               className={cn(
                 "whitespace-nowrap text-[15px] font-semibold tracking-[-0.01em] transition-all duration-300",
@@ -229,7 +230,7 @@ export function Sidebar({
                           >
                             {/* Active accent bar */}
                             {active && (
-                              <div className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-[rgb(45_170_100)]" />
+                              <div className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-[rgb(var(--token-accent))]" />
                             )}
                             <Icon
                               className={cn(

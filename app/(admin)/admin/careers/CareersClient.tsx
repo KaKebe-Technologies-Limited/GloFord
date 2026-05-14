@@ -52,6 +52,7 @@ type Career = {
 export function CareersClient({ careers }: { careers: Career[] }) {
   const [editing, setEditing] = useState<Career | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   function openCreate() {
@@ -70,24 +71,29 @@ export function CareersClient({ careers }: { careers: Career[] }) {
   }
 
   async function handleSubmit(formData: FormData) {
-    if (editing) {
-      formData.set("id", editing.id);
-      await updateCareerAction(formData);
-    } else {
-      await createCareerAction(formData);
+    setError(null);
+    try {
+      if (editing) {
+        formData.set("id", editing.id);
+        await updateCareerAction(formData);
+      } else {
+        await createCareerAction(formData);
+      }
+      closeForm();
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
     }
-    closeForm();
-    router.refresh();
-  }
-
-  async function handleDelete(formData: FormData) {
-    await deleteCareerAction(formData);
-    router.refresh();
   }
 
   async function handleToggle(formData: FormData) {
-    await toggleCareerAction(formData);
-    router.refresh();
+    setError(null);
+    try {
+      await toggleCareerAction(formData);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    }
   }
 
   function formatDate(d: Date | string | null): string {
@@ -101,6 +107,12 @@ export function CareersClient({ careers }: { careers: Career[] }) {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[rgb(var(--token-danger)/0.08)] p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Careers</h1>
@@ -354,12 +366,21 @@ export function CareersClient({ careers }: { careers: Career[] }) {
                             </ConfirmDialogHeader>
                             <ConfirmDialogFooter>
                               <ConfirmDialogCancel>Cancel</ConfirmDialogCancel>
-                              <form action={handleDelete}>
-                                <input type="hidden" name="id" value={c.id} />
-                                <ConfirmDialogAction type="submit">
-                                  Delete
-                                </ConfirmDialogAction>
-                              </form>
+                              <ConfirmDialogAction
+                                onClick={async () => {
+                                  setError(null);
+                                  try {
+                                    const fd = new FormData();
+                                    fd.set("id", c.id);
+                                    await deleteCareerAction(fd);
+                                    router.refresh();
+                                  } catch (e) {
+                                    setError(e instanceof Error ? e.message : "Delete failed");
+                                  }
+                                }}
+                              >
+                                Delete
+                              </ConfirmDialogAction>
                             </ConfirmDialogFooter>
                           </ConfirmDialogContent>
                         </ConfirmDialog>

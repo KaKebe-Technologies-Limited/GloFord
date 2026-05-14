@@ -36,6 +36,7 @@ type Faq = {
 export function FaqsClient({ faqs }: { faqs: Faq[] }) {
   const [editing, setEditing] = useState<Faq | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   function openCreate() {
@@ -54,28 +55,39 @@ export function FaqsClient({ faqs }: { faqs: Faq[] }) {
   }
 
   async function handleSubmit(formData: FormData) {
-    if (editing) {
-      formData.set("id", editing.id);
-      await updateFaqAction(formData);
-    } else {
-      await createFaqAction(formData);
+    setError(null);
+    try {
+      if (editing) {
+        formData.set("id", editing.id);
+        await updateFaqAction(formData);
+      } else {
+        await createFaqAction(formData);
+      }
+      closeForm();
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
     }
-    closeForm();
-    router.refresh();
-  }
-
-  async function handleDelete(formData: FormData) {
-    await deleteFaqAction(formData);
-    router.refresh();
   }
 
   async function handleToggle(formData: FormData) {
-    await toggleFaqAction(formData);
-    router.refresh();
+    setError(null);
+    try {
+      await toggleFaqAction(formData);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    }
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[rgb(var(--token-danger)/0.08)] p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">FAQs</h1>
@@ -250,12 +262,21 @@ export function FaqsClient({ faqs }: { faqs: Faq[] }) {
                             </ConfirmDialogHeader>
                             <ConfirmDialogFooter>
                               <ConfirmDialogCancel>Cancel</ConfirmDialogCancel>
-                              <form action={handleDelete}>
-                                <input type="hidden" name="id" value={f.id} />
-                                <ConfirmDialogAction type="submit">
-                                  Delete
-                                </ConfirmDialogAction>
-                              </form>
+                              <ConfirmDialogAction
+                                onClick={async () => {
+                                  setError(null);
+                                  try {
+                                    const fd = new FormData();
+                                    fd.set("id", f.id);
+                                    await deleteFaqAction(fd);
+                                    router.refresh();
+                                  } catch (e) {
+                                    setError(e instanceof Error ? e.message : "Delete failed");
+                                  }
+                                }}
+                              >
+                                Delete
+                              </ConfirmDialogAction>
                             </ConfirmDialogFooter>
                           </ConfirmDialogContent>
                         </ConfirmDialog>

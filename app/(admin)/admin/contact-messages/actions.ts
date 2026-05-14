@@ -2,13 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { markMessageRead, deleteContactMessage } from "@/lib/services/contact";
+import { parseFormData, messageIdSchema } from "@/lib/validators/admin";
 
 export async function markReadAction(formData: FormData) {
-  await markMessageRead(formData.get("id") as string);
+  const { id } = parseFormData(messageIdSchema, formData);
+  await markMessageRead(id);
   revalidatePath("/admin/contact-messages");
 }
 
 export async function deleteMessageAction(formData: FormData) {
-  await deleteContactMessage(formData.get("id") as string);
+  const { id } = parseFormData(messageIdSchema, formData);
+  await deleteContactMessage(id);
   revalidatePath("/admin/contact-messages");
 }

@@ -39,6 +39,7 @@ export function MilestonesClient({ milestones }: { milestones: Milestone[] }) {
   const [editing, setEditing] = useState<Milestone | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   function openCreate() {
@@ -60,28 +61,39 @@ export function MilestonesClient({ milestones }: { milestones: Milestone[] }) {
   }
 
   async function handleSubmit(formData: FormData) {
-    if (editing) {
-      formData.set("id", editing.id);
-      await updateMilestoneAction(formData);
-    } else {
-      await createMilestoneAction(formData);
+    setError(null);
+    try {
+      if (editing) {
+        formData.set("id", editing.id);
+        await updateMilestoneAction(formData);
+      } else {
+        await createMilestoneAction(formData);
+      }
+      closeForm();
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
     }
-    closeForm();
-    router.refresh();
-  }
-
-  async function handleDelete(formData: FormData) {
-    await deleteMilestoneAction(formData);
-    router.refresh();
   }
 
   async function handleToggle(formData: FormData) {
-    await toggleMilestoneAction(formData);
-    router.refresh();
+    setError(null);
+    try {
+      await toggleMilestoneAction(formData);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    }
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[rgb(var(--token-danger)/0.08)] p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Milestones</h1>
@@ -274,12 +286,21 @@ export function MilestonesClient({ milestones }: { milestones: Milestone[] }) {
                             </ConfirmDialogHeader>
                             <ConfirmDialogFooter>
                               <ConfirmDialogCancel>Cancel</ConfirmDialogCancel>
-                              <form action={handleDelete}>
-                                <input type="hidden" name="id" value={milestone.id} />
-                                <ConfirmDialogAction type="submit">
-                                  Delete
-                                </ConfirmDialogAction>
-                              </form>
+                              <ConfirmDialogAction
+                                onClick={async () => {
+                                  setError(null);
+                                  try {
+                                    const fd = new FormData();
+                                    fd.set("id", milestone.id);
+                                    await deleteMilestoneAction(fd);
+                                    router.refresh();
+                                  } catch (e) {
+                                    setError(e instanceof Error ? e.message : "Delete failed");
+                                  }
+                                }}
+                              >
+                                Delete
+                              </ConfirmDialogAction>
                             </ConfirmDialogFooter>
                           </ConfirmDialogContent>
                         </ConfirmDialog>

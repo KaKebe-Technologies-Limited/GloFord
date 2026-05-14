@@ -53,7 +53,7 @@ export function LeaderMessageSection({
                         className="aspect-[4/5] w-full object-cover"
                       />
                     ) : (
-                      <div className="flex aspect-[4/5] w-full items-center justify-center bg-gradient-to-br from-[rgb(26_60_52)] to-[rgb(18_42_36)] text-6xl font-bold text-white/30">
+                      <div className="flex aspect-[4/5] w-full items-center justify-center bg-gradient-to-br from-[rgb(var(--token-primary))] to-[rgb(var(--token-primary)/0.7)] text-6xl font-bold text-white/30">
                         {msg.leaderName.charAt(0)}
                       </div>
                     )}

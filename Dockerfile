@@ -14,7 +14,10 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma
-RUN pnpm install --frozen-lockfile
+RUN pnpm config set fetch-retries 5 && \
+    pnpm config set fetch-retry-maxtimeout 120000 && \
+    pnpm config set fetch-timeout 120000 && \
+    pnpm install --frozen-lockfile
 
 # ─── builder ────────────────────────────────────────────────
 FROM node:${NODE_VERSION} AS builder
@@ -32,7 +35,7 @@ ENV DATABASE_URL=${DATABASE_URL} \
     NEXT_TELEMETRY_DISABLED=1 \
     SKIP_ENV_VALIDATION=1
 
-RUN pnpm prisma generate
+RUN for i in 1 2 3 4 5; do pnpm prisma generate && break || sleep 10; done
 RUN pnpm build
 
 # ─── runner ─────────────────────────────────────────────────
@@ -56,6 +59,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # tracing). The Prisma CLI is not needed at runtime — migrations are
 # applied by the `migrate` compose service, not the app container.
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+
+# Create uploads directory writable by nextjs user
+RUN mkdir -p /app/uploads && chown nextjs:nodejs /app/uploads
 
 USER nextjs
 EXPOSE 3000

@@ -25,8 +25,11 @@ html[dir="rtl"] .rtl\:flip {
    colors are defined directly in @theme inline.
    ──────────────────────────────────────────────────────────── */
 
-@theme inline {
-  /* Semantic colors — DB-driven via --token-* vars */
+/* Semantic color variables — defined in plain :root so Tailwind v4
+   doesn't absorb them into its theme system. These use CSS custom
+   property references to --token-* which are overridden by layout.tsx
+   at runtime from the DB. */
+:root {
   --color-bg:           rgb(var(--token-bg));
   --color-fg:           rgb(var(--token-fg));
   --color-muted:        rgb(var(--token-muted));
@@ -44,28 +47,21 @@ html[dir="rtl"] .rtl\:flip {
   --color-danger:       rgb(var(--token-danger));
   --color-danger-fg:    rgb(var(--token-danger-fg));
   --color-success:      rgb(var(--token-success));
+  --color-success-fg:   rgb(var(--token-success-fg));
   --color-surface-2:    rgb(var(--token-surface-2));
   --color-border:       rgb(var(--token-hairline) / var(--hairline-a));
 
-  /* Brand scale — dark forest green */
-  --color-brand:       rgb(26 60 52);
-  --color-brand-light: rgb(37 85 73);
-  --color-brand-dark:  rgb(18 42 36);
-  --color-brand-50:    rgb(240 247 244);
-  --color-brand-100:   rgb(220 237 230);
-  --color-brand-200:   rgb(185 218 205);
-  --color-brand-300:   rgb(140 192 172);
-  --color-brand-400:   rgb(85 150 128);
-  --color-brand-500:   rgb(45 105 88);
-  --color-brand-600:   rgb(30 78 66);
-  --color-brand-700:   rgb(26 60 52);
-  --color-brand-800:   rgb(18 42 36);
-  --color-brand-900:   rgb(10 28 22);
+  /* Brand scale */
+  --color-brand:       rgb(var(--token-primary));
+  --color-brand-light: rgb(var(--token-accent));
+  --color-brand-dark:  rgb(var(--token-primary));
+}
 
-  /* Typography */
-  --font-sans:    var(--font-inter);
-  --font-serif:   var(--font-playfair);
-  --font-display: var(--font-playfair);
+@theme {
+  /* Typography — driven by theme tokens, fallback to loaded fonts */
+  --font-sans:    var(--token-font-sans, var(--font-inter));
+  --font-serif:   var(--token-font-serif, var(--font-playfair));
+  --font-display: var(--token-font-serif, var(--font-playfair));
 
   /* Radius */
   --radius-sm: var(--token-radius-sm);
@@ -99,6 +95,7 @@ html[dir="rtl"] .rtl\:flip {
   --token-danger:       239 68 68;
   --token-danger-fg:    255 255 255;
   --token-success:      34 197 94;
+  --token-success-fg:   255 255 255;
 
   --token-radius-sm: 0.25rem;
   --token-radius-md: 0.5rem;
@@ -152,7 +149,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::selection {
-  background: rgb(26 60 52 / 0.18);
+  background: rgb(var(--token-primary) / 0.18);
   color: inherit;
 }
 

@@ -8,6 +8,14 @@ import {
   deleteVolunteerOpportunity,
   updateVolunteerApplicationStatus,
 } from "@/lib/services/volunteer";
+import {
+  parseFormData,
+  createVolunteerSchema,
+  updateVolunteerSchema,
+  toggleSchema,
+  deleteSchema,
+  updateVolunteerAppStatusSchema,
+} from "@/lib/validators/admin";
 
 function slugify(text: string): string {
   return text
@@ -18,72 +26,50 @@ function slugify(text: string): string {
     .trim();
 }
 
-function parseList(text: string | null): string[] {
-  if (!text) return [];
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
 export async function createVolunteerAction(formData: FormData) {
-  await requireActorFromSession();
-  const title = formData.get("title") as string;
-  const slug = (formData.get("slug") as string) || slugify(title);
-
-  await createVolunteerOpportunity({
-    title,
-    slug,
-    department: formData.get("department") as string,
-    location: formData.get("location") as string,
-    commitment: formData.get("commitment") as string,
-    description: formData.get("description") as string,
-    requirements: parseList(formData.get("requirements") as string),
-    benefits: parseList(formData.get("benefits") as string),
+  const actor = await requireActorFromSession();
+  const data = parseFormData(createVolunteerSchema, formData);
+  await createVolunteerOpportunity(actor, {
+    title: data.title,
+    slug: data.slug || slugify(data.title),
+    department: data.department,
+    location: data.location,
+    commitment: data.commitment,
+    description: data.description,
+    requirements: data.requirements,
+    benefits: data.benefits,
   });
   revalidatePath("/admin/volunteer");
 }
 
 export async function updateVolunteerAction(formData: FormData) {
-  await requireActorFromSession();
-  const id = formData.get("id") as string;
-  const title = formData.get("title") as string;
-  const slug = (formData.get("slug") as string) || slugify(title);
-
-  await updateVolunteerOpportunity(id, {
+  const actor = await requireActorFromSession();
+  const { id, slug: rawSlug, title, ...rest } = parseFormData(updateVolunteerSchema, formData);
+  await updateVolunteerOpportunity(actor, id, {
     title,
-    slug,
-    department: formData.get("department") as string,
-    location: formData.get("location") as string,
-    commitment: formData.get("commitment") as string,
-    description: formData.get("description") as string,
-    requirements: parseList(formData.get("requirements") as string),
-    benefits: parseList(formData.get("benefits") as string),
-    isActive: formData.get("isActive") === "on",
+    slug: rawSlug || slugify(title),
+    ...rest,
   });
   revalidatePath("/admin/volunteer");
 }
 
 export async function deleteVolunteerAction(formData: FormData) {
-  await requireActorFromSession();
-  await deleteVolunteerOpportunity(formData.get("id") as string);
+  const actor = await requireActorFromSession();
+  const { id } = parseFormData(deleteSchema, formData);
+  await deleteVolunteerOpportunity(actor, id);
   revalidatePath("/admin/volunteer");
 }
 
 export async function toggleVolunteerAction(formData: FormData) {
-  await requireActorFromSession();
-  const id = formData.get("id") as string;
-  const isActive = formData.get("isActive") === "true";
-  await updateVolunteerOpportunity(id, { isActive: !isActive });
+  const actor = await requireActorFromSession();
+  const { id, isActive } = parseFormData(toggleSchema, formData);
+  await updateVolunteerOpportunity(actor, id, { isActive: !isActive });
   revalidatePath("/admin/volunteer");
 }
 
-export async function updateVolunteerApplicationStatusAction(
-  formData: FormData,
-) {
-  await requireActorFromSession();
-  const id = formData.get("id") as string;
-  const status = formData.get("status") as "SUBMITTED" | "APPROVED" | "REJECTED";
-  await updateVolunteerApplicationStatus(id, status);
+export async function updateVolunteerApplicationStatusAction(formData: FormData) {
+  const actor = await requireActorFromSession();
+  const { id, status } = parseFormData(updateVolunteerAppStatusSchema, formData);
+  await updateVolunteerApplicationStatus(actor, id, status);
   revalidatePath("/admin/volunteer");
 }

@@ -18,20 +18,32 @@ type Message = {
 export function ContactMessagesClient({ messages }: { messages: Message[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Message | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   async function handleMarkRead(id: string) {
-    const fd = new FormData();
-    fd.set("id", id);
-    await markReadAction(fd);
-    router.refresh();
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.set("id", id);
+      await markReadAction(fd);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    }
   }
 
   async function handleDelete(id: string) {
-    const fd = new FormData();
-    fd.set("id", id);
-    await deleteMessageAction(fd);
-    setSelected(null);
-    router.refresh();
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.set("id", id);
+      await deleteMessageAction(fd);
+      setSelected(null);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed");
+    }
   }
 
   function formatDate(d: Date | string) {
@@ -46,6 +58,12 @@ export function ContactMessagesClient({ messages }: { messages: Message[] }) {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[rgb(var(--token-danger)/0.08)] p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Contact Messages</h1>
@@ -107,7 +125,7 @@ export function ContactMessagesClient({ messages }: { messages: Message[] }) {
                     <Mail className="h-4 w-4" />
                   </a>
                   <button
-                    onClick={() => handleDelete(selected.id)}
+                    onClick={() => setDeleteTarget(selected.id)}
                     className="rounded-lg border border-[var(--color-border)] p-2 text-[var(--color-danger)] hover:bg-[rgb(var(--token-danger)/0.10)]"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -128,6 +146,35 @@ export function ContactMessagesClient({ messages }: { messages: Message[] }) {
           )}
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-[var(--color-fg)]">Delete Message</h3>
+            <p className="mt-2 text-sm text-[var(--color-muted-fg)]">
+              Are you sure you want to delete this message? This action cannot be undone.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-lg border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-fg)] hover:bg-[rgb(var(--token-muted)/0.30)]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await handleDelete(deleteTarget);
+                  setDeleteTarget(null);
+                }}
+                className="rounded-lg bg-[var(--color-danger)] px-4 py-2 text-sm font-medium text-[var(--color-danger-fg)] hover:opacity-90"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

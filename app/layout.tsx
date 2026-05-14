@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display, IBM_Plex_Sans_Arabic } from "next/font/google";
+import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { getActiveThemeTokens } from "@/lib/theme/service";
@@ -10,23 +10,25 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+const inter = localFont({
+  src: "../public/fonts/inter-latin.woff2",
   variable: "--font-inter",
   display: "swap",
+  weight: "100 900",
 });
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
+const playfair = localFont({
+  src: "../public/fonts/playfair-latin.woff2",
   variable: "--font-playfair",
   display: "swap",
+  weight: "400 900",
 });
 
-const ibmPlexArabic = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic"],
-  weight: ["400", "500", "600", "700"],
+const ibmPlexArabic = localFont({
+  src: "../public/fonts/ibm-plex-arabic.woff2",
   variable: "--font-arabic",
   display: "swap",
+  weight: "400 700",
 });
 
 export const dynamic = "force-dynamic";
@@ -75,18 +77,25 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     getMessages(),
     getActiveThemeTokens(),
   ]);
-  const style = Object.fromEntries(
-    Object.entries(tokens).map(([k, v]) => [`--token-${k}`, v]),
-  ) as React.CSSProperties;
+  // Override :root CSS defaults with DB-driven theme tokens.
+  // Uses !important to beat the static :root defaults in globals.css.
+  // The ThemeEditor's live preview uses inline styles on <html> which
+  // always beat stylesheet rules, ensuring instant preview works.
+  const cssVars = Object.entries(tokens)
+    .map(([k, v]) => `--token-${k}:${v} !important`)
+    .join(";");
+  const themeStyle = `:root{${cssVars}}`;
 
   return (
     <html
       lang={locale}
       dir={isRtl(locale) ? "rtl" : "ltr"}
-      style={style}
       className={`${inter.variable} ${playfair.variable} ${ibmPlexArabic.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: themeStyle }} />
+      </head>
       <body>
         <ThemeProvider>
           <NuqsAdapter>

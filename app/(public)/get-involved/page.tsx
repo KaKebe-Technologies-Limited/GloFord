@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+
+export const dynamic = "force-dynamic";
 import { getActiveTestimonials } from "@/lib/services/testimonials";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { StatsBar } from "@/components/public/StatsBar";
@@ -150,9 +153,11 @@ export default async function GetInvolvedPage() {
                     </p>
                     <div className="mt-6 flex items-center gap-3">
                       {testimonial.avatarUrl ? (
-                        <img
+                        <Image
                           src={testimonial.avatarUrl}
                           alt={testimonial.authorName}
+                          width={40}
+                          height={40}
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (

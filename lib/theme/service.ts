@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { tags } from "@/lib/cache";
 
@@ -31,6 +30,7 @@ const DEFAULTS: ThemeTokens = {
   "danger": "239 68 68",
   "danger-fg": "255 255 255",
   "success": "34 197 94",
+  "success-fg": "255 255 255",
   "font-sans": '"Inter", ui-sans-serif, system-ui, sans-serif',
   "font-serif": '"Playfair Display", ui-serif, Georgia, serif',
   "radius-sm": "0.25rem",
@@ -38,7 +38,12 @@ const DEFAULTS: ThemeTokens = {
   "radius-lg": "0.75rem",
 };
 
-async function loadActiveTheme(): Promise<ThemeTokens> {
+/**
+ * Fetches the active theme directly from DB on every request.
+ * The root layout is force-dynamic so this runs per-request anyway.
+ * No caching layer — theme changes apply instantly on next navigation.
+ */
+export async function getActiveThemeTokens(): Promise<ThemeTokens> {
   try {
     const t = await db.theme.findUnique({ where: { id: "singleton" } });
     if (!t) return DEFAULTS;
@@ -52,16 +57,11 @@ async function loadActiveTheme(): Promise<ThemeTokens> {
     assign(t.colors);
     assign(t.typography, "font-");
     assign(t.radius, "radius-");
+    // shadows intentionally skipped — no CSS variables consume them yet
     return merged;
   } catch {
     return DEFAULTS;
   }
 }
-
-export const getActiveThemeTokens = unstable_cache(
-  loadActiveTheme,
-  ["active-theme"],
-  { tags: ["theme"], revalidate: 300 },
-);
 
 export { tags };

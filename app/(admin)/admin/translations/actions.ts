@@ -3,12 +3,15 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { requireActorFromSession } from "@/lib/auth-context";
 import { upsertTranslation, deleteTranslation } from "@/lib/services/translations";
+import {
+  parseFormData,
+  upsertTranslationSchema,
+  deleteSchema,
+} from "@/lib/validators/admin";
 
 export async function upsertTranslationAction(formData: FormData) {
   await requireActorFromSession();
-  const locale = formData.get("locale") as string;
-  const key = formData.get("key") as string;
-  const value = formData.get("value") as string;
+  const { locale, key, value } = parseFormData(upsertTranslationSchema, formData);
   await upsertTranslation(locale, key, value);
   revalidateTag(`translations-${locale}`);
   revalidatePath("/admin/translations");
@@ -16,10 +19,10 @@ export async function upsertTranslationAction(formData: FormData) {
 
 export async function deleteTranslationAction(formData: FormData) {
   await requireActorFromSession();
-  const id = formData.get("id") as string;
+  const { id } = parseFormData(deleteSchema, formData);
   const locale = formData.get("locale") as string;
   await deleteTranslation(id);
-  revalidateTag(`translations-${locale}`);
+  if (locale) revalidateTag(`translations-${locale}`);
   revalidatePath("/admin/translations");
 }
 

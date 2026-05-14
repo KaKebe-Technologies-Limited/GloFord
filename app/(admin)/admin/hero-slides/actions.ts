@@ -7,50 +7,50 @@ import {
   updateHeroSlide,
   deleteHeroSlide,
 } from "@/lib/services/heroSlides";
+import {
+  parseFormData,
+  createHeroSlideSchema,
+  updateHeroSlideSchema,
+  toggleSchema,
+  deleteSchema,
+} from "@/lib/validators/admin";
 
 export async function createHeroSlideAction(formData: FormData) {
   await requireActorFromSession();
+  const data = parseFormData(createHeroSlideSchema, formData);
   await createHeroSlide({
-    title: formData.get("title") as string,
-    subtitle: (formData.get("subtitle") as string) || undefined,
-    ctaLabel: (formData.get("ctaLabel") as string) || undefined,
-    ctaHref: (formData.get("ctaHref") as string) || undefined,
-    imageUrl: formData.get("imageUrl") as string,
-    imageAlt: (formData.get("imageAlt") as string) || undefined,
-    durationMs: Number(formData.get("durationSeconds") || 5) * 1000,
-    order: Number(formData.get("order") || 0),
+    title: data.title,
+    subtitle: data.subtitle ?? undefined,
+    ctaLabel: data.ctaLabel ?? undefined,
+    ctaHref: data.ctaHref ?? undefined,
+    imageUrl: data.imageUrl,
+    imageAlt: data.imageAlt ?? undefined,
+    durationMs: data.durationSeconds * 1000,
+    order: data.order,
   });
   revalidatePath("/admin/hero-slides");
 }
 
 export async function updateHeroSlideAction(formData: FormData) {
   await requireActorFromSession();
-  const id = formData.get("id") as string;
+  const { id, durationSeconds, ...rest } = parseFormData(updateHeroSlideSchema, formData);
   await updateHeroSlide(id, {
-    title: formData.get("title") as string,
-    subtitle: (formData.get("subtitle") as string) || null,
-    ctaLabel: (formData.get("ctaLabel") as string) || null,
-    ctaHref: (formData.get("ctaHref") as string) || null,
-    imageUrl: formData.get("imageUrl") as string,
-    imageAlt: (formData.get("imageAlt") as string) || null,
-    durationMs: Number(formData.get("durationSeconds") || 5) * 1000,
-    order: Number(formData.get("order") || 0),
-    isActive: formData.get("isActive") === "on",
+    ...rest,
+    durationMs: durationSeconds * 1000,
   });
   revalidatePath("/admin/hero-slides");
 }
 
 export async function deleteHeroSlideAction(formData: FormData) {
   await requireActorFromSession();
-  const id = formData.get("id") as string;
+  const { id } = parseFormData(deleteSchema, formData);
   await deleteHeroSlide(id);
   revalidatePath("/admin/hero-slides");
 }
 
 export async function toggleHeroSlideAction(formData: FormData) {
   await requireActorFromSession();
-  const id = formData.get("id") as string;
-  const isActive = formData.get("isActive") === "true";
+  const { id, isActive } = parseFormData(toggleSchema, formData);
   await updateHeroSlide(id, { isActive: !isActive });
   revalidatePath("/admin/hero-slides");
 }

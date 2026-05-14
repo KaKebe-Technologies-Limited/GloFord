@@ -6,15 +6,18 @@ import {
   navReorderSchema,
 } from "@/lib/validators/nav";
 import { db } from "@/lib/db";
+import { revalidateTag } from "next/cache";
 import { NotFoundError } from "@/lib/errors";
+
+const CACHE_TAG = "nav";
 
 export const createNavItem = createService({
   module: "nav",
   action: "update",
   schema: navCreateSchema,
   permission: () => ({ type: "NavItem" }),
-  exec: async ({ input, tx }) =>
-    tx.navItem.create({
+  exec: async ({ input, tx }) => {
+    const row = await tx.navItem.create({
       data: {
         location: input.location,
         parentId: input.parentId ?? null,
@@ -25,7 +28,10 @@ export const createNavItem = createService({
         requiredPermission: input.requiredPermission ?? null,
         isActive: input.isActive,
       },
-    }),
+    });
+    revalidateTag(CACHE_TAG);
+    return row;
+  },
 });
 
 export const updateNavItem = createService({
@@ -37,7 +43,9 @@ export const updateNavItem = createService({
     const { id, ...rest } = input;
     const row = await tx.navItem.findUnique({ where: { id } });
     if (!row) throw new NotFoundError("Nav item not found");
-    return tx.navItem.update({ where: { id }, data: rest });
+    const updated = await tx.navItem.update({ where: { id }, data: rest });
+    revalidateTag(CACHE_TAG);
+    return updated;
   },
 });
 
@@ -50,6 +58,7 @@ export const deleteNavItem = createService({
     const row = await tx.navItem.findUnique({ where: { id: input.id } });
     if (!row) throw new NotFoundError("Nav item not found");
     await tx.navItem.delete({ where: { id: input.id } });
+    revalidateTag(CACHE_TAG);
     return { id: input.id };
   },
 });
@@ -68,6 +77,7 @@ export const reorderNavItems = createService({
         }),
       ),
     );
+    revalidateTag(CACHE_TAG);
     return { count: input.items.length };
   },
 });

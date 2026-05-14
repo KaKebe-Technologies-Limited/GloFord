@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 
 export function getTranslationOverrides(locale: string) {
   return unstable_cache(
@@ -22,22 +22,26 @@ export async function listTranslations(locale: string) {
 }
 
 export async function upsertTranslation(locale: string, key: string, value: string) {
-  return db.translation.upsert({
+  const row = await db.translation.upsert({
     where: { locale_key: { locale, key } },
     create: { locale, key, value },
     update: { value },
   });
+  revalidateTag(`translations-${locale}`);
+  return row;
 }
 
 export async function deleteTranslation(id: string) {
-  return db.translation.delete({ where: { id } });
+  const row = await db.translation.delete({ where: { id } });
+  revalidateTag(`translations-${row.locale}`);
+  return row;
 }
 
 export async function bulkUpsertTranslations(
   locale: string,
   entries: Array<{ key: string; value: string }>,
 ) {
-  return db.$transaction(
+  const results = await db.$transaction(
     entries.map((e) =>
       db.translation.upsert({
         where: { locale_key: { locale, key: e.key } },
@@ -46,4 +50,6 @@ export async function bulkUpsertTranslations(
       }),
     ),
   );
+  revalidateTag(`translations-${locale}`);
+  return results;
 }

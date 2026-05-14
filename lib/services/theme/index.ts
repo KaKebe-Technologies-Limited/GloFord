@@ -12,6 +12,10 @@ export const updateTheme = createService({
   permission: () => ({ type: "Theme" }),
   loadBefore: async ({ tx }) => tx.theme.findUnique({ where: { id: SINGLETON } }),
   exec: async ({ input, tx }) => {
+    if (input.presetId) {
+      const preset = await tx.themePreset.findUnique({ where: { id: input.presetId } });
+      if (!preset) throw new Error(`Theme preset "${input.presetId}" not found`);
+    }
     const row = await tx.theme.upsert({
       where: { id: SINGLETON },
       create: {
@@ -19,13 +23,13 @@ export const updateTheme = createService({
         colors: input.colors as never,
         typography: input.typography as never,
         radius: input.radius as never,
-        shadows: input.shadows as never,
+        presetId: input.presetId ?? null,
       },
       update: {
         colors: input.colors as never,
         typography: input.typography as never,
         radius: input.radius as never,
-        shadows: input.shadows as never,
+        presetId: input.presetId ?? null,
       },
     });
     revalidateTag(tags.theme());

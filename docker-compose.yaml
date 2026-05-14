@@ -48,11 +48,11 @@ services:
 
   # ── Migrations + seed (runs once, then exits) ───────────────
   migrate:
-    image: node:22-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
     working_dir: /app
-    volumes:
-      - ./:/app
-      - migrate-node-modules:/app/node_modules
     environment:
       DATABASE_URL: postgresql://app:${DB_PASSWORD:?}@db:5432/app?sslmode=disable
       DIRECT_URL: postgresql://app:${DB_PASSWORD:?}@db:5432/app?sslmode=disable
@@ -69,11 +69,6 @@ services:
     command:
       - -c
       - |
-        apk add --no-cache openssl libc6-compat &&
-        corepack enable &&
-        corepack prepare pnpm@10.0.0 --activate &&
-        pnpm install --frozen-lockfile &&
-        pnpm prisma generate &&
         pnpm prisma migrate deploy &&
         pnpm db:seed
 
@@ -174,7 +169,6 @@ services:
 
 volumes:
   db-data:
-  migrate-node-modules:
   caddy-data:
   caddy-config:
   uploads-data:

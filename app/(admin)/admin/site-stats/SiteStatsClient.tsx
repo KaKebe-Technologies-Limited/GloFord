@@ -36,6 +36,7 @@ type SiteStat = {
 export function SiteStatsClient({ stats }: { stats: SiteStat[] }) {
   const [editing, setEditing] = useState<SiteStat | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   function openCreate() {
@@ -54,28 +55,39 @@ export function SiteStatsClient({ stats }: { stats: SiteStat[] }) {
   }
 
   async function handleSubmit(formData: FormData) {
-    if (editing) {
-      formData.set("id", editing.id);
-      await updateSiteStatAction(formData);
-    } else {
-      await createSiteStatAction(formData);
+    setError(null);
+    try {
+      if (editing) {
+        formData.set("id", editing.id);
+        await updateSiteStatAction(formData);
+      } else {
+        await createSiteStatAction(formData);
+      }
+      closeForm();
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
     }
-    closeForm();
-    router.refresh();
-  }
-
-  async function handleDelete(formData: FormData) {
-    await deleteSiteStatAction(formData);
-    router.refresh();
   }
 
   async function handleToggle(formData: FormData) {
-    await toggleSiteStatAction(formData);
-    router.refresh();
+    setError(null);
+    try {
+      await toggleSiteStatAction(formData);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    }
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[rgb(var(--token-danger)/0.08)] p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -249,12 +261,21 @@ export function SiteStatsClient({ stats }: { stats: SiteStat[] }) {
                             </ConfirmDialogHeader>
                             <ConfirmDialogFooter>
                               <ConfirmDialogCancel>Cancel</ConfirmDialogCancel>
-                              <form action={handleDelete}>
-                                <input type="hidden" name="id" value={s.id} />
-                                <ConfirmDialogAction type="submit">
-                                  Delete
-                                </ConfirmDialogAction>
-                              </form>
+                              <ConfirmDialogAction
+                                onClick={async () => {
+                                  setError(null);
+                                  try {
+                                    const fd = new FormData();
+                                    fd.set("id", s.id);
+                                    await deleteSiteStatAction(fd);
+                                    router.refresh();
+                                  } catch (e) {
+                                    setError(e instanceof Error ? e.message : "Delete failed");
+                                  }
+                                }}
+                              >
+                                Delete
+                              </ConfirmDialogAction>
                             </ConfirmDialogFooter>
                           </ConfirmDialogContent>
                         </ConfirmDialog>

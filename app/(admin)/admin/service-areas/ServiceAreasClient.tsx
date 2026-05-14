@@ -37,6 +37,7 @@ type ServiceArea = {
 export function ServiceAreasClient({ areas }: { areas: ServiceArea[] }) {
   const [editing, setEditing] = useState<ServiceArea | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   function openCreate() {
@@ -55,28 +56,39 @@ export function ServiceAreasClient({ areas }: { areas: ServiceArea[] }) {
   }
 
   async function handleSubmit(formData: FormData) {
-    if (editing) {
-      formData.set("id", editing.id);
-      await updateServiceAreaAction(formData);
-    } else {
-      await createServiceAreaAction(formData);
+    setError(null);
+    try {
+      if (editing) {
+        formData.set("id", editing.id);
+        await updateServiceAreaAction(formData);
+      } else {
+        await createServiceAreaAction(formData);
+      }
+      closeForm();
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
     }
-    closeForm();
-    router.refresh();
-  }
-
-  async function handleDelete(formData: FormData) {
-    await deleteServiceAreaAction(formData);
-    router.refresh();
   }
 
   async function handleToggle(formData: FormData) {
-    await toggleServiceAreaAction(formData);
-    router.refresh();
+    setError(null);
+    try {
+      await toggleServiceAreaAction(formData);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    }
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div role="alert" className="rounded-[var(--radius-md)] border border-[var(--color-danger)] bg-[rgb(var(--token-danger)/0.08)] p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Service Areas</h1>
@@ -255,12 +267,21 @@ export function ServiceAreasClient({ areas }: { areas: ServiceArea[] }) {
                             </ConfirmDialogHeader>
                             <ConfirmDialogFooter>
                               <ConfirmDialogCancel>Cancel</ConfirmDialogCancel>
-                              <form action={handleDelete}>
-                                <input type="hidden" name="id" value={area.id} />
-                                <ConfirmDialogAction type="submit">
-                                  Delete
-                                </ConfirmDialogAction>
-                              </form>
+                              <ConfirmDialogAction
+                                onClick={async () => {
+                                  setError(null);
+                                  try {
+                                    const fd = new FormData();
+                                    fd.set("id", area.id);
+                                    await deleteServiceAreaAction(fd);
+                                    router.refresh();
+                                  } catch (e) {
+                                    setError(e instanceof Error ? e.message : "Delete failed");
+                                  }
+                                }}
+                              >
+                                Delete
+                              </ConfirmDialogAction>
                             </ConfirmDialogFooter>
                           </ConfirmDialogContent>
                         </ConfirmDialog>

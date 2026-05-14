@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { getTeamMembersByDepartment } from "@/lib/services/teamMembers";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { Facebook, Twitter, Linkedin, Instagram, Globe } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { collectionPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
+
+export const dynamic = "force-dynamic";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://gloford.org";
 
@@ -119,9 +122,11 @@ export default async function LeadershipPage() {
                           {/* Photo */}
                           <div className="relative aspect-[3/3.5] overflow-hidden">
                             {member.photoUrl ? (
-                              <img
+                              <Image
                                 src={member.photoUrl}
                                 alt={member.name}
+                                fill
+                                sizes="(max-width: 768px) 100vw, 300px"
                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                               />
                             ) : (
