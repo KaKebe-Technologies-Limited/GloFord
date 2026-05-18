@@ -23,7 +23,7 @@ const CredentialsSchema = z.object({
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 3 * 60 * 60 /* 3 hours */ },
   trustHost: true,
   pages: { signIn: "/login" },
   providers: [
