@@ -80,7 +80,6 @@ export function ConfirmActionProvider({ children }: { children: React.ReactNode 
                   value={typed}
                   onChange={(e) => setTyped(e.target.value)}
                   placeholder={state.requireTypedConfirmation}
-                  autoFocus
                 />
               </div>
             )}

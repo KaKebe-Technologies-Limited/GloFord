@@ -86,10 +86,10 @@ export function NotificationEditor({ initial }: { initial: Initial }) {
     <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
       <section className="space-y-4">
         <div className="grid gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 md:grid-cols-[160px_1fr_220px]">
-          <label className="block space-y-1.5">
+          <div className="block space-y-1.5">
             <span className="text-sm font-medium">Kind</span>
             <Select value={type} onValueChange={(v) => setType(v as "ANNOUNCEMENT" | "REMINDER")} disabled={readOnly}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" aria-label="Notification kind">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -97,7 +97,7 @@ export function NotificationEditor({ initial }: { initial: Initial }) {
                 <SelectItem value="REMINDER">Reminder</SelectItem>
               </SelectContent>
             </Select>
-          </label>
+          </div>
           <label className="block space-y-1.5">
             <span className="text-sm font-medium">Subject</span>
             <input
