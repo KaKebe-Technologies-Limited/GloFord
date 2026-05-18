@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { deleteSegmentAction } from "@/lib/actions/segments";
 import { useConfirmAction } from "@/components/ui/useConfirmAction";
@@ -18,6 +18,7 @@ type Props = {
 
 export function SegmentRow({ segment }: Props) {
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const confirmAction = useConfirmAction();
   const del = async () => {
     if (segment.isSystem) return;
@@ -32,13 +33,16 @@ export function SegmentRow({ segment }: Props) {
       try {
         await deleteSegmentAction({ id: segment.id });
       } catch (e) {
-        alert(e instanceof Error ? e.message : "Failed");
+        setError(e instanceof Error ? e.message : "Failed");
       }
     });
   };
   return (
     <tr className="border-b border-[var(--color-border)] last:border-0">
-      <td className="px-4 py-3 font-medium">{segment.name}</td>
+      <td className="px-4 py-3 font-medium">
+        {segment.name}
+        {error && <p className="text-xs text-[var(--color-danger)] mt-1">{error}</p>}
+      </td>
       <td className="px-4 py-3 font-mono text-xs text-[var(--color-muted-fg)]">{segment.slug}</td>
       <td className="px-4 py-3 text-[var(--color-muted-fg)]">{segment._count.subscribers}</td>
       <td className="px-4 py-3 text-xs text-[var(--color-muted-fg)]">
