@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { deleteSegmentAction } from "@/lib/actions/segments";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
 
 type Props = {
   segment: {
@@ -17,9 +18,16 @@ type Props = {
 
 export function SegmentRow({ segment }: Props) {
   const [pending, start] = useTransition();
-  const del = () => {
+  const confirmAction = useConfirmAction();
+  const del = async () => {
     if (segment.isSystem) return;
-    if (!confirm(`Delete segment "${segment.name}"? Subscribers remain.`)) return;
+    const ok = await confirmAction({
+      title: "Delete segment",
+      description: `Delete segment "${segment.name}"? Subscribers remain.`,
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deleteSegmentAction({ id: segment.id });

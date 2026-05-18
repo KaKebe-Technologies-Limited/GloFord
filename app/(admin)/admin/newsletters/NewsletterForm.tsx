@@ -10,6 +10,7 @@ import {
   deleteNewsletterAction,
 } from "@/lib/actions/newsletters";
 import { sendTestEmailAction } from "@/lib/actions/newsletterTest";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
 import dynamic from "next/dynamic";
 
 const BlockEditor = dynamic(
@@ -52,6 +53,7 @@ export function NewsletterForm({
   const [testSent, setTestSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const toggleSegment = (id: string) =>
     setSelectedSegments((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -89,9 +91,15 @@ export function NewsletterForm({
     });
   };
 
-  const sendNow = () => {
+  const sendNow = async () => {
     if (!initial?.id) return;
-    if (!confirm("Send this newsletter to the selected audience now?")) return;
+    const ok = await confirmAction({
+      title: "Send newsletter",
+      description: "Send this newsletter to the selected audience now?",
+      confirmLabel: "Send now",
+      variant: "primary",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await sendNewsletterAction({ id: initial.id! });
@@ -114,9 +122,15 @@ export function NewsletterForm({
     });
   };
 
-  const del = () => {
+  const del = async () => {
     if (!initial?.id) return;
-    if (!confirm("Delete this draft newsletter?")) return;
+    const ok = await confirmAction({
+      title: "Delete newsletter",
+      description: "Delete this draft newsletter?",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deleteNewsletterAction({ id: initial.id! });

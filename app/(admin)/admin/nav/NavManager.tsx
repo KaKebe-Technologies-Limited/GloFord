@@ -10,6 +10,13 @@ import {
 } from "@/lib/actions/nav";
 import { Button } from "@/components/ui/Button";
 import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/Select";
+import {
   ConfirmDialog,
   ConfirmDialogAction,
   ConfirmDialogCancel,
@@ -157,37 +164,43 @@ export function NavManager({ items }: { items: Item[] }) {
       <section className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-4">
         <h3 className="text-sm font-semibold">Add a link</h3>
         <div className="grid gap-3 md:grid-cols-[170px_200px_1fr_1fr_auto]">
-          <select
-            aria-label="Nav location"
+          <Select
             value={draftLoc}
-            onChange={(e) => {
-              setDraftLoc(e.target.value as Location);
+            onValueChange={(v) => {
+              setDraftLoc(v as Location);
               setDraftParentId("");
             }}
-            className={inputCls}
           >
-            {LOCATIONS.map((l) => (
-              <option key={l.key} value={l.key}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Parent link"
-            value={draftParentId}
-            onChange={(e) => setDraftParentId(e.target.value)}
-            className={inputCls}
-          >
-            <option value="">Top level</option>
-            {items
-              .filter((item) => item.location === draftLoc && !item.parentId)
-              .sort((a, b) => a.order - b.order)
-              .map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
+            <SelectTrigger className="w-[170px]" aria-label="Nav location">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LOCATIONS.map((l) => (
+                <SelectItem key={l.key} value={l.key}>
+                  {l.label}
+                </SelectItem>
               ))}
-          </select>
+            </SelectContent>
+          </Select>
+          <Select
+            value={draftParentId || "__top__"}
+            onValueChange={(v) => setDraftParentId(v === "__top__" ? "" : v)}
+          >
+            <SelectTrigger className="w-[200px]" aria-label="Parent link">
+              <SelectValue placeholder="Top level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__top__">Top level</SelectItem>
+              {items
+                .filter((item) => item.location === draftLoc && !item.parentId)
+                .sort((a, b) => a.order - b.order)
+                .map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
           <input
             value={draft.label}
             onChange={(e) => setDraft((d) => ({ ...d, label: e.target.value }))}

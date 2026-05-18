@@ -9,6 +9,14 @@ import {
   sendEventNotificationAction,
 } from "@/lib/actions/events";
 import { Button } from "@/components/ui/Button";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/Select";
 
 type Notif = {
   id: string;
@@ -38,6 +46,7 @@ export function NotificationList({
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const add = () => {
     setError(null);
@@ -57,8 +66,14 @@ export function NotificationList({
     });
   };
 
-  const send = (id: string) => {
-    if (!confirm("Send this notification now?")) return;
+  const send = async (id: string) => {
+    const ok = await confirmAction({
+      title: "Send notification",
+      description: "Send this notification now?",
+      confirmLabel: "Send now",
+      variant: "primary",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await sendEventNotificationAction({ id });
@@ -68,8 +83,14 @@ export function NotificationList({
     });
   };
 
-  const del = (id: string) => {
-    if (!confirm("Delete this notification?")) return;
+  const del = async (id: string) => {
+    const ok = await confirmAction({
+      title: "Delete notification",
+      description: "Delete this notification?",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deleteEventNotificationAction({ id });
@@ -142,17 +163,20 @@ export function NotificationList({
       <div className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-4">
         <h3 className="text-sm font-semibold">Add a notification</h3>
         <div className="grid gap-3 md:grid-cols-[140px_1fr_220px_auto]">
-          <select
-            aria-label="Notification type"
+          <Select
             value={draft.type}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, type: e.target.value as "ANNOUNCEMENT" | "REMINDER" }))
+            onValueChange={(v) =>
+              setDraft((d) => ({ ...d, type: v as "ANNOUNCEMENT" | "REMINDER" }))
             }
-            className={inputCls}
           >
-            <option value="ANNOUNCEMENT">Announcement</option>
-            <option value="REMINDER">Reminder</option>
-          </select>
+            <SelectTrigger className="w-[140px]" aria-label="Notification type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ANNOUNCEMENT">Announcement</SelectItem>
+              <SelectItem value="REMINDER">Reminder</SelectItem>
+            </SelectContent>
+          </Select>
           <input
             value={draft.subject}
             onChange={(e) => setDraft((d) => ({ ...d, subject: e.target.value }))}

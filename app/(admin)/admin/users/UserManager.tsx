@@ -8,6 +8,14 @@ import {
   deactivateUserAction,
 } from "@/lib/actions/users";
 import { Button } from "@/components/ui/Button";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/Select";
 
 type Role = "ADMIN" | "EDITOR" | "VIEWER";
 
@@ -29,6 +37,7 @@ export function UserManager({
   currentUserId: string;
   members: Member[];
 }) {
+  const confirmAction = useConfirmAction();
   const [invite, setInvite] = useState({ email: "", name: "", role: "EDITOR" as Role });
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -60,8 +69,14 @@ export function UserManager({
     });
   };
 
-  const remove = (userId: string) => {
-    if (!confirm("Remove this user from the organization?")) return;
+  const remove = async (userId: string) => {
+    const ok = await confirmAction({
+      title: "Remove user",
+      description: "Remove this user from the organization?",
+      confirmLabel: "Remove",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deactivateUserAction({ userId });
@@ -98,15 +113,16 @@ export function UserManager({
             placeholder="Full name (optional)"
             className={inputCls}
           />
-          <select
-            value={invite.role}
-            onChange={(e) => setInvite((d) => ({ ...d, role: e.target.value as Role }))}
-            className={inputCls}
-          >
-            <option value="ADMIN">Admin</option>
-            <option value="EDITOR">Editor</option>
-            <option value="VIEWER">Viewer</option>
-          </select>
+          <Select value={invite.role} onValueChange={(v) => setInvite((d) => ({ ...d, role: v as Role }))}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ADMIN">Admin</SelectItem>
+              <SelectItem value="EDITOR">Editor</SelectItem>
+              <SelectItem value="VIEWER">Viewer</SelectItem>
+            </SelectContent>
+          </Select>
           <Button onClick={doInvite} disabled={pending || !invite.email.trim()}>
             <UserPlus className="h-4 w-4" /> Invite
           </Button>
@@ -139,16 +155,20 @@ export function UserManager({
                         Super admin
                       </span>
                     ) : (
-                      <select
+                      <Select
                         defaultValue={m.role}
-                        onChange={(e) => changeRole(m.userId, e.target.value as Role)}
+                        onValueChange={(v) => changeRole(m.userId, v as Role)}
                         disabled={pending || isSelf}
-                        className="rounded-[var(--radius-sm)] border border-[var(--color-input)] bg-[var(--color-bg)] px-2 py-1 text-sm"
                       >
-                        <option value="ADMIN">Admin</option>
-                        <option value="EDITOR">Editor</option>
-                        <option value="VIEWER">Viewer</option>
-                      </select>
+                        <SelectTrigger className="w-[120px] h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ADMIN">Admin</SelectItem>
+                          <SelectItem value="EDITOR">Editor</SelectItem>
+                          <SelectItem value="VIEWER">Viewer</SelectItem>
+                        </SelectContent>
+                      </Select>
                     )}
                   </td>
                   <td className="px-4 py-3 text-[var(--color-muted-fg)]">{m.joinedAt}</td>

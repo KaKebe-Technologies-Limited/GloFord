@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Search, Languages } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import {
   ConfirmDialog,
   ConfirmDialogTrigger,
@@ -148,18 +149,18 @@ export function TranslationsClient({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
         <div className="space-y-1.5">
           <Label htmlFor="locale-select">Locale</Label>
-          <select
-            id="locale-select"
-            value={locale}
-            onChange={(e) => handleLocaleChange(e.target.value)}
-            className="flex h-10 rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-          >
-            {LOCALES.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.label} ({l.code})
-              </option>
-            ))}
-          </select>
+          <Select value={locale} onValueChange={(v) => handleLocaleChange(v)}>
+            <SelectTrigger aria-label="locale-select">
+              <SelectValue placeholder="Select locale..." />
+            </SelectTrigger>
+            <SelectContent>
+              {LOCALES.map((l) => (
+                <SelectItem key={l.code} value={l.code}>
+                  {l.label} ({l.code})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-fg)]" />

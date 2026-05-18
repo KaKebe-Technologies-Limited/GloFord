@@ -3,13 +3,12 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { CheckCircle2, ChevronDown, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { submitPartnerAction } from "./actions";
 
 const inputCls =
   "w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm transition focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--token-primary)/0.20)]";
-const selectCls =
-  "w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm transition focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--token-primary)/0.20)] appearance-none";
 const labelCls = "block text-sm font-medium mb-1.5";
 
 export function PartnerApplicationForm() {
@@ -17,6 +16,7 @@ export function PartnerApplicationForm() {
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [partnershipType, setPartnershipType] = useState("");
 
   const PARTNERSHIP_TYPES = [
     { value: "Strategic", label: t("typeStrategic") },
@@ -131,22 +131,19 @@ export function PartnerApplicationForm() {
           <label htmlFor="partnershipType" className={labelCls}>
             {t("formPartnershipType")}
           </label>
-          <div className="relative">
-            <select
-              id="partnershipType"
-              name="partnershipType"
-              required
-              className={selectCls}
-            >
-              <option value="">{t("formSelectType")}</option>
+          <input type="hidden" name="partnershipType" value={partnershipType} />
+          <Select value={partnershipType || undefined} onValueChange={(v) => setPartnershipType(v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t("formSelectType")} />
+            </SelectTrigger>
+            <SelectContent>
               {PARTNERSHIP_TYPES.map((pt) => (
-                <option key={pt.value} value={pt.value}>
+                <SelectItem key={pt.value} value={pt.value}>
                   {pt.label}
-                </option>
+                </SelectItem>
               ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-fg)]" />
-          </div>
+            </SelectContent>
+          </Select>
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="partDescription" className={labelCls}>

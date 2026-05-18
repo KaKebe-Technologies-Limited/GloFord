@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, ChevronDown, Handshake } from "lucide-react";
+import { Eye, Handshake } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { updatePartnerApplicationStatusAction } from "./actions";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -222,23 +223,31 @@ export function PartnerApplicationsClient({
 
 function StatusSelect({ defaultStatus }: { defaultStatus: string }) {
   const [status, setStatus] = useState(defaultStatus);
+  const formRef = React.useRef<HTMLFormElement | null>(null);
   return (
-    <div className="relative">
-      <select
-        name="status"
+    <>
+      <input type="hidden" name="status" value={status} />
+      <Select
         value={status}
-        onChange={(e) => {
-          setStatus(e.target.value);
-          const form = e.target.closest("form");
-          if (form) form.requestSubmit();
+        onValueChange={(v) => {
+          setStatus(v);
+          setTimeout(() => formRef.current?.requestSubmit(), 0);
         }}
-        className={`appearance-none rounded-full py-0.5 pl-2.5 pr-7 text-xs font-medium ${STATUS_STYLES[status] ?? "bg-[var(--color-muted)] text-[var(--color-muted-fg)]"}`}
       >
-        <option value="PENDING">Pending</option>
-        <option value="APPROVED">Approved</option>
-        <option value="REJECTED">Rejected</option>
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2" />
-    </div>
+        <SelectTrigger
+          ref={(node) => {
+            formRef.current = node?.closest("form") ?? null;
+          }}
+          className={`rounded-full py-0.5 pl-2.5 pr-7 text-xs font-medium ${STATUS_STYLES[status] ?? "bg-[var(--color-muted)] text-[var(--color-muted-fg)]"}`}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="PENDING">Pending</SelectItem>
+          <SelectItem value="APPROVED">Approved</SelectItem>
+          <SelectItem value="REJECTED">Rejected</SelectItem>
+        </SelectContent>
+      </Select>
+    </>
   );
 }

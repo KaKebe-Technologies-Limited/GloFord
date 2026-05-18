@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Pencil, Trash2, Users, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import {
   ConfirmDialog,
   ConfirmDialogTrigger,
@@ -18,6 +19,7 @@ import {
   ConfirmDialogAction,
   ConfirmDialogCancel,
 } from "@/components/ui/ConfirmDialog";
+import { DatePicker } from "@/components/ui/DatePicker";
 import {
   createCareerAction,
   updateCareerAction,
@@ -53,7 +55,14 @@ export function CareersClient({ careers }: { careers: Career[] }) {
   const [editing, setEditing] = useState<Career | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deadline, setDeadline] = useState(editing ? formatDate(editing.applicationDeadline) : "");
+  const [jobType, setJobType] = useState(editing?.type ?? "FULL_TIME");
   const router = useRouter();
+
+  useEffect(() => {
+    setDeadline(editing ? formatDate(editing.applicationDeadline) : "");
+    setJobType(editing?.type ?? "FULL_TIME");
+  }, [editing]);
 
   function openCreate() {
     setEditing(null);
@@ -161,18 +170,19 @@ export function CareersClient({ careers }: { careers: Career[] }) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="type">Type</Label>
-                <select
-                  id="type"
-                  name="type"
-                  defaultValue={editing?.type ?? "FULL_TIME"}
-                  className="flex h-10 w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-                >
-                  {JOB_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
+                <input type="hidden" name="type" value={jobType} />
+                <Select value={jobType} onValueChange={(v) => setJobType(v)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select type..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {JOB_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="salaryRange">Salary Range</Label>
@@ -185,11 +195,11 @@ export function CareersClient({ careers }: { careers: Career[] }) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="applicationDeadline">Application Deadline</Label>
-                <Input
+                <DatePicker
                   id="applicationDeadline"
                   name="applicationDeadline"
-                  type="date"
-                  defaultValue={editing ? formatDate(editing.applicationDeadline) : ""}
+                  value={deadline}
+                  onChange={setDeadline}
                 />
               </div>
             </div>

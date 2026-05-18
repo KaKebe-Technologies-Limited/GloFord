@@ -6,6 +6,14 @@ import {
   updateEventNotificationAction,
   sendEventNotificationAction,
 } from "@/lib/actions/events";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/Select";
 import dynamic from "next/dynamic";
 
 const BlockEditor = dynamic(
@@ -38,6 +46,7 @@ export function NotificationEditor({ initial }: { initial: Initial }) {
   const [content, setContent] = useState<Block[]>(initial.content);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const save = () => {
     setError(null);
@@ -56,8 +65,14 @@ export function NotificationEditor({ initial }: { initial: Initial }) {
     });
   };
 
-  const sendNow = () => {
-    if (!confirm("Send this notification now to all eligible subscribers?")) return;
+  const sendNow = async () => {
+    const ok = await confirmAction({
+      title: "Send notification",
+      description: "Send this notification now to all eligible subscribers?",
+      confirmLabel: "Send now",
+      variant: "primary",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await sendEventNotificationAction({ id: initial.id });
@@ -73,15 +88,15 @@ export function NotificationEditor({ initial }: { initial: Initial }) {
         <div className="grid gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 md:grid-cols-[160px_1fr_220px]">
           <label className="block space-y-1.5">
             <span className="text-sm font-medium">Kind</span>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as "ANNOUNCEMENT" | "REMINDER")}
-              disabled={readOnly}
-              className={inputCls}
-            >
-              <option value="ANNOUNCEMENT">Announcement</option>
-              <option value="REMINDER">Reminder</option>
-            </select>
+            <Select value={type} onValueChange={(v) => setType(v as "ANNOUNCEMENT" | "REMINDER")} disabled={readOnly}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ANNOUNCEMENT">Announcement</SelectItem>
+                <SelectItem value="REMINDER">Reminder</SelectItem>
+              </SelectContent>
+            </Select>
           </label>
           <label className="block space-y-1.5">
             <span className="text-sm font-medium">Subject</span>

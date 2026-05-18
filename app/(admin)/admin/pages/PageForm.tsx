@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createPageAction, updatePageAction, deletePageAction } from "@/lib/actions/pages";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
 import dynamic from "next/dynamic";
 
 const BlockEditor = dynamic(
@@ -29,6 +30,7 @@ export function PageForm({ initial }: { initial?: Initial }) {
   const [blocks, setBlocks] = useState<Block[]>(initial?.blocks ?? []);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const submit = () => {
     setError(null);
@@ -45,9 +47,15 @@ export function PageForm({ initial }: { initial?: Initial }) {
     });
   };
 
-  const del = () => {
+  const del = async () => {
     if (!initial?.id) return;
-    if (!confirm("Delete this page? This cannot be undone.")) return;
+    const ok = await confirmAction({
+      title: "Delete page",
+      description: "Delete this page? This cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deletePageAction({ id: initial.id });

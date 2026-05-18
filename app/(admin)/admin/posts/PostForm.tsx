@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createPostAction, updatePostAction, deletePostAction } from "@/lib/actions/posts";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
 import dynamic from "next/dynamic";
 
 const BlockEditor = dynamic(
@@ -38,6 +39,7 @@ export function PostForm({ initial }: { initial?: Initial }) {
   const [seoDesc, setSeoDesc] = useState(initial?.seoDesc ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const submit = () => {
     setError(null);
@@ -68,9 +70,15 @@ export function PostForm({ initial }: { initial?: Initial }) {
     });
   };
 
-  const del = () => {
+  const del = async () => {
     if (!initial?.id) return;
-    if (!confirm("Delete this post?")) return;
+    const ok = await confirmAction({
+      title: "Delete post",
+      description: "Delete this post?",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deletePostAction({ id: initial.id });

@@ -5,6 +5,7 @@ import { Trash2, Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { deleteMediaAction } from "@/lib/actions/media";
 import { cn } from "@/lib/utils/cn";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
 
 type Item = {
   id: string;
@@ -18,6 +19,7 @@ type Item = {
 export function MediaCard({ item }: { item: Item }) {
   const [pending, start] = useTransition();
   const [copied, setCopied] = useState(false);
+  const confirmAction = useConfirmAction();
 
   const copy = async () => {
     await navigator.clipboard.writeText(item.id);
@@ -25,8 +27,14 @@ export function MediaCard({ item }: { item: Item }) {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const del = () => {
-    if (!confirm("Delete this media file?")) return;
+  const del = async () => {
+    const ok = await confirmAction({
+      title: "Delete media",
+      description: "Delete this media file?",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(() => deleteMediaAction({ id: item.id }));
   };
 

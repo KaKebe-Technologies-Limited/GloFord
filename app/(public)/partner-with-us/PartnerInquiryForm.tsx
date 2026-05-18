@@ -3,12 +3,11 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { submitPartnerInquiryAction } from "./actions";
 
 const inputCls =
   "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 text-sm transition focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--token-primary)/0.20)]";
-const selectCls =
-  "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 text-sm transition focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--token-primary)/0.20)] appearance-none";
 const labelCls = "block text-sm font-medium text-[var(--color-fg)] mb-1.5";
 
 export function PartnerInquiryForm() {
@@ -16,6 +15,7 @@ export function PartnerInquiryForm() {
   const [isPending, startTransition] = useTransition();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [partnershipType, setPartnershipType] = useState("");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -79,14 +79,19 @@ export function PartnerInquiryForm() {
         </div>
         <div>
           <label htmlFor="partnershipType" className={labelCls}>{t("formPartnershipType")}</label>
-          <select id="partnershipType" name="partnershipType" required className={selectCls}>
-            <option value="">{t("formSelectType")}</option>
-            <option value="Funding">{t("formTypeFunding")}</option>
-            <option value="Implementation">{t("formTypeImplementation")}</option>
-            <option value="Technical">{t("formTypeTechnical")}</option>
-            <option value="Strategic">{t("formTypeStrategic")}</option>
-            <option value="Other">{t("formTypeOther")}</option>
-          </select>
+          <input type="hidden" name="partnershipType" value={partnershipType} />
+          <Select value={partnershipType || undefined} onValueChange={(v) => setPartnershipType(v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t("formSelectType")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Funding">{t("formTypeFunding")}</SelectItem>
+              <SelectItem value="Implementation">{t("formTypeImplementation")}</SelectItem>
+              <SelectItem value="Technical">{t("formTypeTechnical")}</SelectItem>
+              <SelectItem value="Strategic">{t("formTypeStrategic")}</SelectItem>
+              <SelectItem value="Other">{t("formTypeOther")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <label htmlFor="description" className={labelCls}>{t("formAboutOrg")}</label>

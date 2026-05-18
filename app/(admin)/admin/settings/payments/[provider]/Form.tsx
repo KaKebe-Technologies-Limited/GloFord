@@ -3,6 +3,13 @@
 import { useState, useTransition } from "react";
 import { savePaymentConfigAction } from "@/lib/actions/paymentConfig";
 import { Button } from "@/components/ui/Button";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/Select";
 
 type ProviderId = "PESAPAL" | "MTN_MOMO" | "AIRTEL_MONEY";
 
@@ -61,17 +68,18 @@ export function PaymentConfigForm({
           />
           Enable this provider
         </label>
-        <label className="flex items-center gap-2 text-sm">
-          Mode
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as "sandbox" | "live")}
-            className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-sm"
-          >
-            <option value="sandbox">Sandbox</option>
-            <option value="live">Live</option>
-          </select>
-        </label>
+        <div className="flex items-center gap-2 text-sm">
+          <span>Mode</span>
+          <Select value={mode} onValueChange={(v) => setMode(v as "sandbox" | "live")}>
+            <SelectTrigger className="w-[120px] h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sandbox">Sandbox</SelectItem>
+              <SelectItem value="live">Live</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="space-y-3">{renderFields(provider, fields, setField)}</div>

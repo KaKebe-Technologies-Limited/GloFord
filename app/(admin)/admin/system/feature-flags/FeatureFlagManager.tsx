@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { upsertFeatureFlagAction, deleteFeatureFlagAction } from "@/lib/actions/system";
 import { Button } from "@/components/ui/Button";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
 
 type Flag = {
   id: string;
@@ -17,6 +18,7 @@ export function FeatureFlagManager({ flags }: { flags: Flag[] }) {
   const [draft, setDraft] = useState({ key: "", description: "", isEnabled: false });
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const save = (key: string, description: string, isEnabled: boolean) => {
     setError(null);
@@ -35,8 +37,14 @@ export function FeatureFlagManager({ flags }: { flags: Flag[] }) {
     setDraft({ key: "", description: "", isEnabled: false });
   };
 
-  const del = (id: string) => {
-    if (!confirm("Delete this flag?")) return;
+  const del = async (id: string) => {
+    const ok = await confirmAction({
+      title: "Delete flag",
+      description: "Delete this flag?",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deleteFeatureFlagAction({ id });

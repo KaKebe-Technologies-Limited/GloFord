@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Building2, MapPin, Clock, CheckCircle2, Loader2 } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { submitVolunteerApplicationAction } from "./actions";
 
 const inputCls =
@@ -33,6 +34,7 @@ export function VolunteerApplyForm({
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availability, setAvailability] = useState("");
 
   async function handleSubmit(formData: FormData) {
     setSubmitting(true);
@@ -199,18 +201,19 @@ export function VolunteerApplyForm({
           >
             Availability
           </label>
-          <select
-            id="availability"
-            name="availability"
-            className="flex h-10 w-full rounded-[var(--radius-md)] border border-[var(--color-input)] bg-[var(--color-bg)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-          >
-            <option value="">Select availability...</option>
-            {AVAILABILITY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <input type="hidden" name="availability" value={availability} />
+          <Select value={availability || undefined} onValueChange={(v) => setAvailability(v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select availability..." />
+            </SelectTrigger>
+            <SelectContent>
+              {AVAILABILITY_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-1.5">

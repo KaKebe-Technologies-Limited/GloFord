@@ -7,6 +7,7 @@ import {
   deleteEventAction,
 } from "@/lib/actions/events";
 import { Button } from "@/components/ui/Button";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
 import { MediaPicker } from "@/components/ui/MediaPicker";
 
 type SegmentOption = { id: string; name: string };
@@ -50,6 +51,7 @@ export function EventForm({ initial, segments = [] }: { initial?: Initial; segme
   const [seoDesc, setSeoDesc] = useState(initial?.seoDesc ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const submit = () => {
     setError(null);
@@ -76,9 +78,15 @@ export function EventForm({ initial, segments = [] }: { initial?: Initial; segme
     });
   };
 
-  const del = () => {
+  const del = async () => {
     if (!initial?.id) return;
-    if (!confirm("Delete this event? All notifications will also be removed.")) return;
+    const ok = await confirmAction({
+      title: "Delete event",
+      description: "Delete this event? All notifications will also be removed.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deleteEventAction({ id: initial.id });

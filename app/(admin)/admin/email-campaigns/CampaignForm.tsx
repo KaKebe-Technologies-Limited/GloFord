@@ -8,6 +8,14 @@ import {
   activateEmailCampaignAction,
 } from "@/lib/actions/emailCampaigns";
 import { Button } from "@/components/ui/Button";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/Select";
 
 type SegmentOption = { id: string; name: string };
 
@@ -33,6 +41,7 @@ export function CampaignForm({ initial, segments = [] }: { initial?: Initial; se
   const isActive = initial?.isActive ?? false;
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const submit = () => {
     setError(null);
@@ -64,9 +73,15 @@ export function CampaignForm({ initial, segments = [] }: { initial?: Initial; se
     });
   };
 
-  const del = () => {
+  const del = async () => {
     if (!initial?.id) return;
-    if (!confirm("Delete this campaign? This cannot be undone.")) return;
+    const ok = await confirmAction({
+      title: "Delete campaign",
+      description: "Delete this campaign? This cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deleteEmailCampaignAction({ id: initial.id });
@@ -91,16 +106,17 @@ export function CampaignForm({ initial, segments = [] }: { initial?: Initial; se
           />
         </Field>
         <Field label="Trigger">
-          <select
-            value={trigger}
-            onChange={(e) => setTrigger(e.target.value as Initial["trigger"])}
-            className={inputCls}
-          >
-            <option value="ON_SIGNUP">On signup (welcome drip)</option>
-            <option value="ON_DONATION">On donation (thank-you drip)</option>
-            <option value="SCHEDULED">Scheduled (cron-driven)</option>
-            <option value="MANUAL">Manual enrollment only</option>
-          </select>
+          <Select value={trigger} onValueChange={(v) => setTrigger(v as Initial["trigger"])}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ON_SIGNUP">On signup (welcome drip)</SelectItem>
+              <SelectItem value="ON_DONATION">On donation (thank-you drip)</SelectItem>
+              <SelectItem value="SCHEDULED">Scheduled (cron-driven)</SelectItem>
+              <SelectItem value="MANUAL">Manual enrollment only</SelectItem>
+            </SelectContent>
+          </Select>
         </Field>
         <Field label="Target segments">
           {segments.length === 0 ? (

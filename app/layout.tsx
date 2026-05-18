@@ -8,6 +8,8 @@ import { isRtl } from "@/lib/i18n/config";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/Tooltip";
+import { ConfirmActionProvider } from "@/components/ui/useConfirmAction";
+import { Toaster } from "@/components/ui/Toast";
 import "./globals.css";
 
 const inter = localFont({
@@ -100,9 +102,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider>
           <NuqsAdapter>
             <NextIntlClientProvider locale={locale} messages={messages}>
-              <TooltipProvider>
-                {children}
-              </TooltipProvider>
+              <Toaster>
+                <ConfirmActionProvider>
+                  <TooltipProvider>
+                    {children}
+                  </TooltipProvider>
+                </ConfirmActionProvider>
+              </Toaster>
             </NextIntlClientProvider>
           </NuqsAdapter>
         </ThemeProvider>

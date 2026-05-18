@@ -7,6 +7,14 @@ import {
   deleteCampaignAction,
 } from "@/lib/actions/campaigns";
 import { Button } from "@/components/ui/Button";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/Select";
 
 type ProgramOption = { id: string; title: string };
 
@@ -38,6 +46,7 @@ export function CampaignForm({ initial, programs = [] }: { initial?: Initial; pr
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const submit = () => {
     setError(null);
@@ -62,9 +71,15 @@ export function CampaignForm({ initial, programs = [] }: { initial?: Initial; pr
     });
   };
 
-  const del = () => {
+  const del = async () => {
     if (!initial?.id) return;
-    if (!confirm("Delete this campaign? Donations remain but are unlinked.")) return;
+    const ok = await confirmAction({
+      title: "Delete campaign",
+      description: "Delete this campaign? Donations remain but are unlinked.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deleteCampaignAction({ id: initial.id });
@@ -103,12 +118,17 @@ export function CampaignForm({ initial, programs = [] }: { initial?: Initial; pr
           </Field>
         </div>
         <Field label="Linked program (optional)">
-          <select value={programId} onChange={(e) => setProgramId(e.target.value)} className={inputCls}>
-            <option value="">— No program —</option>
-            {programs.map((p) => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
+          <Select value={programId || "__none__"} onValueChange={(v) => setProgramId(v === "__none__" ? "" : v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="— No program —" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">— No program —</SelectItem>
+              {programs.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </Field>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />

@@ -6,6 +6,7 @@ import {
   updateProgramAction,
   deleteProgramAction,
 } from "@/lib/actions/programs";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
 import dynamic from "next/dynamic";
 
 const BlockEditor = dynamic(
@@ -42,6 +43,7 @@ export function ProgramForm({ initial }: { initial?: Initial }) {
   const [seoDesc, setSeoDesc] = useState(initial?.seoDesc ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const submit = () => {
     setError(null);
@@ -68,9 +70,15 @@ export function ProgramForm({ initial }: { initial?: Initial }) {
     });
   };
 
-  const del = () => {
+  const del = async () => {
     if (!initial?.id) return;
-    if (!confirm("Delete this program?")) return;
+    const ok = await confirmAction({
+      title: "Delete program",
+      description: "Delete this program?",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deleteProgramAction({ id: initial.id });

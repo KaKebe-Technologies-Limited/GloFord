@@ -3,21 +3,31 @@
 import { useTransition } from "react";
 import { setProgramStatusAction } from "@/lib/actions/programs";
 import type { ContentStatus } from "@prisma/client";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/Select";
 
 export function ProgramStatusControl({ id, status }: { id: string; status: ContentStatus }) {
   const [pending, start] = useTransition();
   return (
-    <select
+    <Select
       disabled={pending}
       value={status}
-      onChange={(e) => start(() => setProgramStatusAction({ id, status: e.target.value as ContentStatus }))}
-      className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm"
-      aria-label="Program status"
+      onValueChange={(v) => start(() => setProgramStatusAction({ id, status: v as ContentStatus }))}
     >
-      <option value="DRAFT">Draft</option>
-      <option value="REVIEW">In review</option>
-      <option value="PUBLISHED">Published</option>
-      <option value="ARCHIVED">Archived</option>
-    </select>
+      <SelectTrigger className="w-[160px]" aria-label="Program status">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="DRAFT">Draft</SelectItem>
+        <SelectItem value="REVIEW">In review</SelectItem>
+        <SelectItem value="PUBLISHED">Published</SelectItem>
+        <SelectItem value="ARCHIVED">Archived</SelectItem>
+      </SelectContent>
+    </Select>
   );
 }

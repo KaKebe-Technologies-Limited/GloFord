@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Eye, ChevronDown } from "lucide-react";
+import { ArrowLeft, Eye } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { updateApplicationStatusAction } from "../../actions";
 
 const STATUS_OPTIONS = [
@@ -191,27 +192,11 @@ export function ApplicationsClient({
                       {new Date(app.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3">
-                      <form action={handleStatusChange} className="inline-flex">
-                        <input type="hidden" name="id" value={app.id} />
-                        <div className="relative">
-                          <select
-                            name="status"
-                            defaultValue={app.status}
-                            onChange={(e) => {
-                              const form = e.target.closest("form");
-                              if (form) form.requestSubmit();
-                            }}
-                            className={`appearance-none rounded-full py-0.5 pl-2.5 pr-7 text-xs font-medium ${STATUS_STYLES[app.status] ?? "bg-[var(--color-muted)] text-[var(--color-muted-fg)]"}`}
-                          >
-                            {STATUS_OPTIONS.map((s) => (
-                              <option key={s} value={s}>
-                                {s.charAt(0) + s.slice(1).toLowerCase()}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2" />
-                        </div>
-                      </form>
+                      <StatusSelect
+                        appId={app.id}
+                        defaultStatus={app.status}
+                        onSubmit={handleStatusChange}
+                      />
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button
@@ -230,5 +215,44 @@ export function ApplicationsClient({
         </div>
       </div>
     </div>
+  );
+}
+
+function StatusSelect({
+  appId,
+  defaultStatus,
+  onSubmit,
+}: {
+  appId: string;
+  defaultStatus: string;
+  onSubmit: (formData: FormData) => void;
+}) {
+  const [status, setStatus] = useState(defaultStatus);
+  const formRef = React.useRef<HTMLFormElement>(null);
+  return (
+    <form ref={formRef} action={onSubmit} className="inline-flex">
+      <input type="hidden" name="id" value={appId} />
+      <input type="hidden" name="status" value={status} />
+      <Select
+        value={status}
+        onValueChange={(v) => {
+          setStatus(v);
+          setTimeout(() => formRef.current?.requestSubmit(), 0);
+        }}
+      >
+        <SelectTrigger
+          className={`rounded-full py-0.5 pl-2.5 pr-7 text-xs font-medium ${STATUS_STYLES[status] ?? "bg-[var(--color-muted)] text-[var(--color-muted-fg)]"}`}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTIONS.map((s) => (
+            <SelectItem key={s} value={s}>
+              {s.charAt(0) + s.slice(1).toLowerCase()}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </form>
   );
 }

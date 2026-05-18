@@ -9,6 +9,7 @@ import {
   deleteCampaignEmailAction,
 } from "@/lib/actions/emailCampaigns";
 import { Button } from "@/components/ui/Button";
+import { useConfirmAction } from "@/components/ui/useConfirmAction";
 
 type Step = {
   id: string;
@@ -32,6 +33,7 @@ export function StepList({
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const confirmAction = useConfirmAction();
 
   const nextOrder = steps.length ? Math.max(...steps.map((s) => s.stepOrder)) + 1 : 0;
 
@@ -64,8 +66,14 @@ export function StepList({
     });
   };
 
-  const del = (id: string) => {
-    if (!confirm("Delete this step?")) return;
+  const del = async (id: string) => {
+    const ok = await confirmAction({
+      title: "Delete step",
+      description: "Delete this step?",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     start(async () => {
       try {
         await deleteCampaignEmailAction({ id });
